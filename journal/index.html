@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, max-scale=1, user-scalable=no">
+    <title>Journal</title>
+    <link href="style.css" rel="stylesheet" type="text/css"/>
+</head>
+
+<body>
+    <div id="page">
+        <div id="messages">
+        </div>
+        <div id="input">
+            <div id="input-field-container">
+                <input type="text" id="input-field" placeholder="Write a message here :)">
+            </div>
+        </div>
+    </div>
+    <script src="/token.js"></script>
+    <script src="script.js"></script>
+</body>
+
+<template id="message-template">
+    <div class="message-container">
+        <div class="message"></div>
+        <div class="timestamp"><span class="time"></span><span class="date"></span></div>
+    </div>
+</template>
+</html>
