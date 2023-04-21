@@ -22,9 +22,20 @@ window.addEventListener("resize", () => {
     document.getElementsByTagName("html")[0].style.height = visualViewport.height + "px";
 })
 
+function parseHash() {
+    const hash = window.location.hash.substring(1);
+    const pairs = hash.split('&');
+    const result = {};
+    for (const pair of pairs) {
+      const [key, val] = pair.split('=');
+      result[key] = decodeURIComponent(val);
+    }
+    return result;
+  }
+  
+
 function pickJournal() {
-    const url = new URL(window.location.href);
-    entryID = url.searchParams.get("entryid");
+    entryID = parseHash().entryid;
 }
 
 function loadJournal() {
