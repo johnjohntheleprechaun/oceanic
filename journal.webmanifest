@@ -1,0 +1,26 @@
+{
+    "name": "One Day At A Time",
+    "short_name": "ODAAT",
+    "start_url": "/home.html",
+    "display": "standalone",
+    "background_color": "#fff",
+    "description": "A journal app",
+    "icons": [
+      {
+        "src": "journal-icon1024.png",
+        "sizes": "1024x1024",
+        "type": "image/png"
+      },
+      {
+        "src": "journal-icon512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      },
+      {
+        "src": "journal-icon192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
+    ]
+  }
+  

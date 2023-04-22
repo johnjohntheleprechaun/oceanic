@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, max-scale=1, user-scalable=no">
     <title>Journal</title>
     <link href="/journal.css" rel="stylesheet" type="text/css"/>
-    <link href="/journal-icon.png" rel="icon" type="image/png" />
+    <link href="/journal-icon1024.png" rel="icon" type="image/png" />
 </head>
 
 <body>
@@ -15,7 +15,10 @@
         </div>
         <div id="input">
             <div id="input-field-container">
-                <input type="text" id="input-field" placeholder="Write a message here :)">
+                <form id="input-form" action="javascript:sendMessage();">
+                    <input type="text" id="input-field" placeholder="Write a message here :)">
+                    <input type="submit" id="input-submit" style="display: none;">
+                </form>
             </div>
         </div>
     </div>

@@ -91,6 +91,12 @@ body {
 
     background-color: #2E294E;
 }
+#input-form {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+}
 #input-field {
     width: 100%;
     height: 100%;
