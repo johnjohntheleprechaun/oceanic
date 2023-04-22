@@ -54,5 +54,5 @@ function addJournal(journal) {
 }
 
 function openJournal(entryID) {
-    window.location.href = window.location.href + "journal" + "#entryid=" + entryID;
+    window.location.href = window.location.origin + "/journal.html" + "#entryid=" + entryID;
 }
