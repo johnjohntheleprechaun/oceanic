@@ -15,6 +15,7 @@ window.addEventListener("load", () => {
 })
 window.addEventListener("resize", () => {
     document.getElementsByTagName("html")[0].style.height = visualViewport.height + "px";
+    messageArea.scrollTop = messageArea.scrollHeight;
 })
 
 function parseHash() {
