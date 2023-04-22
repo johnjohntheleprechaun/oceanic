@@ -10,11 +10,6 @@ window.addEventListener("load", () => {
     messageArea = document.getElementById("messages");
     messageTemplate = document.getElementById("message-template").content;
     inputField = document.getElementById("input-field");
-    inputField.addEventListener("keydown", (e) => {
-        if (e.code === "Enter") {
-            sendMessage();
-        }
-    });
     pickJournal();
     loadJournal();
 })
