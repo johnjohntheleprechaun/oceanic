@@ -23,7 +23,26 @@ body {
 
 #navbar {
     color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    border-bottom: 1px solid #2E294E;
+    height: 40px;
+    margin: 0px;
+    align-items: center;
 }
+#journal-title {
+    font-size: 16pt;
+}
+#home-button {
+    color: white;
+    border: none;
+    background-color: #2E294E;
+    height: 100%;
+    aspect-ratio: 1;
+}
+
+
 
 #messages {
     height: 100%;
@@ -57,7 +76,6 @@ body {
 .date {
     margin-left: 15px;
 }
-
 @media only screen and (max-width: 800px) {
     .date {
         display: none;
