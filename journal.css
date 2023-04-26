@@ -25,7 +25,7 @@ body {
     color: white;
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: space-between;
     border-bottom: 1px solid #2E294E;
     height: 40px;
     margin: 0px;
@@ -40,6 +40,11 @@ body {
     background-color: #2E294E;
     height: 100%;
     aspect-ratio: 1;
+}
+#home-partner {
+    height: 100%;
+    aspect-ratio: 1;
+    background-color: transparent;
 }
 
 
