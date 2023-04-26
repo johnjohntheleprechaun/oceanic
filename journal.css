@@ -35,9 +35,8 @@ body {
     font-size: 16pt;
 }
 #home-button {
-    color: white;
     border: none;
-    background-color: #2E294E;
+    background-color: #574d97;
     height: 100%;
     aspect-ratio: 1;
 }
@@ -144,5 +143,5 @@ body {
     aspect-ratio: 1;
     border-radius: 10px;
     border: none;
-    background-color: #2E294E;
+    background-color: #574d97;
 }
