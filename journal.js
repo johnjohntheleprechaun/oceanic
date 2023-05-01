@@ -18,6 +18,14 @@ window.addEventListener("resize", () => {
     messageArea.scrollTop = messageArea.scrollHeight;
 })
 
+function setTitle(timestamp) {
+    console.log(timestamp);
+    let date = new Date(timestamp);
+    console.log(date);
+    let title = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
+    document.getElementById("journal-title").innerText = title;
+}
+
 function parseHash() {
     const hash = window.location.hash.substring(1);
     const pairs = hash.split('&');
@@ -49,6 +57,7 @@ function loadJournal() {
 
 function setMessages(data) {
     data.forEach(message => addMessage(message.message, message.timestamp));
+    setTitle(data[0].timestamp);
 }
 
 function sendMessage() {
