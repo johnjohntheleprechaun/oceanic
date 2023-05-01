@@ -31,6 +31,7 @@ html, body {
     align-items: center;
     flex-direction: column;
     font-size: 14pt;
+    cursor: pointer;
 }
 
 #create-journal {
@@ -42,6 +43,7 @@ html, body {
     background-color: #2E294E;
     border: 7px solid #574d97;
     border-radius: 25px;
+    cursor: pointer;
 }
 .date, .time {
     pointer-events: none;

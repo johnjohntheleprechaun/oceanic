@@ -144,4 +144,5 @@ body {
     border-radius: 10px;
     border: none;
     background-color: #574d97;
+    cursor: pointer;
 }
