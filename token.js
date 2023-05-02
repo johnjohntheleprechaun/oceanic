@@ -1,5 +1,5 @@
 const authURL = "https://message-journal.auth.us-west-2.amazoncognito.com";
-const redirectURI = window.location.origin + "/callback";
+const redirectURI = window.location.origin + "/callback.html";
 const clientID = "2ji6bjoqm4p37s1r87t1099n0a";
 
 let token;
@@ -17,6 +17,6 @@ function loadToken() {
         window.location.href = url.toString();
     }
     else {
-        return window.localStorage.getItem("token");
+        return storedToken;
     }
 }
