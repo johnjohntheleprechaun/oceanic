@@ -16,6 +16,7 @@ fetch(authURL + "/oauth2/token", {
 .then(data => writeTokens(data));
 
 function writeTokens(data) {
+    window.localStorage.setItem("id_token", data.id_token);
     window.localStorage.setItem("access_token", data.access_token);
     window.localStorage.setItem("refresh_token", data.refresh_token);
 }
