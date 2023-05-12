@@ -44,6 +44,13 @@ html, body {
     border: 7px solid #574d97;
     border-radius: 25px;
     cursor: pointer;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#create-icon {
+    width: 100%;
 }
 .date, .time {
     pointer-events: none;
