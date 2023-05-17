@@ -5,7 +5,7 @@ async function test() {
     const credentials = fromCognitoIdentityPool({
         identityPoolId: "us-west-2:fef09b59-5eb4-4b2d-b5ac-e0fee5dca5b9",
         logins: {
-            "cognito-idp.us-west-2.amazonaws.com/us-west-2_H6yuRNbli": window.localStorage.getItem("access_token")
+            "cognito-idp.us-west-2.amazonaws.com/us-west-2_H6yuRNbli": window.localStorage.getItem("id_token")
         },
         clientConfig: { region: "us-west-2" }
     });

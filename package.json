@@ -1,10 +1,10 @@
 {
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.327.0",
-    "@aws-sdk/credential-providers": "^3.327.0",
+    "@aws-sdk/client-dynamodb": "^3.332.0",
+    "@aws-sdk/credential-providers": "^3.332.0",
     "webpack": "^5.82.0"
   },
   "devDependencies": {
-    "webpack-cli": "^5.0.2"
+    "webpack-cli": "^5.1.1"
   }
 }
