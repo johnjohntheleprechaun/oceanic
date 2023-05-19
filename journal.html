@@ -18,12 +18,12 @@
         <div id="messages">
         </div>
         <div id="input">
-            <form autocomplete="off" id="input-form" action="javascript:sendMessage();">
-                <div id="input-field-container">
-                    <input type="text" id="input-field" placeholder="Write a message here :)">
-                </div>
-                <button type="submit" id="input-submit" value=""><img src="icon_send.svg"></button>
-            </form>
+            <div id="input-field-container">
+                <input type="text" id="input-field" placeholder="Write a message here :)">
+            </div>
+            <div id="submit">
+            <img src="icon_send.svg" onclick="sendMessage()">
+            </div>
         </div>
     </div>
     <script src="/token.js"></script>

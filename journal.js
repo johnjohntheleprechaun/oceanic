@@ -5,7 +5,7 @@ let messageTemplate;
 let inputField;
 let entryID
 
-window.addEventListener("load", () => {token = loadToken()})
+window.addEventListener("load", () => {token = loadToken()});
 window.addEventListener("load", () => {
     messageArea = document.getElementById("messages");
     messageTemplate = document.getElementById("message-template").content;
@@ -13,10 +13,15 @@ window.addEventListener("load", () => {
     document.getElementById("journal-title").addEventListener("click", () => window.location.href = "/home.html");
     pickJournal();
     loadJournal();
-})
+});
 window.addEventListener("resize", () => {
     document.getElementsByTagName("html")[0].style.height = visualViewport.height + "px";
     messageArea.scrollTop = messageArea.scrollHeight;
+});
+window.addEventListener("keydown", e => {
+    if (e.key === "Enter" && document.activeElement === inputField) {
+        sendMessage();
+    }
 })
 
 function setTitle(timestamp) {
