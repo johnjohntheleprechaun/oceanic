@@ -13,7 +13,7 @@
 <body>
     <div id="page">
         <div id="navbar">
-            <span id="journal-title" href="/home.html"></span>
+            <span id="journal-title" onclick="window.location.href = '/home.html'"></span>
         </div>
         <div id="messages">
         </div>
@@ -22,7 +22,7 @@
                 <input type="text" id="input-field" placeholder="Write a message here :)">
             </div>
             <div id="submit">
-            <img src="icon_send.svg" onclick="sendMessage()">
+            <img src="icon_send.svg" onmousedown="sendMessage(); event.preventDefault();">
             </div>
         </div>
     </div>

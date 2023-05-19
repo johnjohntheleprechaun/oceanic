@@ -10,7 +10,6 @@ window.addEventListener("load", () => {
     messageArea = document.getElementById("messages");
     messageTemplate = document.getElementById("message-template").content;
     inputField = document.getElementById("input-field");
-    document.getElementById("journal-title").addEventListener("click", () => window.location.href = "/home.html");
     pickJournal();
     loadJournal();
 });
