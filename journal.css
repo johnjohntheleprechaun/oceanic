@@ -29,28 +29,10 @@ body {
     height: 40px;
     margin: 0px;
     align-items: center;
+    padding: 3px;
 }
 #journal-title {
-    font-size: 16pt;
-}
-#home-button {
-    border: none;
-    background-color: transparent;
-    height: 100%;
-    aspect-ratio: 1;
-    
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-#home-partner {
-    height: 100%;
-    aspect-ratio: 1;
-    background-color: transparent;
-}
-#home-icon {
-    height: 100%;
-    width: 100%;
+    font-size: 20pt;
 }
 
 
