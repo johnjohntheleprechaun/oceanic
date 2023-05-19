@@ -33,6 +33,7 @@ body {
 }
 #journal-title {
     font-size: 20pt;
+    cursor: pointer;
 }
 
 
