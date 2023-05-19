@@ -58,7 +58,12 @@ function loadJournal() {
 
 function setMessages(data) {
     data.forEach(message => addMessage(message.message, message.timestamp));
-    setTitle(data[0].timestamp);
+    // THIS IS NOT A GOOD FIX, PLEASE DO SOMETHING BETTER LATER
+    if (data.length > 0) {
+        setTitle(data[0].timestamp);
+    } else {
+        setTitle(Date.now());
+    }
 }
 
 function sendMessage() {
