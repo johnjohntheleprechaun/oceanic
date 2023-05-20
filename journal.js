@@ -12,11 +12,15 @@ window.addEventListener("load", () => {
     inputField = document.getElementById("input-field");
     pickJournal();
     loadJournal();
+
+    document.body.style.height = visualViewport.height + "px";
 });
+
 window.addEventListener("resize", () => {
-    document.getElementsByTagName("html")[0].style.height = visualViewport.height + "px";
+    document.body.style.height = visualViewport.height + "px";
     messageArea.scrollTop = messageArea.scrollHeight;
 });
+
 window.addEventListener("keydown", e => {
     if (e.key === "Enter" && document.activeElement === inputField) {
         sendMessage();
