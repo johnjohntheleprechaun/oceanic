@@ -22,7 +22,8 @@ window.addEventListener("resize", () => {
 });
 
 window.addEventListener("keydown", e => {
-    if (e.key === "Enter" && document.activeElement === inputField) {
+    if (document.activeElement === inputField && e.code === "Enter" && !e.shiftKey) {
+        e.preventDefault();
         sendMessage();
     }
 })
@@ -75,10 +76,10 @@ function setMessages(data) {
 }
 
 function sendMessage() {
-    if (inputField.value !== "") {
+    if (inputField.innerText !== "") {
         // send message to server
         const data = {
-            "message": inputField.value
+            "message": inputField.innerText
         };
         fetch(url + entryID, {
             method: "POST",
@@ -91,7 +92,7 @@ function sendMessage() {
         .then(messageResponseHandler)
         .catch(error => console.error(error));
 
-        inputField.value = "";
+        inputField.innerText = "";
     }
 }
 function messageResponseHandler(data) {
