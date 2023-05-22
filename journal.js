@@ -36,9 +36,7 @@ function resizeInputField() {
 }
 
 function setTitle(timestamp) {
-    console.log(timestamp);
     let date = new Date(timestamp);
-    console.log(date);
     let title = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
     document.getElementById("journal-title").innerText = title;
 }
@@ -83,7 +81,6 @@ function setMessages(data) {
 }
 
 function sendMessage() {
-    console.log(inputField.value);
     if (inputField.value !== "") {
         // send message to server
         const data = {
