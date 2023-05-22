@@ -4,12 +4,14 @@ let messageArea;
 let messageTemplate;
 let inputField;
 let entryID
+const maxLines = 5;
 
 window.addEventListener("load", () => {token = loadToken()});
 window.addEventListener("load", () => {
     messageArea = document.getElementById("messages");
     messageTemplate = document.getElementById("message-template").content;
     inputField = document.getElementById("input-field");
+    inputField.addEventListener("input", resizeInputField);
     pickJournal();
     loadJournal();
 
@@ -26,7 +28,12 @@ window.addEventListener("keydown", e => {
         e.preventDefault();
         sendMessage();
     }
-})
+});
+
+function resizeInputField() {
+    inputField.rows = Math.min((inputField.value.match(/\n/g) || []).length + 1, maxLines);
+    inputField.scrollTop = inputField.scrollHeight;
+}
 
 function setTitle(timestamp) {
     console.log(timestamp);
@@ -76,10 +83,11 @@ function setMessages(data) {
 }
 
 function sendMessage() {
-    if (inputField.innerText !== "") {
+    console.log(inputField.value);
+    if (inputField.value !== "") {
         // send message to server
         const data = {
-            "message": inputField.innerText
+            "message": inputField.value
         };
         fetch(url + entryID, {
             method: "POST",
@@ -92,7 +100,7 @@ function sendMessage() {
         .then(messageResponseHandler)
         .catch(error => console.error(error));
 
-        inputField.innerText = "";
+        inputField.value = "";
     }
 }
 function messageResponseHandler(data) {
