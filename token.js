@@ -20,7 +20,8 @@ export function checkToken(token) {
     return true;
 }
 
-export async function refresh_tokens(refresh_token) {
+export async function refresh_tokens() {
+    const refresh_token = window.localStorage.getItem("refresh_token");
     if (!checkToken(refresh_token)) {
         login();
     }
