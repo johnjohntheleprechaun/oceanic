@@ -1,6 +1,7 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { checkToken, refresh_tokens } from "./token";
 import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { NotAuthorizedException } from "@aws-sdk/client-cognito-identity";
 
 let credentials;
 let dynamoClient;
@@ -39,7 +40,10 @@ async function attemptCall(sdkFunc, params) {
         return await sdkFunc(params);
     }
     catch (error) {
-        console.log(error);
-        throw error;
+        if (error instanceof NotAuthorizedException) {
+            refresh_tokens();
+        } else {
+            throw error;
+        }
     }
 }

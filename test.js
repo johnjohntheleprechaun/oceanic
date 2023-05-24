@@ -1,6 +1,4 @@
-import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
-import { checkToken, refresh_tokens } from "./token";
-import { dynamoQuery, loadCredentials, logCredentials, utilsInit } from "./aws";
+import { dynamoQuery, utilsInit } from "./aws";
 
 async function test() {
     utilsInit();
@@ -14,7 +12,7 @@ async function test() {
         }
     };
     console.log(await dynamoQuery(params));
-    setTimeout(async () => {
+    setInterval(async () => {
         console.log(await dynamoQuery(params));
     }, 3660000);
 }
