@@ -35,13 +35,14 @@ export async function dynamoQuery(params) {
     return await attemptCall(dynamoClient.send, command);
 }
 
-async function attemptCall(sdkFunc, params) {
+async function attemptCall(sdkFunc, params, attempts=0) {
     try {
         return await sdkFunc(params);
     }
     catch (error) {
-        if (error instanceof NotAuthorizedException) {
+        if (error instanceof NotAuthorizedException && attempts < 2) {
             refresh_tokens();
+            return await attemptCall(sdkFunc, params, attempts+1)
         } else {
             throw error;
         }
