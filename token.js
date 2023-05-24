@@ -21,11 +21,7 @@ export function checkToken(token) {
 }
 
 export async function refresh_tokens() {
-    const refresh_token = window.localStorage.getItem("refresh_token");
-    if (!checkToken(refresh_token)) {
-        login();
-    }
-
+    let refresh_token = window.localStorage.getItem("refresh_token");
     return fetch(authURL + "/oauth2/token", {
         method: "POST",
         headers: {
@@ -43,6 +39,9 @@ export async function refresh_tokens() {
 }
 
 export function save_tokens(data) {
+    if (data.error === "invalid_grant") {
+        login();
+    }
     // save tokens to local storage
     window.localStorage.setItem("id_token", data.id_token);
     window.localStorage.setItem("access_token", data.access_token);
