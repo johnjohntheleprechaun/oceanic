@@ -1,4 +1,4 @@
-import { dynamoScan, utilsInit } from "./aws";
+import { dynamoPutItem, dynamoScan, utilsInit } from "./aws";
 
 const url = "https://4bwtjf5ctmo527paml7vdxnwnq0yhiuf.lambda-url.us-west-2.on.aws/journals/";
 
@@ -13,17 +13,17 @@ window.addEventListener("load", () => {
     document.getElementById("create-journal").addEventListener("click", createJournal);
 })
 
-function createJournal(event) {
-    console.log(event);
-    fetch(url, {
-        method: "POST",
-        headers: {
-            "Authorization": "Bearer " + token
+async function createJournal(event) {
+    const entryID = crypto.randomUUID();
+    const params = {
+        TableName: "journal-entry-list",
+        Item: {
+            entryID: { S: entryID },
+            created: { N: Date.now().toString() }
         }
-    })
-    .then(response => response.json())
-    .then(data => openJournal(data.journal.entryID))
-    .catch(error => console.error(error));
+    };
+    await dynamoPutItem(params);
+    openJournal(entryID);
 }
 
 async function loadJournals() {
