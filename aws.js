@@ -40,7 +40,7 @@ export async function dynamoScan(params) {
 }
 export async function dynamoPutItem(params) {
     const command = new PutItemCommand(params);
-    return (await attemptCall(dynamoClient.send, command)).Items;
+    return await attemptCall(dynamoClient.send, command);
 }
 
 async function attemptCall(sdkFunc, params, attempted=false) {
