@@ -1,4 +1,4 @@
-import { dynamoQuery, utilsInit } from "./aws";
+import { dynamoPutItem, dynamoQuery, utilsInit } from "./aws";
 
 const url = "https://4bwtjf5ctmo527paml7vdxnwnq0yhiuf.lambda-url.us-west-2.on.aws/journals/";
 
@@ -50,39 +50,25 @@ async function loadJournal() {
 }
 
 function setMessages(data) {
-    console.log(data);
     data.forEach(message => addMessage(message.message.S, parseInt(message.timestamp.N)));
 }
 
-function sendMessage() {
+async function sendMessage() {
     if (inputField.value !== "") {
+        const timestamp = Date.now();
         // send message to server
-        const data = {
-            "message": inputField.value
+        const params = {
+            TableName: "journal-messages",
+            Item: {
+                entryID: { S: entryID },
+                timestamp: { N: timestamp.toString() },
+                message: { S: inputField.value }
+            }
         };
-        fetch(url + entryID, {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer " + token
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(messageResponseHandler)
-        .catch(error => console.error(error));
+        await dynamoPutItem(params);
+        addMessage(inputField.value, timestamp);
 
         inputField.value = "";
-    }
-}
-function messageResponseHandler(data) {
-    if (data.error !== undefined) {
-        if (data.error === "invalid token") {
-            let newToken = window.prompt("Invalid token, please enter a new one");
-            window.localStorage.setItem("token", newToken);
-        }
-    }
-    else {
-        addMessage(data.message.message, data.message.timestamp);
     }
 }
 
