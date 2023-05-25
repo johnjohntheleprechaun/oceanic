@@ -1,3 +1,5 @@
+import { dynamoPutItem, dynamoQuery, utilsInit } from "./aws";
+
 const url = "https://4bwtjf5ctmo527paml7vdxnwnq0yhiuf.lambda-url.us-west-2.on.aws/journals/";
 
 let messageArea;
@@ -6,12 +8,19 @@ let inputField;
 let entryID
 const maxLines = 5;
 
-window.addEventListener("load", () => {token = loadToken()});
+window.addEventListener("load", utilsInit);
+
 window.addEventListener("load", () => {
     messageArea = document.getElementById("messages");
     messageTemplate = document.getElementById("message-template").content;
     inputField = document.getElementById("input-field");
     inputField.addEventListener("input", resizeInputField);
+    
+    document.getElementById("submit").addEventListener("mousedown", e => {
+        e.preventDefault();
+        sendMessage();
+    })
+
     pickJournal();
     loadJournal();
 
@@ -30,12 +39,15 @@ window.addEventListener("keydown", e => {
     }
 });
 
+
+
 function resizeInputField() {
     inputField.rows = Math.min((inputField.value.match(/\n/g) || []).length + 1, maxLines);
     inputField.scrollTop = inputField.scrollHeight;
 }
 
 function setTitle(timestamp) {
+    console.log(timestamp);
     let date = new Date(timestamp);
     let title = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
     document.getElementById("journal-title").innerText = title;
@@ -57,58 +69,45 @@ function pickJournal() {
     entryID = parseHash().entryid;
 }
 
-function loadJournal() {
+async function loadJournal() {
     messageArea.innerHTML = "";
-    fetch(url + entryID, {
-        method: "GET",
-        headers: {
-            "Authorization": "Bearer " + token
+    const params = {
+        TableName: "journal-messages",
+        KeyConditionExpression: "entryID = :eID",
+        ExpressionAttributeValues: {
+            ":eID": { S: entryID }
         }
-    })
-    .then(response => response.json())
-    .then(setMessages)
-    .catch(error => console.error(error));
+    };
+    const messages = await dynamoQuery(params);
+    setMessages(messages);
 }
 
 function setMessages(data) {
-    data.forEach(message => addMessage(message.message, message.timestamp));
     // THIS IS NOT A GOOD FIX, PLEASE DO SOMETHING BETTER LATER
     if (data.length > 0) {
-        setTitle(data[0].timestamp);
+        setTitle(parseInt(data[0].timestamp.N));
     } else {
         setTitle(Date.now());
     }
+    data.forEach(message => addMessage(message.message.S, parseInt(message.timestamp.N)));
 }
 
-function sendMessage() {
+async function sendMessage() {
     if (inputField.value !== "") {
+        const timestamp = Date.now();
         // send message to server
-        const data = {
-            "message": inputField.value
+        const params = {
+            TableName: "journal-messages",
+            Item: {
+                entryID: { S: entryID },
+                timestamp: { N: timestamp.toString() },
+                message: { S: inputField.value }
+            }
         };
-        fetch(url + entryID, {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer " + token
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(messageResponseHandler)
-        .catch(error => console.error(error));
+        await dynamoPutItem(params);
+        addMessage(inputField.value, timestamp);
 
         inputField.value = "";
-    }
-}
-function messageResponseHandler(data) {
-    if (data.error !== undefined) {
-        if (data.error === "invalid token") {
-            let newToken = window.prompt("Invalid token, please enter a new one");
-            window.localStorage.setItem("token", newToken);
-        }
-    }
-    else {
-        addMessage(data.message.message, data.message.timestamp);
     }
 }
 
