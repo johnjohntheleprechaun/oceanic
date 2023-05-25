@@ -1,6 +1,6 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { checkToken, refresh_tokens } from "./token";
-import { DynamoDBClient, QueryCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, QueryCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { NotAuthorizedException } from "@aws-sdk/client-cognito-identity";
 
 let credentials;
@@ -36,6 +36,10 @@ export async function dynamoQuery(params) {
 }
 export async function dynamoScan(params) {
     const command = new ScanCommand(params);
+    return (await attemptCall(dynamoClient.send, command)).Items;
+}
+export async function dynamoPutItem(params) {
+    const command = new PutItemCommand(params);
     return (await attemptCall(dynamoClient.send, command)).Items;
 }
 
