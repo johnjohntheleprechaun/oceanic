@@ -1,7 +1,5 @@
 import { dynamoPutItem, dynamoScan, utilsInit } from "./aws";
 
-const url = "https://4bwtjf5ctmo527paml7vdxnwnq0yhiuf.lambda-url.us-west-2.on.aws/journals/";
-
 let entryTemplate;
 let journalArea;
 
