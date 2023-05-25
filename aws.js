@@ -32,7 +32,7 @@ export function loadCredentials() {
 
 export async function dynamoQuery(params) {
     const command = new QueryCommand(params);
-    return await attemptCall(dynamoClient.send, command).Items;
+    return (await attemptCall(dynamoClient.send, command)).Items;
 }
 export async function dynamoScan(params) {
     const command = new ScanCommand(params);
