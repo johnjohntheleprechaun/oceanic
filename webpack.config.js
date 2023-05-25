@@ -1,9 +1,13 @@
 var path = require('path');
 
 module.exports = {
-    entry: "./test.js",
+    entry: {
+        test: "./test.js",
+        home: "./home.js",
+        journal: "./journal.js"
+    },
     output: {
-        filename: "./bundle.js",
+        filename: "[name].bundle.js",
         path: path.resolve(__dirname, 'js')
     },
     mode: "development"
