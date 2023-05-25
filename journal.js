@@ -1,3 +1,5 @@
+import { dynamoQuery, utilsInit } from "./aws";
+
 const url = "https://4bwtjf5ctmo527paml7vdxnwnq0yhiuf.lambda-url.us-west-2.on.aws/journals/";
 
 let messageArea;
@@ -5,7 +7,7 @@ let messageTemplate;
 let inputField;
 let entryID
 
-window.addEventListener("load", () => {token = loadToken()})
+window.addEventListener("load", utilsInit)
 window.addEventListener("load", () => {
     messageArea = document.getElementById("messages");
     messageTemplate = document.getElementById("message-template").content;
@@ -34,21 +36,22 @@ function pickJournal() {
     entryID = parseHash().entryid;
 }
 
-function loadJournal() {
+async function loadJournal() {
     messageArea.innerHTML = "";
-    fetch(url + entryID, {
-        method: "GET",
-        headers: {
-            "Authorization": "Bearer " + token
+    const params = {
+        TableName: "journal-messages",
+        KeyConditionExpression: "entryID = :eID",
+        ExpressionAttributeValues: {
+            ":eID": { S: entryID }
         }
-    })
-    .then(response => response.json())
-    .then(setMessages)
-    .catch(error => console.error(error));
+    };
+    const messages = await dynamoQuery(params);
+    setMessages(messages);
 }
 
 function setMessages(data) {
-    data.forEach(message => addMessage(message.message, message.timestamp));
+    console.log(data);
+    data.forEach(message => addMessage(message.message.S, parseInt(message.timestamp.N)));
 }
 
 function sendMessage() {
