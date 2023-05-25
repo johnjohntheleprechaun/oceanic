@@ -1,6 +1,6 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { checkToken, refresh_tokens } from "./token";
-import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, QueryCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { NotAuthorizedException } from "@aws-sdk/client-cognito-identity";
 
 let credentials;
@@ -32,17 +32,21 @@ export function loadCredentials() {
 
 export async function dynamoQuery(params) {
     const command = new QueryCommand(params);
-    return await attemptCall(dynamoClient.send, command);
+    return await attemptCall(dynamoClient.send, command).Items;
+}
+export async function dynamoScan(params) {
+    const command = new ScanCommand(params);
+    return (await attemptCall(dynamoClient.send, command)).Items;
 }
 
-async function attemptCall(sdkFunc, params, attempts=0) {
+async function attemptCall(sdkFunc, params, attempted=false) {
     try {
         return await sdkFunc(params);
     }
     catch (error) {
-        if (error instanceof NotAuthorizedException && attempts < 2) {
+        if (error instanceof NotAuthorizedException && !attempted) {
             refresh_tokens();
-            return await attemptCall(sdkFunc, params, attempts+1)
+            return await attemptCall(sdkFunc, params, true)
         } else {
             throw error;
         }
