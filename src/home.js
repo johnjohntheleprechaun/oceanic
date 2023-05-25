@@ -1,4 +1,4 @@
-import { dynamoPutItem, dynamoScan, utilsInit } from "./aws";
+import { dynamoPutItem, dynamoScan, utilsInit } from "./utils/aws";
 
 let entryTemplate;
 let journalArea;

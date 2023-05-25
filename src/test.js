@@ -1,4 +1,4 @@
-import { dynamoQuery, utilsInit } from "./aws";
+import { dynamoQuery, utilsInit } from "./utils/aws";
 
 async function test() {
     utilsInit();
