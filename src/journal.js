@@ -1,4 +1,4 @@
-import { dynamoPutItem, dynamoQuery, utilsInit } from "./aws";
+import { dynamoPutItem, dynamoQuery, utilsInit } from "./utils/aws";
 
 const url = "https://4bwtjf5ctmo527paml7vdxnwnq0yhiuf.lambda-url.us-west-2.on.aws/journals/";
 
