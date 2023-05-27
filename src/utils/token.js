@@ -1,7 +1,7 @@
 import jwt_decode from "jwt-decode"
-const authURL = "https://message-journal.auth.us-west-2.amazoncognito.com";
+const authURL = "https://odaat.auth.us-west-2.amazoncognito.com";
 const redirectURI = window.location.origin + "/callback.html";
-const clientID = "2ji6bjoqm4p37s1r87t1099n0a";
+const clientID = "ovll3cuki0ao0gh4j2i1qgjgc";
 
 export function checkToken(token) {
     let decoded;

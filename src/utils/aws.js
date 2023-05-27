@@ -33,9 +33,9 @@ export function loadCredentials() {
         token = window.localStorage.getItem("id_token");
     }
     credentials = fromCognitoIdentityPool({
-        identityPoolId: "us-west-2:fef09b59-5eb4-4b2d-b5ac-e0fee5dca5b9",
+        identityPoolId: "us-west-2:cc44443b-6758-4eaa-a278-d964bb899ea7",
         logins: {
-            "cognito-idp.us-west-2.amazonaws.com/us-west-2_H6yuRNbli": token
+            "cognito-idp.us-west-2.amazonaws.com/us-west-2_Kn1Q4gwus": token
         },
         clientConfig: { region: "us-west-2" }
     });
