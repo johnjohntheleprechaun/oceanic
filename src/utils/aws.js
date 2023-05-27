@@ -2,17 +2,28 @@ import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { checkToken, refresh_tokens } from "./token";
 import { DynamoDBClient, PutItemCommand, QueryCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { NotAuthorizedException } from "@aws-sdk/client-cognito-identity";
+import { S3Client } from "@aws-sdk/client-s3";
 
 let credentials;
 let dynamoClient;
+let s3Client;
 
 export function utilsInit() {
     loadCredentials();
+
+    // Initialize clients
     dynamoClient = new DynamoDBClient({ 
         region: "us-west-2",
         credentials: credentials
     });
+    s3Client = new S3Client({
+        region: "us-west-2",
+        credentials: credentials
+    })
+
+    // Bind send functions
     dynamoClient.send = dynamoClient.send.bind(dynamoClient);
+    s3Client.send = s3Client.send.bind(s3Client);
 }
 
 export function loadCredentials() {
