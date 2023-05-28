@@ -8,8 +8,8 @@ let credentials;
 let dynamoClient;
 let s3Client;
 
-export function utilsInit() {
-    loadCredentials();
+export async function utilsInit() {
+    await loadCredentials();
 
     // Initialize clients
     dynamoClient = new DynamoDBClient({ 
@@ -26,10 +26,10 @@ export function utilsInit() {
     s3Client.send = s3Client.send.bind(s3Client);
 }
 
-export function loadCredentials() {
+export async function loadCredentials() {
     let token = window.localStorage.getItem("id_token");
     if (!checkToken(token)) {
-        refresh_tokens();
+        await refresh_tokens();
         token = window.localStorage.getItem("id_token");
     }
     credentials = fromCognitoIdentityPool({
@@ -60,7 +60,7 @@ async function attemptCall(sdkFunc, params, attempted=false) {
     }
     catch (error) {
         if (error instanceof NotAuthorizedException && !attempted) {
-            refresh_tokens();
+            await refresh_tokens();
             return await attemptCall(sdkFunc, params, true)
         } else {
             throw error;

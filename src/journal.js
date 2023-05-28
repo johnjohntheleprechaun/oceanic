@@ -8,9 +8,7 @@ let inputField;
 let entryID
 const maxLines = 5;
 
-window.addEventListener("load", utilsInit);
-
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
     messageArea = document.getElementById("messages");
     messageTemplate = document.getElementById("message-template").content;
     inputField = document.getElementById("input-field");
@@ -19,10 +17,10 @@ window.addEventListener("load", () => {
     document.getElementById("submit").addEventListener("mousedown", e => {
         e.preventDefault();
         sendMessage();
-    })
-
-    pickJournal();
-    loadJournal();
+    });
+    
+    await utilsInit();
+    await loadJournal();
 
     document.body.style.height = visualViewport.height + "px";
 });
@@ -70,6 +68,7 @@ function pickJournal() {
 }
 
 async function loadJournal() {
+    pickJournal();
     messageArea.innerHTML = "";
     const params = {
         TableName: "journal-messages",

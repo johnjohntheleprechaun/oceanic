@@ -22,7 +22,7 @@ export function checkToken(token) {
 
 export async function refresh_tokens() {
     let refresh_token = window.localStorage.getItem("refresh_token");
-    return fetch(authURL + "/oauth2/token", {
+    return await fetch(authURL + "/oauth2/token", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"

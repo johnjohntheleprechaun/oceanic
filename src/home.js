@@ -3,12 +3,13 @@ import { dynamoPutItem, dynamoScan, utilsInit } from "./utils/aws";
 let entryTemplate;
 let journalArea;
 
-window.addEventListener("load", utilsInit);
-window.addEventListener("load", loadJournals);
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
     entryTemplate = document.getElementById("journal-entry-template").content.querySelector(".journal-entry ");
     journalArea = document.getElementById("journals");
     document.getElementById("create-journal").addEventListener("click", createJournal);
+
+    await utilsInit();
+    await loadJournals();
 })
 
 async function createJournal(event) {
