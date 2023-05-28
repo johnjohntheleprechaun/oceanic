@@ -35,7 +35,7 @@ export async function loadCredentials() {
     credentials = fromCognitoIdentityPool({
         identityPoolId: "us-west-2:cc44443b-6758-4eaa-a278-d964bb899ea7",
         logins: {
-            "cognito-idp.us-west-2.amazonaws.com/us-west-2_Kn1Q4gwus": token
+            "cognito-idp.us-west-2.amazonaws.com/us-west-2_AsE2JA5Tw": token
         },
         clientConfig: { region: "us-west-2" }
     });

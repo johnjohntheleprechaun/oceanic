@@ -1,6 +1,6 @@
-const authURL = "https://odaat.auth.us-west-2.amazoncognito.com";
+const authURL = "https://oceanic.auth.us-west-2.amazoncognito.com";
 const redirectURI = window.location.origin + "/callback.html";
-const clientID = "ovll3cuki0ao0gh4j2i1qgjgc";
+const clientID = "jh6lo44rv24ntbg0v16o0k15a";
 
 function getTokens() {
     const authCode = new URLSearchParams(window.location.search).get("code");
