@@ -12,7 +12,7 @@ async function readFile(path) {
 }
 
 async function writeFile(path, contents, create=true) {
-    const handle = await getFileHandle(path, {create: create});
+    const handle = await storage.getFileHandle(path, {create: create});
     const stream = await handle.createWritable();
 
     await stream.write(contents);
