@@ -5,13 +5,16 @@ async function init() {
 }
 
 async function readFile(path) {
-    return storage.getFileHandle(path, {create: false})
-    .then(handle => handle.getFile())
-    .then(file => file.text());
+    const handle = await storage.getFileHandle(path, {create: false})
+    const file = await handle.getFile();
+
+    return file.text();
 }
 
 async function writeFile(path, contents, create=true) {
-    return storage.getFileHandle(path, {create: create})
-    .then(handle => handle.createWritable())
-    .then(stream => stream.write(contents))
+    const handle = await getFileHandle(path, {create: create});
+    const stream = await handle.createWritable();
+
+    await stream.write(contents);
+    return stream.close();
 }
