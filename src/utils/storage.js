@@ -1,20 +1,31 @@
-var storage;
+let db;
 
-async function init() {
-    storage = await navigator.storage.getDirectory();
+async function dbInit() {
+    if (!window.indexedDB) {
+        window.alert("Your browser doesn't support indexedDB. This means that journal files cannot be stored locally.");
+    }
+    const dbRequest = window.indexedDB.open("journals", 1);
+    dbRequest.onsuccess = dbLoadSuccess;
+    dbRequest.onerror = dbLoadError;
+    dbRequest.onblocked = dbLoadBlocked;
+    dbRequest.onupgradeneeded = upgradeDB;
+    return dbRequest;
 }
 
-async function readFile(path) {
-    const handle = await storage.getFileHandle(path, {create: false})
-    const file = await handle.getFile();
-
-    return file.text();
+async function dbLoadSuccess(event) {
+    db = event.target.result;
 }
 
-async function writeFile(path, contents, create=true) {
-    const handle = await storage.getFileHandle(path, {create: create});
-    const stream = await handle.createWritable();
+async function dbLoadError(event) {
+    throw event.target.error;
+}
 
-    await stream.write(contents);
-    return stream.close();
+async function dbLoadBlocked(event) {
+    console.log(event);
+    return;
+}
+
+async function upgradeDB() {
+    // implement upgrade code for major changes here
+    // this shouldn't be needed for quite a while
 }
