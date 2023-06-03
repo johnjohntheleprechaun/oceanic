@@ -1,3 +1,4 @@
+const DB_VERSION = 1;
 let db;
 
 async function storageInit() {
@@ -7,7 +8,7 @@ async function storageInit() {
 
 async function dbInit() {
     return new Promise((resolve, reject) => {
-        const dbRequest = window.indexedDB.open("journals", 1);
+        const dbRequest = window.indexedDB.open("journals", DB_VERSION);
         dbRequest.onsuccess = e => {
             resolve(e.target.result);
         };
