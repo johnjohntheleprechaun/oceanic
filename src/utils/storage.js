@@ -1,40 +1,28 @@
 let db;
 
 async function storageInit() {
-    await dbInit();
-    if (!db) {
-        // some actual error shit
-        return;
-    }
-    // implement storage init code (whatever that is)
+    db = await dbInit();
+    return db;
 }
 
 async function dbInit() {
-    if (!window.indexedDB) {
-        window.alert("Your browser doesn't support indexedDB. This means that journal files cannot be stored locally.");
-    }
-    const dbRequest = window.indexedDB.open("journals", 1);
-    dbRequest.onsuccess = dbLoadSuccess;
-    dbRequest.onerror = dbLoadError;
-    dbRequest.onblocked = dbLoadBlocked;
-    dbRequest.onupgradeneeded = upgradeDB;
-    return dbRequest;
-}
-
-async function dbLoadSuccess(event) {
-    db = event.target.result;
-}
-
-async function dbLoadError(event) {
-    throw event.target.error;
-}
-
-async function dbLoadBlocked(event) {
-    console.log(event);
-    return;
+    return new Promise((resolve, reject) => {
+        const dbRequest = window.indexedDB.open("journals", 1);
+        dbRequest.onsuccess = e => {
+            resolve(e.target.result);
+        };
+        dbRequest.onerror = e => {
+            reject(e.target.error);
+        };
+        dbRequest.onblocked = e => {
+            reject(new Error("Database is blocked"));
+        };
+        dbRequest.onupgradeneeded = upgradeDB;
+    });
 }
 
 async function upgradeDB() {
     // implement upgrade code for major changes here
     // this shouldn't be needed for quite a while
+    console.log("upgrade");
 }
