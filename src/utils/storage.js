@@ -1,5 +1,14 @@
 let db;
 
+async function storageInit() {
+    await dbInit();
+    if (!db) {
+        // some actual error shit
+        return;
+    }
+    // implement storage init code (whatever that is)
+}
+
 async function dbInit() {
     if (!window.indexedDB) {
         window.alert("Your browser doesn't support indexedDB. This means that journal files cannot be stored locally.");
