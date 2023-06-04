@@ -29,7 +29,7 @@ async function upgradeDB(event) {
     await db.createObjectStore("journals", { keyPath: "id" });
 }
 
-async function createJournal(id) {
+export async function createJournal(id) {
     // create transaction
     const transaction = db.transaction("journals", "readwrite");
     const objectStore = transaction.objectStore("journals");
@@ -42,7 +42,7 @@ async function createJournal(id) {
     return addRequest
 }
 
-async function appendToJournal(id, text) {
+export async function appendToJournal(id, text) {
     // create transaction
     const transaction = db.transaction("journals", "readwrite");
     const objectStore = transaction.objectStore("journals");
@@ -57,7 +57,7 @@ async function appendToJournal(id, text) {
     return putRequest;
 }
 
-async function updateJournal(id, content) {
+export async function updateJournal(id, content) {
     // create transaction
     const transaction = db.transaction("journals", "readwrite");
     const objectStore = transaction.objectStore("journals");
