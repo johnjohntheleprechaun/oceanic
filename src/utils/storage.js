@@ -2,7 +2,7 @@ const DB_VERSION = 1;
 /** @type {IDBDatabase} */
 let db;
 
-export async function dbInit() {
+async function dbInit() {
     return new Promise((resolve, reject) => {
         const dbRequest = window.indexedDB.open("journals", DB_VERSION);
         dbRequest.onsuccess = function() {
@@ -19,7 +19,7 @@ export async function dbInit() {
     });
 }
 
-export async function createJournal(id) {
+async function createJournal(id) {
     // create transaction
     const transaction = db.transaction("journals", "readwrite");
     const objectStore = transaction.objectStore("journals");
@@ -32,7 +32,7 @@ export async function createJournal(id) {
     return addRequest
 }
 
-export async function appendToJournal(id, text) {
+async function appendToJournal(id, text) {
     // create transaction
     const transaction = db.transaction("journals", "readwrite");
     const objectStore = transaction.objectStore("journals");
@@ -47,7 +47,7 @@ export async function appendToJournal(id, text) {
     return putRequest;
 }
 
-export async function updateJournal(id, content) {
+async function updateJournal(id, content) {
     // create transaction
     const transaction = db.transaction("journals", "readwrite");
     const objectStore = transaction.objectStore("journals");
@@ -68,7 +68,7 @@ export async function updateJournal(id, content) {
     return putRequest;
 }
 
-export async function getJournal(id) {
+async function getJournal(id) {
     // create transaction
     const transaction = db.transaction("journals", "readonly");
     const objectStore = transaction.objectStore("journals");
