@@ -77,6 +77,26 @@ async function getJournal(id) {
     return await getObject(id, objectStore);
 }
 
+async function openCursor(objectStore) {
+    return new Promise((resolve, reject) => {
+        const request = objectStore.openCursor();
+
+        // bind functions
+        request.onsuccess = function() {
+            resolve(request.result);
+        };
+        request.onerror = function() {
+            reject(request.error);
+        };
+    });
+}
+
+async function test() {
+    for await (const value of listJournals()) {
+        console.log(value);
+    }      
+}
+
 async function getObject(id, objectStore) {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
