@@ -4,7 +4,7 @@ let db;
 
 async function dbInit() {
     return new Promise((resolve, reject) => {
-        const dbRequest = window.indexedDB.open("journals", DB_VERSION);
+        const dbRequest = window.indexedDB.open("journal", DB_VERSION);
         dbRequest.onsuccess = function() {
             db = dbRequest.result;
             resolve(dbRequest.result);
@@ -21,8 +21,8 @@ async function dbInit() {
 
 async function createJournal(id) {
     // create transaction
-    const transaction = db.transaction("journals", "readwrite");
-    const objectStore = transaction.objectStore("journals");
+    const transaction = db.transaction("entries", "readwrite");
+    const objectStore = transaction.objectStore("entries");
     
     // make request
     const addRequest = await addObject(id, objectStore);
@@ -34,8 +34,8 @@ async function createJournal(id) {
 
 async function appendToJournal(id, text) {
     // create transaction
-    const transaction = db.transaction("journals", "readwrite");
-    const objectStore = transaction.objectStore("journals");
+    const transaction = db.transaction("entries", "readwrite");
+    const objectStore = transaction.objectStore("entries");
 
     // fetch current content
     const currentJournal = await getObject(id, objectStore);
@@ -49,8 +49,8 @@ async function appendToJournal(id, text) {
 
 async function updateJournal(id, content) {
     // create transaction
-    const transaction = db.transaction("journals", "readwrite");
-    const objectStore = transaction.objectStore("journals");
+    const transaction = db.transaction("entries", "readwrite");
+    const objectStore = transaction.objectStore("entries");
 
     // make request
     const currentObject = await getObject(id, objectStore);
@@ -70,8 +70,8 @@ async function updateJournal(id, content) {
 
 async function getJournal(id) {
     // create transaction
-    const transaction = db.transaction("journals", "readonly");
-    const objectStore = transaction.objectStore("journals");
+    const transaction = db.transaction("entries", "readonly");
+    const objectStore = transaction.objectStore("entries");
 
     // make request
     return await getObject(id, objectStore);
