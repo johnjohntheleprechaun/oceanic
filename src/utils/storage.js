@@ -11,13 +11,13 @@ async function storageInit() {
 async function dbInit() {
     return new Promise((resolve, reject) => {
         const dbRequest = window.indexedDB.open("journals", DB_VERSION);
-        dbRequest.onsuccess = e => {
-            resolve(e.target.result);
+        dbRequest.onsuccess = function() {
+            resolve(dbRequest.result);
         };
-        dbRequest.onerror = e => {
-            reject(e.target.error);
+        dbRequest.onerror = function() {
+            reject(dbRequest.error);
         };
-        dbRequest.onblocked = e => {
+        dbRequest.onblocked = function() {
             reject(new Error("Database is blocked"));
         };
         dbRequest.onupgradeneeded = upgradeDB;
