@@ -69,7 +69,6 @@ async function putObject(newData, objectStore) {
         // add event listeners
         addRequest.onsuccess = function() {
             // resolve with the journals ID (as per documentation the result should be the key)
-            transaction.commit();
             resolve(addRequest.result);
         };
         addRequest.onerror = function() {
@@ -90,7 +89,6 @@ async function addObject(id, objectStore) {
         // add event listeners
         addRequest.onsuccess = function() {
             // resolve with the journals ID (as per documentation the result should be the key)
-            transaction.commit();
             resolve(addRequest.result);
         };
         addRequest.onerror = function() {
