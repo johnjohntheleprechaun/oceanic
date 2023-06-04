@@ -2,16 +2,11 @@ const DB_VERSION = 1;
 /** @type {IDBDatabase} */
 let db;
 
-async function storageInit() {
-    db = await dbInit();
-    
-    return db;
-}
-
-async function dbInit() {
+export async function dbInit() {
     return new Promise((resolve, reject) => {
         const dbRequest = window.indexedDB.open("journals", DB_VERSION);
         dbRequest.onsuccess = function() {
+            db = dbRequest.result;
             resolve(dbRequest.result);
         };
         dbRequest.onerror = function() {
@@ -76,6 +71,15 @@ export async function updateJournal(id, content) {
     // commit and return
     transaction.commit();
     return putRequest;
+}
+
+export async function getJournal(id) {
+    // create transaction
+    const transaction = db.transaction("journals", "readonly");
+    const objectStore = transaction.objectStore("journals");
+
+    // make request
+    return await getObject(id, objectStore);
 }
 
 async function getObject(id, objectStore) {
