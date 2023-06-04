@@ -19,11 +19,6 @@ export async function dbInit() {
     });
 }
 
-async function upgradeDB(event) {
-    const db = event.target.result;
-    await db.createObjectStore("journals", { keyPath: "id" });
-}
-
 export async function createJournal(id) {
     // create transaction
     const transaction = db.transaction("journals", "readwrite");
@@ -132,4 +127,9 @@ async function addObject(id, objectStore) {
             reject(addRequest.error);
         };
     });
+}
+
+async function upgradeDB(event) {
+    const db = event.target.result;
+    await db.createObjectStore("journals", { keyPath: "id" });
 }
