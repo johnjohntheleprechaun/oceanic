@@ -42,15 +42,32 @@ async function createJournal(id) {
     return addRequest
 }
 
+async function appendToJournal(id, text) {
+    // create transaction
+    const transaction = db.transaction("journals", "readwrite");
+    const objectStore = transaction.objectStore("journals");
+
+    // fetch current content
+    const currentJournal = await getObject(id, objectStore);
+    currentJournal.content += text;
+    const putRequest = await putObject(currentJournal, objectStore);
+
+    // commit and return
+    transaction.commit();
+    return putRequest;
+}
+
 async function updateJournal(id, content) {
     // create transaction
     const transaction = db.transaction("journals", "readwrite");
     const objectStore = transaction.objectStore("journals");
 
     // make request
+    const currentObject = await getObject(id, objectStore);
     const putRequest = await putObject(
         {
             id: id,
+            createdAt: currentObject.createdAt,
             content: content
         },
         objectStore
@@ -58,7 +75,23 @@ async function updateJournal(id, content) {
 
     // commit and return
     transaction.commit();
-    return putRequest
+    return putRequest;
+}
+
+async function getObject(id, objectStore) {
+    return new Promise((resolve, reject) => {
+        // add an empty journal entry
+        const addRequest = objectStore.get(id);
+
+        // add event listeners
+        addRequest.onsuccess = function() {
+            // resolve with the journals ID (as per documentation the result should be the key)
+            resolve(addRequest.result);
+        };
+        addRequest.onerror = function() {
+            reject(addRequest.error);
+        };
+    });
 }
 
 async function putObject(newData, objectStore) {
