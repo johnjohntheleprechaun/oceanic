@@ -1,8 +1,10 @@
 const DB_VERSION = 1;
+/** @type {IDBDatabase} */
 let db;
 
 async function storageInit() {
     db = await dbInit();
+    
     return db;
 }
 
@@ -22,8 +24,30 @@ async function dbInit() {
     });
 }
 
-async function upgradeDB() {
-    // implement upgrade code for major changes here
-    // this shouldn't be needed for quite a while
-    console.log("upgrade");
+async function upgradeDB(event) {
+    const db = event.target.result;
+    await db.createObjectStore("journals", { keyPath: "id" });
+}
+
+async function createJournal(id) {
+    return new Promise((resolve, reject) => {
+        // add an empty journal entry
+        const transaction = db.transaction("journals", "readwrite");
+        const objectStore = transaction.objectStore("journals");
+        const addRequest = objectStore.add({
+            id: id,
+            createdAt: Date.now(),
+            content: ""
+        });
+
+        // add event listeners
+        addRequest.onsuccess = function() {
+            // resolve with the journals ID (as per documentation the result should be the key)
+            transaction.commit();
+            resolve(addRequest.result);
+        };
+        addRequest.onerror = function() {
+            reject(addRequest.error);
+        };
+    });
 }
