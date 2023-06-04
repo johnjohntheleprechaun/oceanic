@@ -30,10 +30,14 @@ async function upgradeDB(event) {
 }
 
 async function createJournal(id) {
+    const transaction = db.transaction("journals", "readwrite");
+    const objectStore = transaction.objectStore("journals");
+    return addObject(id, objectStore);
+}
+
+async function addObject(id, objectStore) {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
-        const transaction = db.transaction("journals", "readwrite");
-        const objectStore = transaction.objectStore("journals");
         const addRequest = objectStore.add({
             id: id,
             createdAt: Date.now(),
@@ -50,4 +54,8 @@ async function createJournal(id) {
             reject(addRequest.error);
         };
     });
+}
+
+async function updateJournal(id, content) {
+    return new Promise()
 }
