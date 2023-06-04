@@ -131,5 +131,5 @@ async function addObject(id, objectStore) {
 
 async function upgradeDB(event) {
     const db = event.target.result;
-    await db.createObjectStore("journals", { keyPath: "id" });
+    await db.createObjectStore("entries", { keyPath: "id" });
 }
