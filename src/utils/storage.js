@@ -77,6 +77,41 @@ async function getJournal(id) {
     return await getObject(id, objectStore);
 }
 
+function listJournals() {
+    // create transaction
+    const transaction = db.transaction("entries", "readonly");
+    const objectStore = transaction.objectStore("entries");
+
+    return {
+        async [Symbol.asyncIterator]() {
+            cursor = await openCursor(objectStore);
+            return this;
+        },
+        async next() {
+            if (cursor) {
+                const cursorVal = cursor.value;
+                continueCursor(cursor);
+                return { value: cursorVal, done: false };
+            } else {
+                transaction.commit();
+                return { done: true };
+            }
+        }
+    };
+}
+
+async function continueCursor(cursor) {
+    return new Promise((resolve, reject) => {
+        cursor.onsuccess = function() {
+            resolve(cursor);
+        }
+        cursor.onerror = function() {
+            reject(cursor);
+        }
+        cursor.continue();
+    })
+}
+
 async function openCursor(objectStore) {
     return new Promise((resolve, reject) => {
         const request = objectStore.openCursor();
