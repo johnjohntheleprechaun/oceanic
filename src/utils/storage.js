@@ -84,18 +84,31 @@ function listJournals() {
 
     return {
         async [Symbol.asyncIterator]() {
-            cursor = await openCursor(objectStore);
+            return {
+                cursor: await openCursor(objectStore),
+                next() {
+                    return continueCursor(cursor);
+                }
+            }
+        }
+    };
+}
+
+async function testJournals() {
+    for await (const value of listJournals()) {
+        console.log(value);
+    }
+}
+
+function testIter() {
+    return {
+        i: 0,
+        [Symbol.asyncIterator]() {
+            console.log(this);
             return this;
         },
         async next() {
-            if (cursor) {
-                const cursorVal = cursor.value;
-                continueCursor(cursor);
-                return { value: cursorVal, done: false };
-            } else {
-                transaction.commit();
-                return { done: true };
-            }
+            return { done: true };
         }
     };
 }
@@ -127,7 +140,8 @@ async function openCursor(objectStore) {
 }
 
 async function test() {
-    for await (const value of listJournals()) {
+    const iter = testIter();
+    for await (const value of iter) {
         console.log(value);
     }      
 }
