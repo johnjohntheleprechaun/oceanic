@@ -77,52 +77,46 @@ async function getJournal(id) {
     return await getObject(id, objectStore);
 }
 
-function listJournals() {
+async function listJournals() {
     // create transaction
     const transaction = db.transaction("entries", "readonly");
     const objectStore = transaction.objectStore("entries");
 
+    const cursor = await openCursor(objectStore);
+
     return {
-        async [Symbol.asyncIterator]() {
+        [Symbol.asyncIterator]() {
             return {
-                cursor: await openCursor(objectStore),
-                next() {
-                    return continueCursor(cursor);
+                async next() {
+                    if (cursor.value) {
+                        const returnVal = { value: cursor.value, done: false };
+                        await continueCursor(cursor);
+                        return returnVal;
+                    } else {
+                        return { done: true };
+                    }
                 }
             }
         }
     };
 }
 
-async function testJournals() {
-    for await (const value of listJournals()) {
+async function test() {
+    for await (const value of await listJournals()) {
         console.log(value);
     }
 }
 
-function testIter() {
-    return {
-        i: 0,
-        [Symbol.asyncIterator]() {
-            console.log(this);
-            return this;
-        },
-        async next() {
-            return { done: true };
-        }
-    };
-}
-
 async function continueCursor(cursor) {
     return new Promise((resolve, reject) => {
-        cursor.onsuccess = function() {
+        cursor.request.onsuccess = function() {
             resolve(cursor);
-        }
-        cursor.onerror = function() {
-            reject(cursor);
+        };
+        cursor.request.onerror = function() {
+            reject(cursor.request.error);
         }
         cursor.continue();
-    })
+    });
 }
 
 async function openCursor(objectStore) {
@@ -137,13 +131,6 @@ async function openCursor(objectStore) {
             reject(request.error);
         };
     });
-}
-
-async function test() {
-    const iter = testIter();
-    for await (const value of iter) {
-        console.log(value);
-    }      
 }
 
 async function getObject(id, objectStore) {
