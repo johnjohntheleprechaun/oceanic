@@ -2,7 +2,7 @@ const DB_VERSION = 1;
 /** @type {IDBDatabase} */
 let db;
 
-async function dbInit() {
+export async function dbInit() {
     return new Promise((resolve, reject) => {
         const dbRequest = window.indexedDB.open("journal", DB_VERSION);
         dbRequest.onsuccess = function() {
@@ -19,7 +19,7 @@ async function dbInit() {
     });
 }
 
-async function createJournal(id) {
+export async function createJournal(id) {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
@@ -32,7 +32,7 @@ async function createJournal(id) {
     return addRequest
 }
 
-async function appendToJournal(id, text) {
+export async function appendToJournal(id, text) {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
@@ -47,7 +47,7 @@ async function appendToJournal(id, text) {
     return putRequest;
 }
 
-async function updateJournal(id, content) {
+export async function updateJournal(id, content) {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
@@ -68,7 +68,7 @@ async function updateJournal(id, content) {
     return putRequest;
 }
 
-async function getJournal(id) {
+export async function getJournal(id) {
     // create transaction
     const transaction = db.transaction("entries", "readonly");
     const objectStore = transaction.objectStore("entries");
@@ -77,7 +77,7 @@ async function getJournal(id) {
     return await getObject(id, objectStore);
 }
 
-async function listJournals() {
+export async function listJournals() {
     // create transaction
     const transaction = db.transaction("entries", "readonly");
     const objectStore = transaction.objectStore("entries");
@@ -99,12 +99,6 @@ async function listJournals() {
             };
         }
     };
-}
-
-async function test() {
-    for await (const value of await listJournals()) {
-        console.log(value);
-    }
 }
 
 async function continueCursor(cursor) {
