@@ -96,7 +96,7 @@ async function listJournals() {
                         return { done: true };
                     }
                 }
-            }
+            };
         }
     };
 }
@@ -114,7 +114,7 @@ async function continueCursor(cursor) {
         };
         cursor.request.onerror = function() {
             reject(cursor.request.error);
-        }
+        };
         cursor.continue();
     });
 }
