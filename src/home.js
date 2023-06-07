@@ -1,4 +1,5 @@
 import { dynamoPutItem, dynamoScan, utilsInit } from "./utils/aws";
+import { dbInit, listJournals } from "./utils/storage";
 
 let entryTemplate;
 let journalArea;
@@ -8,7 +9,7 @@ window.addEventListener("load", async () => {
     journalArea = document.getElementById("journals");
     document.getElementById("create-journal").addEventListener("click", createJournal);
 
-    await utilsInit();
+    await dbInit();
     await loadJournals();
 })
 
@@ -26,26 +27,20 @@ async function createJournal(event) {
 }
 
 async function loadJournals() {
-    const params = {
-        TableName: "journal-entry-list"
-    };
-    const journals = await dynamoScan(params);
-    setJournals(journals);
-}
-
-function setJournals(data) {
-    const sorted = data.sort((a,b) => a.created.N >= b.created.N ? 1 : -1);
-    sorted.forEach(addJournal);
+    const journals = await listJournals();
+    for await (const journal of journals) {
+        addJournal(journal);
+    }
 }
 
 function addJournal(journal) {
     let entry = entryTemplate.cloneNode(true);
-    let date = new Date(parseInt(journal.created.N));
+    let date = new Date(journal.createdAt);
 
     entry.querySelector(".date").innerText = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
     entry.querySelector(".time").innerText = date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0");
     entry.addEventListener("click", event => openJournal(event.target.attributes["data-entryid"].nodeValue));
-    entry.dataset.entryid = journal.entryID.S;
+    entry.dataset.entryid = journal.id;
 
     journalArea.appendChild(entry);
 }
