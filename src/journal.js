@@ -1,4 +1,5 @@
 import { dynamoPutItem, dynamoQuery, utilsInit } from "./utils/aws";
+import { dbInit, getJournal } from "./utils/storage";
 
 const url = "https://4bwtjf5ctmo527paml7vdxnwnq0yhiuf.lambda-url.us-west-2.on.aws/journals/";
 
@@ -19,7 +20,7 @@ window.addEventListener("load", async () => {
         sendMessage();
     });
     
-    await utilsInit();
+    await dbInit();
     await loadJournal();
 
     document.body.style.height = visualViewport.height + "px";
@@ -70,25 +71,12 @@ function pickJournal() {
 async function loadJournal() {
     pickJournal();
     messageArea.innerHTML = "";
-    const params = {
-        TableName: "journal-messages",
-        KeyConditionExpression: "entryID = :eID",
-        ExpressionAttributeValues: {
-            ":eID": { S: entryID }
-        }
-    };
-    const messages = await dynamoQuery(params);
-    setMessages(messages);
+    return getJournal(entryID).then(setContent);
 }
 
-function setMessages(data) {
-    // THIS IS NOT A GOOD FIX, PLEASE DO SOMETHING BETTER LATER
-    if (data.length > 0) {
-        setTitle(parseInt(data[0].timestamp.N));
-    } else {
-        setTitle(Date.now());
-    }
-    data.forEach(message => addMessage(message.message.S, parseInt(message.timestamp.N)));
+function setContent(journal) {
+    setTitle(journal.createdAt);
+    messageArea.innerText = journal.content;
 }
 
 async function sendMessage() {
