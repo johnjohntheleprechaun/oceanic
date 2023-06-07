@@ -1,5 +1,4 @@
-import { dynamoPutItem, dynamoScan, utilsInit } from "./utils/aws";
-import { dbInit, listJournals } from "./utils/storage";
+import { createJournal, dbInit, listJournals } from "./utils/storage";
 
 let entryTemplate;
 let journalArea;
@@ -7,23 +6,16 @@ let journalArea;
 window.addEventListener("load", async () => {
     entryTemplate = document.getElementById("journal-entry-template").content.querySelector(".journal-entry ");
     journalArea = document.getElementById("journals");
-    document.getElementById("create-journal").addEventListener("click", createJournal);
+    document.getElementById("create-journal").addEventListener("click", newJournal);
 
     await dbInit();
     await loadJournals();
 })
 
-async function createJournal(event) {
+function newJournal() {
     const entryID = crypto.randomUUID();
-    const params = {
-        TableName: "journal-entry-list",
-        Item: {
-            entryID: { S: entryID },
-            created: { N: Date.now().toString() }
-        }
-    };
-    await dynamoPutItem(params);
-    openJournal(entryID);
+    createJournal(entryID)
+    .then(openJournal(entryID));
 }
 
 async function loadJournals() {
