@@ -29,11 +29,11 @@ async function createJournal(event) {
 async function loadJournals() {
     const journals = await listJournals();
     for await (const journal of journals) {
-        addJournal(journal);
+        displayJournal(journal);
     }
 }
 
-function addJournal(journal) {
+function displayJournal(journal) {
     let entry = entryTemplate.cloneNode(true);
     let date = new Date(journal.createdAt);
 
