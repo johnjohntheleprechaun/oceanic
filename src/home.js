@@ -27,10 +27,9 @@ async function loadJournals() {
 
 function displayJournal(journal) {
     let entry = entryTemplate.cloneNode(true);
-    let date = new Date(timestamp);
 
     entry.querySelector(".date").innerText = formatDate(journal.created);
-    entry.querySelector(".time").innerText = date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0");
+    entry.querySelector(".time").innerText = formatTime(journal.created);
     entry.addEventListener("click", event => openJournal(event.target.attributes["data-entryid"].nodeValue));
     entry.dataset.entryid = journal.id;
 
@@ -40,6 +39,10 @@ function displayJournal(journal) {
 function formatDate(timestamp) {
     let date = new Date(timestamp);
     return (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
+}
+function formatTime(timestamp) {
+    let date = new Date(timestamp);
+    return date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0");
 }
 
 function openJournal(entryID) {
