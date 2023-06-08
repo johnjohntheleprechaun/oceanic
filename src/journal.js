@@ -1,7 +1,4 @@
-import { dynamoPutItem, dynamoQuery, utilsInit } from "./utils/aws";
 import { appendToJournal, dbInit, getJournal } from "./utils/storage";
-
-const url = "https://4bwtjf5ctmo527paml7vdxnwnq0yhiuf.lambda-url.us-west-2.on.aws/journals/";
 
 let messageArea;
 let messageTemplate;
