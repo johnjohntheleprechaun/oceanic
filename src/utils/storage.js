@@ -19,15 +19,16 @@ export async function dbInit() {
     });
 }
 
-export async function createJournal(id) {
+export async function createJournal(title) {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
     
     // make request
     const journal = {
-        id: id,
+        id: crypto.randomUUID(),
         created: Date.now(),
+        title: title,
         content: ""
     }
     const addRequest = await addObject(journal, objectStore);
@@ -61,8 +62,9 @@ export async function updateJournal(id, content) {
     const currentObject = await getObject(id, objectStore);
     const putRequest = await putObject(
         {
-            id: id,
+            id: currentObject.id,
             created: currentObject.created,
+            title: currentObject.title,
             content: content
         },
         objectStore
