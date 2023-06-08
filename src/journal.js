@@ -1,5 +1,5 @@
 import { dynamoPutItem, dynamoQuery, utilsInit } from "./utils/aws";
-import { dbInit, getJournal } from "./utils/storage";
+import { appendToJournal, dbInit, getJournal } from "./utils/storage";
 
 const url = "https://4bwtjf5ctmo527paml7vdxnwnq0yhiuf.lambda-url.us-west-2.on.aws/journals/";
 
@@ -17,7 +17,7 @@ window.addEventListener("load", async () => {
     
     document.getElementById("submit").addEventListener("mousedown", e => {
         e.preventDefault();
-        sendMessage();
+        addMessage();
     });
     
     await dbInit();
@@ -34,7 +34,7 @@ window.addEventListener("resize", () => {
 window.addEventListener("keydown", e => {
     if (document.activeElement === inputField && e.code === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        sendMessage();
+        addMessage();
     }
 });
 
@@ -79,26 +79,17 @@ function setContent(journal) {
     messageArea.innerText = journal.content;
 }
 
-async function sendMessage() {
+async function addMessage() {
     if (inputField.value !== "") {
         const timestamp = Date.now();
-        // send message to server
-        const params = {
-            TableName: "journal-messages",
-            Item: {
-                entryID: { S: entryID },
-                timestamp: { N: timestamp.toString() },
-                message: { S: inputField.value }
-            }
-        };
-        await dynamoPutItem(params);
-        addMessage(inputField.value, timestamp);
-
+        // append message to journal
+        await appendToJournal(entryID, `{${timestamp}} ${inputField.value}\n`);
+        displayMessage(inputField.value, timestamp);
         inputField.value = "";
     }
 }
 
-function addMessage(content, timestamp) {
+function displayMessage(content, timestamp) {
     let message = messageTemplate.cloneNode(true);
     let date = new Date(timestamp);
 
