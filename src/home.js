@@ -13,7 +13,7 @@ window.addEventListener("load", async () => {
 })
 
 function newJournal() {
-    const title = formatDate(Date.now());
+    const title = getDate(Date.now());
     createJournal(title)
     .then(id => openJournal(id));
 }
@@ -28,19 +28,19 @@ async function loadJournals() {
 function displayJournal(journal) {
     let entry = entryTemplate.cloneNode(true);
 
-    entry.querySelector(".date").innerText = formatDate(journal.created);
-    entry.querySelector(".time").innerText = formatTime(journal.created);
+    entry.querySelector(".date").innerText = getDate(journal.created);
+    entry.querySelector(".time").innerText = getTime(journal.created);
     entry.addEventListener("click", event => openJournal(event.target.attributes["data-entryid"].nodeValue));
     entry.dataset.entryid = journal.id;
 
     journalArea.appendChild(entry);
 }
 
-function formatDate(timestamp) {
+function getDate(timestamp) {
     let date = new Date(timestamp);
     return (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
 }
-function formatTime(timestamp) {
+function getTime(timestamp) {
     let date = new Date(timestamp);
     return date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0");
 }
