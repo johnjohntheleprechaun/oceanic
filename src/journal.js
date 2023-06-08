@@ -43,7 +43,6 @@ function resizeInputField() {
 }
 
 function setTitle(timestamp) {
-    console.log(timestamp);
     let date = new Date(timestamp);
     let title = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
     document.getElementById("journal-title").innerText = title;
