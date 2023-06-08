@@ -10,7 +10,7 @@ html, body {
     height: 100%;
     padding: 10px;
     box-sizing: border-box;
-    background-color: #011638;
+    background-color: #14104a;
     overflow-y: auto;
 }
 
@@ -22,7 +22,7 @@ html, body {
 }
 
 .journal-entry {
-    background-color: #2E294E;
+    background-color: #1c1769;
     font-family: sans-serif;
     height: 75px;
     color: white;
@@ -32,6 +32,8 @@ html, body {
     flex-direction: column;
     font-size: 14pt;
     cursor: pointer;
+
+    border-radius: 10px;
 }
 
 #create-journal {
@@ -40,7 +42,7 @@ html, body {
     position: absolute;
     bottom: 25px;
     right: 25px;
-    background-color: #2E294E;
+    background-color: #282092;
     border: 5px solid #fff;
     border-radius: 25px;
     cursor: pointer;
