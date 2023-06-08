@@ -3,6 +3,12 @@ const DB_VERSION = 1;
 let db;
 
 export async function dbInit() {
+    // requeset persistent storage
+    if (navigator.storage && !await navigator.storage.persisted()){
+        await navigator.storage.persist();
+    } else if (!navigator.storage) {
+        // notify users somehow
+    }
     return new Promise((resolve, reject) => {
         const dbRequest = window.indexedDB.open("journal", DB_VERSION);
         dbRequest.onsuccess = function() {
