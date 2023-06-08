@@ -25,7 +25,12 @@ export async function createJournal(id) {
     const objectStore = transaction.objectStore("entries");
     
     // make request
-    const addRequest = await addObject(id, objectStore);
+    const journal = {
+        id: id,
+        created: Date.now(),
+        content: ""
+    }
+    const addRequest = await addObject(journal, objectStore);
     
     // commit and return
     transaction.commit();
@@ -159,14 +164,10 @@ async function putObject(newData, objectStore) {
     });
 }
 
-async function addObject(id, objectStore) {
+async function addObject(object, objectStore) {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
-        const addRequest = objectStore.add({
-            id: id,
-            created: Date.now(),
-            content: ""
-        });
+        const addRequest = objectStore.add(object);
 
         // add event listeners
         addRequest.onsuccess = function() {
