@@ -68,7 +68,8 @@ function pickJournal() {
 async function loadJournal() {
     pickJournal();
     messageArea.innerHTML = "";
-    const journal = await getJournal(entryID)
+    const journal = await getJournal(entryID);
+    setTitle(journal.created);
     displayJournal(journal);
 }
 
@@ -85,11 +86,6 @@ function displayMessageJournal(content) {
         }
         displayMessage(m[2], parseInt(m[1]));
     }
-}
-
-function setContent(journal) {
-    setTitle(journal.created);
-    messageArea.innerText = journal.content;
 }
 
 async function addMessage() {
