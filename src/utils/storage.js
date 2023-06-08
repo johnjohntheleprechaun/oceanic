@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid"
 const DB_VERSION = 1;
 /** @type {IDBDatabase} */
 let db;
@@ -26,7 +27,7 @@ export async function createJournal(title) {
     
     // make request
     const journal = {
-        id: crypto.randomUUID(),
+        id: uuid(),
         created: Date.now(),
         title: title,
         content: ""

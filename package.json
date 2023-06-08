@@ -4,6 +4,7 @@
     "@aws-sdk/client-s3": "^3.341.0",
     "@aws-sdk/credential-providers": "^3.332.0",
     "jwt-decode": "^3.1.2",
+    "uuid": "^9.0.0",
     "webpack": "^5.82.0"
   },
   "devDependencies": {
