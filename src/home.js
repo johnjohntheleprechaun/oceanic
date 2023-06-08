@@ -27,7 +27,7 @@ async function loadJournals() {
 
 function displayJournal(journal) {
     let entry = entryTemplate.cloneNode(true);
-    let date = new Date(journal.createdAt);
+    let date = new Date(journal.created);
 
     entry.querySelector(".date").innerText = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
     entry.querySelector(".time").innerText = date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0");

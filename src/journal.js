@@ -75,7 +75,7 @@ async function loadJournal() {
 }
 
 function setContent(journal) {
-    setTitle(journal.createdAt);
+    setTitle(journal.created);
     messageArea.innerText = journal.content;
 }
 

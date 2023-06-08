@@ -57,7 +57,7 @@ export async function updateJournal(id, content) {
     const putRequest = await putObject(
         {
             id: id,
-            createdAt: currentObject.createdAt,
+            created: currentObject.created,
             content: content
         },
         objectStore
@@ -164,7 +164,7 @@ async function addObject(id, objectStore) {
         // add an empty journal entry
         const addRequest = objectStore.add({
             id: id,
-            createdAt: Date.now(),
+            created: Date.now(),
             content: ""
         });
 
@@ -180,6 +180,9 @@ async function addObject(id, objectStore) {
 }
 
 async function upgradeDB(event) {
+    /** @type IDBDatabase */
     const db = event.target.result;
-    await db.createObjectStore("entries", { keyPath: "id" });
+    const objectStore = db.createObjectStore("entries", { keyPath: "id" });
+    objectStore.createIndex("created", "created", { unique: false });
+    objectStore.createIndex("title", "title", { unique: false });
 }
