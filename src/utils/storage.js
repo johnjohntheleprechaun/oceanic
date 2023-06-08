@@ -88,8 +88,9 @@ export async function listJournals() {
     // create transaction
     const transaction = db.transaction("entries", "readonly");
     const objectStore = transaction.objectStore("entries");
+    const index = objectStore.index("created");
 
-    const cursor = await openCursor(objectStore);
+    const cursor = await openCursor(index);
 
     return {
         [Symbol.asyncIterator]() {
