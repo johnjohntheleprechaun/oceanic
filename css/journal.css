@@ -123,6 +123,9 @@ body {
     font-family: sans-serif;
     font-size: 12pt;
 }
+#input-field::placeholder {
+    color: grey;
+}
 
 #submit {
     height: calc(12pt + 16px);
