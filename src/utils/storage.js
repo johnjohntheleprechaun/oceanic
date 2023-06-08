@@ -102,6 +102,9 @@ export async function listJournals() {
         [Symbol.asyncIterator]() {
             return {
                 async next() {
+                    if (!cursor) {
+                        return { done: true };
+                    }
                     if (cursor.value) {
                         const returnVal = { value: cursor.value, done: false };
                         await continueCursor(cursor);
