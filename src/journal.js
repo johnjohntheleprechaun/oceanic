@@ -71,7 +71,23 @@ function pickJournal() {
 async function loadJournal() {
     pickJournal();
     messageArea.innerHTML = "";
-    return getJournal(entryID).then(setContent);
+    const journal = await getJournal(entryID)
+    displayJournal(journal);
+}
+
+function displayJournal(journal) {
+    displayMessageJournal(journal.content);
+}
+
+function displayMessageJournal(content) {
+    const regex = /{(\d+)} (.+)/gm;
+    let m;
+    while ((m = regex.exec(content)) !== null) {
+        if (m.index === regex.lastIndex) {
+            regex.lastIndex++;
+        }
+        displayMessage(m[2], parseInt(m[1]));
+    }
 }
 
 function setContent(journal) {
