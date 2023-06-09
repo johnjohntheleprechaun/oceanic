@@ -3,7 +3,7 @@
     "short_name": "Oceanic",
     "start_url": "/home.html",
     "display": "standalone",
-    "background_color": "#fff",
+    "background_color": "#14104a",
     "description": "A journaling and mental health app",
     "icons": [
       {
