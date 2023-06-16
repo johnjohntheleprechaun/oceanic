@@ -1,7 +1,7 @@
 import jwt_decode from "jwt-decode"
-const authURL = "https://message-journal.auth.us-west-2.amazoncognito.com";
+const authURL = "https://oceanic.auth.us-west-2.amazoncognito.com";
 const redirectURI = window.location.origin + "/callback.html";
-const clientID = "2ji6bjoqm4p37s1r87t1099n0a";
+const clientID = "jh6lo44rv24ntbg0v16o0k15a";
 
 export function checkToken(token) {
     let decoded;
@@ -22,7 +22,7 @@ export function checkToken(token) {
 
 export async function refresh_tokens() {
     let refresh_token = window.localStorage.getItem("refresh_token");
-    return fetch(authURL + "/oauth2/token", {
+    return await fetch(authURL + "/oauth2/token", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
