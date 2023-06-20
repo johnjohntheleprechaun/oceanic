@@ -113,8 +113,8 @@ export async function listJournals() {
                     if (!cursor) {
                         return { done: true };
                     }
-                    if (cursor.request.result) {
-                        const returnVal = { value: cursor.request.result, done: false };
+                    if (cursor.value) {
+                        const returnVal = { value: cursor.value, done: false };
                         await continueCursor(cursor);
                         return returnVal;
                     } else {
@@ -138,7 +138,7 @@ async function continueCursor(cursor: IDBCursor) {
     });
 }
 
-async function openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCursor> {
+async function openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCursorWithValue> {
     return new Promise((resolve, reject) => {
         const request = objectStore.openCursor();
 
