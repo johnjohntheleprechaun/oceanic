@@ -1,10 +1,10 @@
-import { createJournal, dbInit, listJournals } from "./utils/storage";
+import { Journal, createJournal, dbInit, listJournals } from "./utils/storage";
 
-let entryTemplate;
-let journalArea;
+let entryTemplate: HTMLElement;
+let journalArea: HTMLElement;
 
 window.addEventListener("load", async () => {
-    entryTemplate = document.getElementById("journal-entry-template").content.querySelector(".journal-entry ");
+    entryTemplate = (document.getElementById("journal-entry-template") as HTMLTemplateElement).content.querySelector(".journal-entry ");
     journalArea = document.getElementById("journals");
     document.getElementById("create-journal").addEventListener("click", newJournal);
 
@@ -25,26 +25,26 @@ async function loadJournals() {
     }
 }
 
-function displayJournal(journal) {
-    let entry = entryTemplate.cloneNode(true);
-
-    entry.querySelector(".date").innerText = getDate(journal.created);
-    entry.querySelector(".time").innerText = getTime(journal.created);
-    entry.addEventListener("click", event => openJournal(event.target.attributes["data-entryid"].nodeValue));
+function displayJournal(journal: Journal) {
+    let entry = entryTemplate.cloneNode(true) as HTMLElement;
+    
+    (entry.querySelector(".date") as HTMLElement).innerText = getDate(journal.created);
+    (entry.querySelector(".time") as HTMLElement).innerText = getTime(journal.created);
+    entry.addEventListener("click", event => openJournal((event.target as HTMLElement).attributes.getNamedItem("data-entryid").value));
     entry.dataset.entryid = journal.id;
-
+    
     journalArea.appendChild(entry);
 }
 
-function getDate(timestamp) {
+function getDate(timestamp: number) {
     let date = new Date(timestamp);
     return (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
 }
-function getTime(timestamp) {
+function getTime(timestamp: number) {
     let date = new Date(timestamp);
     return date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0");
 }
 
-function openJournal(entryID) {
+function openJournal(entryID: string) {
     window.location.href = window.location.origin + "/journal.html" + "#entryid=" + entryID;
 }

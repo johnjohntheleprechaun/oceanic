@@ -1,7 +1,7 @@
 const DB_VERSION = 1;
 let db: IDBDatabase;
 
-interface Journal {
+export interface Journal {
     id: string,
     created: number,
     title: string,
@@ -33,7 +33,7 @@ export async function dbInit() {
     });
 }
 
-export async function createJournal(title: string) {
+export async function createJournal(title: string): Promise<string> {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
@@ -152,14 +152,13 @@ async function openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCu
     });
 }
 
-async function getObject(id: string, objectStore: IDBObjectStore | IDBIndex): Promise<any> {
+async function getObject(id: string, objectStore: IDBObjectStore | IDBIndex): Promise<Journal> {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
         const addRequest = objectStore.get(id);
 
         // add event listeners
         addRequest.onsuccess = function() {
-            // resolve with the journals ID (as per documentation the result should be the key)
             resolve(addRequest.result);
         };
         addRequest.onerror = function() {
@@ -168,7 +167,7 @@ async function getObject(id: string, objectStore: IDBObjectStore | IDBIndex): Pr
     });
 }
 
-async function putObject(newData: any, objectStore: IDBObjectStore) {
+async function putObject(newData: any, objectStore: IDBObjectStore): Promise<string> {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
         const addRequest = objectStore.put(newData);
@@ -176,7 +175,7 @@ async function putObject(newData: any, objectStore: IDBObjectStore) {
         // add event listeners
         addRequest.onsuccess = function() {
             // resolve with the journals ID (as per documentation the result should be the key)
-            resolve(addRequest.result);
+            resolve(addRequest.result.toString());
         };
         addRequest.onerror = function() {
             reject(addRequest.error);
@@ -184,7 +183,7 @@ async function putObject(newData: any, objectStore: IDBObjectStore) {
     });
 }
 
-async function addObject(object: any, objectStore: IDBObjectStore) {
+async function addObject(object: any, objectStore: IDBObjectStore): Promise<string> {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
         const addRequest = objectStore.add(object);
@@ -192,7 +191,7 @@ async function addObject(object: any, objectStore: IDBObjectStore) {
         // add event listeners
         addRequest.onsuccess = function() {
             // resolve with the journals ID (as per documentation the result should be the key)
-            resolve(addRequest.result);
+            resolve(addRequest.result.toString());
         };
         addRequest.onerror = function() {
             reject(addRequest.error);
