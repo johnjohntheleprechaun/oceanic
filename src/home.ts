@@ -28,8 +28,8 @@ async function loadJournals() {
 function displayJournal(journal: Journal) {
     let entry = entryTemplate.cloneNode(true) as HTMLElement;
     
-    (entry.querySelector(".date") as HTMLElement).innerText = getDate(journal.created);
-    (entry.querySelector(".time") as HTMLElement).innerText = getTime(journal.created);
+    entry.querySelector<HTMLElement>(".date").innerText = getDate(journal.created);
+    entry.querySelector<HTMLElement>(".time").innerText = getTime(journal.created);
     entry.addEventListener("click", event => openJournal((event.target as HTMLElement).attributes.getNamedItem("data-entryid").value));
     entry.dataset.entryid = journal.id;
     
