@@ -4,7 +4,7 @@ module.exports = {
     entry: {
         test: "./src/test.ts",
         home: "./src/home.ts",
-        journal: "./src/journal.js"
+        journal: "./src/journal.ts"
     },
     output: {
         filename: "[name].bundle.js",
