@@ -1,15 +1,15 @@
-import { appendToJournal, dbInit, getJournal } from "./utils/storage";
+import { Journal, appendToJournal, dbInit, getJournal } from "./utils/storage";
 
-let messageArea;
-let messageTemplate;
-let inputField;
-let entryID
+let messageArea: HTMLElement;
+let messageTemplate: DocumentFragment;
+let inputField: HTMLTextAreaElement;
+let entryID: string;
 const maxLines = 5;
 
 window.addEventListener("load", async () => {
     messageArea = document.getElementById("messages");
-    messageTemplate = document.getElementById("message-template").content;
-    inputField = document.getElementById("input-field");
+    messageTemplate = (document.getElementById("message-template") as HTMLTemplateElement).content;
+    inputField = document.getElementById("input-field") as HTMLTextAreaElement;
     inputField.addEventListener("input", resizeInputField);
     
     document.getElementById("submit").addEventListener("mousedown", e => {
@@ -42,7 +42,7 @@ function resizeInputField() {
     inputField.scrollTop = inputField.scrollHeight;
 }
 
-function setTitle(timestamp) {
+function setTitle(timestamp: number) {
     let date = new Date(timestamp);
     let title = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
     document.getElementById("journal-title").innerText = title;
@@ -51,7 +51,7 @@ function setTitle(timestamp) {
 function parseHash() {
     const hash = window.location.hash.substring(1);
     const pairs = hash.split('&');
-    const result = {};
+    const result: any = {};
     for (const pair of pairs) {
       const [key, val] = pair.split('=');
       result[key] = decodeURIComponent(val);
@@ -72,11 +72,11 @@ async function loadJournal() {
     displayJournal(journal);
 }
 
-function displayJournal(journal) {
+function displayJournal(journal: Journal) {
     displayMessageJournal(journal.content);
 }
 
-function displayMessageJournal(content) {
+function displayMessageJournal(content: string) {
     const regex = /{(\d+)} (.+)/gm;
     let m;
     while ((m = regex.exec(content)) !== null) {
@@ -97,14 +97,14 @@ async function addMessage() {
     }
 }
 
-function displayMessage(content, timestamp) {
-    let message = messageTemplate.cloneNode(true);
+function displayMessage(content: string, timestamp: number) {
+    let message = messageTemplate.cloneNode(true) as HTMLElement;
     let date = new Date(timestamp);
 
     // add text and timestamp to message
-    message.querySelector(".message").innerText = content;
-    message.querySelector(".time").innerText = date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0") + ":" + date.getSeconds().toString().padStart(2,"0");
-    message.querySelector(".date").innerText = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
+    message.querySelector<HTMLElement>(".message").innerText = content;
+    message.querySelector<HTMLElement>(".time").innerText = date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0") + ":" + date.getSeconds().toString().padStart(2,"0");
+    message.querySelector<HTMLElement>(".date").innerText = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
     
     // append and scroll to bottom
     messageArea.appendChild(message);
