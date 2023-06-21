@@ -4,13 +4,13 @@ let entryTemplate: HTMLElement;
 let journalArea: HTMLElement;
 
 window.addEventListener("load", async () => {
-    entryTemplate = (document.getElementById("journal-entry-template") as HTMLTemplateElement).content.querySelector(".journal-entry ");
+    entryTemplate = document.querySelector<HTMLTemplateElement>("#journal-entry-template").content.firstElementChild as HTMLElement;
     journalArea = document.getElementById("journals");
     document.getElementById("create-journal").addEventListener("click", newJournal);
 
     await dbInit();
     await loadJournals();
-})
+});
 
 function newJournal() {
     const title = getDate(Date.now());
