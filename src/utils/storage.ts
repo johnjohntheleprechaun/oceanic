@@ -1,6 +1,12 @@
 const DB_VERSION = 1;
-/** @type {IDBDatabase} */
-let db;
+let db: IDBDatabase;
+
+export interface Journal {
+    id: string,
+    created: number,
+    title: string,
+    content: string
+}
 
 export async function dbInit() {
     // requeset persistent storage
@@ -21,11 +27,13 @@ export async function dbInit() {
         dbRequest.onblocked = function() {
             reject(new Error("Database is blocked"));
         };
-        dbRequest.onupgradeneeded = upgradeDB;
+        dbRequest.onupgradeneeded = function(event: IDBVersionChangeEvent) {
+            upgradeDB(event, dbRequest.result);
+        };
     });
 }
 
-export async function createJournal(title) {
+export async function createJournal(title: string): Promise<string> {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
@@ -44,7 +52,7 @@ export async function createJournal(title) {
     return addRequest
 }
 
-export async function appendToJournal(id, text) {
+export async function appendToJournal(id: string, text: string) {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
@@ -59,7 +67,7 @@ export async function appendToJournal(id, text) {
     return putRequest;
 }
 
-export async function updateJournal(id, content) {
+export async function updateJournal(id: string, content: string) {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
@@ -81,7 +89,7 @@ export async function updateJournal(id, content) {
     return putRequest;
 }
 
-export async function getJournal(id) {
+export async function getJournal(id: string): Promise<Journal> {
     // create transaction
     const transaction = db.transaction("entries", "readonly");
     const objectStore = transaction.objectStore("entries");
@@ -118,7 +126,7 @@ export async function listJournals() {
     };
 }
 
-async function continueCursor(cursor) {
+async function continueCursor(cursor: IDBCursor) {
     return new Promise((resolve, reject) => {
         cursor.request.onsuccess = function() {
             resolve(cursor);
@@ -130,7 +138,7 @@ async function continueCursor(cursor) {
     });
 }
 
-async function openCursor(objectStore) {
+async function openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCursorWithValue> {
     return new Promise((resolve, reject) => {
         const request = objectStore.openCursor();
 
@@ -144,14 +152,13 @@ async function openCursor(objectStore) {
     });
 }
 
-async function getObject(id, objectStore) {
+async function getObject(id: string, objectStore: IDBObjectStore | IDBIndex): Promise<Journal> {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
         const addRequest = objectStore.get(id);
 
         // add event listeners
         addRequest.onsuccess = function() {
-            // resolve with the journals ID (as per documentation the result should be the key)
             resolve(addRequest.result);
         };
         addRequest.onerror = function() {
@@ -160,7 +167,7 @@ async function getObject(id, objectStore) {
     });
 }
 
-async function putObject(newData, objectStore) {
+async function putObject(newData: any, objectStore: IDBObjectStore): Promise<string> {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
         const addRequest = objectStore.put(newData);
@@ -168,7 +175,7 @@ async function putObject(newData, objectStore) {
         // add event listeners
         addRequest.onsuccess = function() {
             // resolve with the journals ID (as per documentation the result should be the key)
-            resolve(addRequest.result);
+            resolve(addRequest.result.toString());
         };
         addRequest.onerror = function() {
             reject(addRequest.error);
@@ -176,7 +183,7 @@ async function putObject(newData, objectStore) {
     });
 }
 
-async function addObject(object, objectStore) {
+async function addObject(object: any, objectStore: IDBObjectStore): Promise<string> {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
         const addRequest = objectStore.add(object);
@@ -184,7 +191,7 @@ async function addObject(object, objectStore) {
         // add event listeners
         addRequest.onsuccess = function() {
             // resolve with the journals ID (as per documentation the result should be the key)
-            resolve(addRequest.result);
+            resolve(addRequest.result.toString());
         };
         addRequest.onerror = function() {
             reject(addRequest.error);
@@ -192,9 +199,7 @@ async function addObject(object, objectStore) {
     });
 }
 
-async function upgradeDB(event) {
-    /** @type IDBDatabase */
-    const db = event.target.result;
+async function upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase) {
     const objectStore = db.createObjectStore("entries", { keyPath: "id" });
     objectStore.createIndex("created", "created", { unique: false });
     objectStore.createIndex("title", "title", { unique: false });

@@ -3,10 +3,12 @@
     "@aws-sdk/client-dynamodb": "^3.332.0",
     "@aws-sdk/client-s3": "^3.341.0",
     "@aws-sdk/credential-providers": "^3.332.0",
-    "jwt-decode": "^3.1.2",
-    "webpack": "^5.82.0"
+    "jwt-decode": "^3.1.2"
   },
   "devDependencies": {
+    "ts-loader": "^9.4.3",
+    "typescript": "^5.0.4",
+    "webpack": "^5.84.1",
     "webpack-cli": "^5.1.1"
   }
 }
