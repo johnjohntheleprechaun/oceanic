@@ -35,7 +35,8 @@ module.exports = {
             title: "Journal List",
             template: "./src/html/home.template.html",
             filename: "home.html",
-            chunks: ["home"]
+            chunks: ["home"],
+            favicon: "src/images/oceanic-quill.svg"
         })
     ],
     mode: "development"
