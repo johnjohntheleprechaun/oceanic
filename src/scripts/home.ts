@@ -1,4 +1,5 @@
 import { Journal, createJournal, dbInit, listJournals } from "./utils/storage";
+const css = require("css/home.css");
 
 let entryTemplate: HTMLElement;
 let journalArea: HTMLElement;
@@ -7,7 +8,7 @@ window.addEventListener("load", async () => {
     entryTemplate = document.querySelector<HTMLTemplateElement>("#journal-entry-template").content.firstElementChild as HTMLElement;
     journalArea = document.getElementById("journals");
     document.getElementById("create-journal").addEventListener("click", newJournal);
-
+    console.log("js is running!");
     await dbInit();
     await loadJournals();
 });
