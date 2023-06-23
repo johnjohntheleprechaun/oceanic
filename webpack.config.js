@@ -1,14 +1,15 @@
-var path = require('path');
+const path = require('path');
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
     entry: {
-        test: "./src/test.ts",
-        home: "./src/home.ts",
-        journal: "./src/journal.ts"
+        test: "./src/scripts/test.ts",
+        home: "./src/scripts/home.ts",
+        journal: "./src/scripts/journal.ts"
     },
     output: {
         filename: "[name].bundle.js",
-        path: path.resolve(__dirname, 'js')
+        path: path.resolve(__dirname, 'dist')
     },
     module: {
         rules: [
@@ -20,7 +21,18 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: [".js", ".ts"]
+        extensions: [".js", ".ts"],
+        alias: {
+            "css": path.resolve(__dirname, "src/css")
+        }
     },
+    plugins: [
+        new HtmlWebpackPlugin({
+            title: "Journal List",
+            template: "./src/html/home.template.html",
+            filename: "home.html",
+            chunks: ["home"]
+        })
+    ],
     mode: "development"
 }
