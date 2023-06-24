@@ -8,7 +8,7 @@ module.exports = {
         journal: "./src/scripts/journal.ts"
     },
     output: {
-        filename: "[name].bundle.js",
+        filename: "[name].[contenthash].js",
         path: path.resolve(__dirname, 'dist')
     },
     module: {
