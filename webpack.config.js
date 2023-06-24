@@ -21,13 +21,23 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: ["style-loader", "css-loader"]
+            },
+            {
+                test: /\.svg$/,
+                loader: "file-loader",
+                options: {
+                    name: "[name].[ext]",
+                    outputPath: "images",
+                    esModule: false
+                }
             }
         ]
     },
     resolve: {
         extensions: [".js", ".ts"],
         alias: {
-            "css": path.resolve(__dirname, "src/css")
+            "css": path.resolve(__dirname, "src/css"),
+            "images": path.resolve(__dirname, "src/images")
         }
     },
     plugins: [
