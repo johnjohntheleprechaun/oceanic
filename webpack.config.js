@@ -44,7 +44,7 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
             title: "Journal List",
-            template: "./src/html/home.template.html",
+            template: "src/html/home.template.html",
             filename: "home.html",
             chunks: ["home"],
             favicon: "src/images/oceanic-quill.svg"
