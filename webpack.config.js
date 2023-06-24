@@ -23,7 +23,12 @@ module.exports = {
                 use: ["style-loader", "css-loader"]
             },
             {
-                test: /\.svg$/,
+                test: /\.(svg|png)$/,
+                type: "asset/resource"
+            },
+            {
+                test: /\.webmanifest$/,
+                use: "webpack-webmanifest-loader",
                 type: "asset/resource"
             }
         ]
@@ -32,7 +37,8 @@ module.exports = {
         extensions: [".js", ".ts"],
         alias: {
             "css": path.resolve(__dirname, "src/css"),
-            "images": path.resolve(__dirname, "src/images")
+            "images": path.resolve(__dirname, "src/images"),
+            "@": path.resolve(__dirname, "src")
         }
     },
     plugins: [
