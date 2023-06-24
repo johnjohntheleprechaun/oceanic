@@ -5,9 +5,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, max-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Journal</title>
-    <link href="/css/scrollbar.css" rel="stylesheet" type="text/css" />
-    <link href="/css/journal.css" rel="stylesheet" type="text/css" />
-    <link href="/images/oceanic-icon1024.png" rel="icon" type="image/png" />
 </head>
 
 <body>
@@ -22,11 +19,10 @@
                 <textarea id="input-field" rows="1" placeholder="write a message here :)"></textarea>
             </div>
             <div id="submit">
-                <img src="/images/icon_send.svg">
+                <img src="<%= require('images/icon_send.svg') %>">
             </div>
         </div>
     </div>
-    <script src="/js/journal.bundle.js"></script>
 </body>
 
 <template id="message-template">

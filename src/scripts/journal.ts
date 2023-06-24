@@ -1,4 +1,5 @@
 import { Journal, appendToJournal, dbInit, getJournal } from "./utils/storage";
+const css = require("css/journal.css");
 
 let messageArea: HTMLElement;
 let messageTemplate: DocumentFragment;
