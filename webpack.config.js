@@ -24,12 +24,7 @@ module.exports = {
             },
             {
                 test: /\.svg$/,
-                loader: "file-loader",
-                options: {
-                    name: "[name].[ext]",
-                    outputPath: "images",
-                    esModule: false
-                }
+                type: "asset/resource"
             }
         ]
     },
