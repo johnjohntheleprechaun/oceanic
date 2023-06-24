@@ -41,7 +41,10 @@ module.exports = {
             template: "./src/html/home.template.html",
             filename: "home.html",
             chunks: ["home"],
-            favicon: "src/images/oceanic-quill.svg"
+            favicon: "src/images/oceanic-quill.svg",
+            meta: {
+                viewport: "width=device-width, initial-scale=1, max-scale=1, user-scalable=no"
+            }
         })
     ],
     mode: "development"
