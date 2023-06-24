@@ -54,6 +54,11 @@ module.exports = {
             filename: "journal.html",
             chunks: ["journal"],
             favicon: "src/images/oceanic-quill.svg"
+        }),
+        new HtmlWebpackPlugin({
+            templateContent: "",
+            filename: "test.html",
+            chunks: ["test"]
         })
     ],
     mode: "development"
