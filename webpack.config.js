@@ -20,7 +20,7 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                use: ["style-loader", "css-loader"]
+                use: ["extract-loader", "css-loader"]
             },
             {
                 test: /\.(svg|png)$/,
@@ -30,6 +30,10 @@ module.exports = {
                 test: /\.webmanifest$/,
                 use: "webpack-webmanifest-loader",
                 type: "asset/resource"
+            },
+            {
+                test: /\.html$/,
+                use: ["html-loader"]
             }
         ]
     },

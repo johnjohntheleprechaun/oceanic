@@ -1,5 +1,5 @@
 import { Journal, createJournal, dbInit, listJournals } from "./utils/storage";
-const css = require("css/home.css");
+//const css = require("css/home.css");
 
 let entryTemplate: HTMLElement;
 let journalArea: HTMLElement;
