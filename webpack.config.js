@@ -5,10 +5,17 @@ module.exports = {
     entry: {
         test: "./src/scripts/test.ts",
         home: "./src/scripts/home.ts",
-        journal: "./src/scripts/journal.ts"
+        journal: "./src/scripts/journal.ts",
+        pwa: "./src/scripts/pwa-loader.js",
+        worker: "./src/scripts/service-worker.ts"
     },
     output: {
-        filename: "[name].[contenthash].js",
+        filename: (chunkData) => {
+            if (chunkData.chunk.name === "worker") {
+                return "[name].js"
+            }
+            return "[name].[contenthash].js"
+        },
         path: path.resolve(__dirname, 'dist')
     },
     module: {
@@ -58,7 +65,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             templateContent: "",
             filename: "test.html",
-            chunks: ["test"]
+            chunks: ["test", "pwa"]
         })
     ],
     mode: "development"
