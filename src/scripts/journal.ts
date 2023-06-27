@@ -1,3 +1,4 @@
+import { markdownToHTML } from "./utils/markdown";
 import { Journal, appendToJournal, dbInit, getJournal } from "./utils/storage";
 //const css = require("css/journal.css");
 
@@ -103,7 +104,7 @@ function displayMessage(content: string, timestamp: number) {
     let date = new Date(timestamp);
 
     // add text and timestamp to message
-    message.querySelector<HTMLElement>(".message").innerText = content;
+    message.querySelector<HTMLElement>(".message").innerText = markdownToHTML(content);
     message.querySelector<HTMLElement>(".time").innerText = date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0") + ":" + date.getSeconds().toString().padStart(2,"0");
     message.querySelector<HTMLElement>(".date").innerText = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
     
