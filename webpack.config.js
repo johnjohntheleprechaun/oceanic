@@ -10,12 +10,7 @@ module.exports = {
         worker: "./src/scripts/service-worker.ts"
     },
     output: {
-        filename: (chunkData) => {
-            if (chunkData.chunk.name === "worker") {
-                return "[name].js"
-            }
-            return "[name].[contenthash].js"
-        },
+        filename: "[name].js",
         path: path.resolve(__dirname, 'dist')
     },
     module: {
@@ -31,12 +26,18 @@ module.exports = {
             },
             {
                 test: /\.(svg|png)$/,
-                type: "asset/resource"
+                type: "asset/resource",
+                generator: {
+                    filename: "[name][ext]"
+                }
             },
             {
                 test: /\.webmanifest$/,
                 use: "webpack-webmanifest-loader",
-                type: "asset/resource"
+                type: "asset/resource",
+                generator: {
+                    filename: "[name][ext]"
+                }
             }
         ]
     },
