@@ -35,5 +35,14 @@ async function loadCache(version: number): Promise<Cache> {
 }
 
 function fetchEvent(event: FetchEvent) {
-    console.log(event);
-}
+    event.respondWith(
+      caches.match(event.request).then(function(match) {
+        if (match) {
+          console.log("Responded from cache");
+          return match;
+        }
+        return fetch(event.request);
+      })
+    );
+  }
+  
