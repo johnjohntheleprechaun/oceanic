@@ -54,13 +54,13 @@ module.exports = {
             title: "Journal List",
             template: "src/html/home.template.html",
             filename: "home.html",
-            chunks: ["home"],
+            chunks: ["home", "pwa"],
             favicon: "src/images/oceanic-quill.svg"
         }),
         new HtmlWebpackPlugin({
             template: "src/html/journal.template.html",
             filename: "journal.html",
-            chunks: ["journal"],
+            chunks: ["journal", "pwa"],
             favicon: "src/images/oceanic-quill.svg"
         }),
         new HtmlWebpackPlugin({

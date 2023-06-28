@@ -2,9 +2,9 @@
 // otherwise cache versions should match application versions.
 const CACHE_VERSION = 0;
 const CACHE_FILES = [
-    "home.html", "home.js", "home.css", "icon_add.svg", // journal list
-    "journal.html", "journal.js", "journal.css", "icon_send.svg", // journal editor
-    "oceanic-quill.svg", "pwa.js" // other stuff
+    "/home.html", "/home.js", "/icon_add.svg", // journal list
+    "/journal.html", "/journal.js", "/icon_send.svg", // journal editor
+    "/oceanic-quill.svg" // other stuff
 ];
 let cache: Cache;
 
@@ -24,7 +24,14 @@ async function loadCache(version: number): Promise<Cache> {
         }
     }
 
-    return caches.open(cacheName);
+    // cache all required files
+    let cache = await caches.open(cacheName);
+    console.log(cache);
+    for (let file of CACHE_FILES) {
+        await cache.add(file);
+    }
+
+    return cache;
 }
 
 function fetchEvent(event: FetchEvent) {
