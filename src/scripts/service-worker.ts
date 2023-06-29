@@ -24,11 +24,12 @@ async function loadCache(version: number): Promise<Cache> {
         }
     }
 
-    // cache all required files
+    // cache all required files if there's a new version (or if test)
     let cache = await caches.open(cacheName);
-    console.log(cache);
-    for (let file of CACHE_FILES) {
-        await cache.add(file);
+    if (cacheList.length === 0 || version === 0) {
+        for (let file of CACHE_FILES) {
+            await cache.add(file);
+        }
     }
 
     return cache;
