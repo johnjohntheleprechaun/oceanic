@@ -6,7 +6,7 @@ window.addEventListener("load", () => {
 })
 
 function registerWorker() {
-    navigator.serviceWorker.register("/service-worker.js").then(registration => {
+    navigator.serviceWorker.register("/worker.js").then(registration => {
         console.log("service worker registered with scope: ", registration.scope);
     });
 }

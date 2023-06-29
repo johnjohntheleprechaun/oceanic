@@ -5,10 +5,12 @@ module.exports = {
     entry: {
         test: "./src/scripts/test.ts",
         home: "./src/scripts/home.ts",
-        journal: "./src/scripts/journal.ts"
+        journal: "./src/scripts/journal.ts",
+        pwa: "./src/scripts/pwa-loader.js",
+        worker: "./src/scripts/service-worker.ts"
     },
     output: {
-        filename: "[name].[contenthash].js",
+        filename: "[name].js",
         path: path.resolve(__dirname, 'dist')
     },
     module: {
@@ -20,16 +22,25 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                use: ["extract-loader", "css-loader"]
+                use: ["extract-loader", "css-loader"],
+                generator: {
+                    filename: "[name][ext]"
+                }
             },
             {
                 test: /\.(svg|png)$/,
-                type: "asset/resource"
+                type: "asset/resource",
+                generator: {
+                    filename: "[name][ext]"
+                }
             },
             {
                 test: /\.webmanifest$/,
                 use: "webpack-webmanifest-loader",
-                type: "asset/resource"
+                type: "asset/resource",
+                generator: {
+                    filename: "[name][ext]"
+                }
             },
             {
                 test: /\.html$/,
@@ -50,19 +61,19 @@ module.exports = {
             title: "Journal List",
             template: "src/html/home.template.html",
             filename: "home.html",
-            chunks: ["home"],
+            chunks: ["home", "pwa"],
             favicon: "src/images/oceanic-quill.svg"
         }),
         new HtmlWebpackPlugin({
             template: "src/html/journal.template.html",
             filename: "journal.html",
-            chunks: ["journal"],
+            chunks: ["journal", "pwa"],
             favicon: "src/images/oceanic-quill.svg"
         }),
         new HtmlWebpackPlugin({
             templateContent: "",
             filename: "test.html",
-            chunks: ["test"]
+            chunks: ["test", "pwa"]
         })
     ],
     mode: "development"
