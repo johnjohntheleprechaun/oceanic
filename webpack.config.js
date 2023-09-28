@@ -79,8 +79,8 @@ module.exports = {
             favicon: "src/images/oceanic-quill.svg"
         }),
         new HtmlWebpackPlugin({
-            template: "src/html/journal.template.html",
-            filename: "journal.html",
+            template: "src/html/journals/messages.template.html",
+            filename: "journals/messages.html",
             chunks: ["journal", "pwa"],
             favicon: "src/images/oceanic-quill.svg"
         }),

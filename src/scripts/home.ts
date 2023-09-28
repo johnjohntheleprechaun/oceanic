@@ -47,5 +47,5 @@ function getTime(timestamp: number) {
 }
 
 function openJournal(entryID: string) {
-    window.location.href = window.location.origin + "/journal.html" + "#entryid=" + entryID;
+    window.location.href = window.location.origin + "/journals/messages.html" + "#entryid=" + entryID;
 }
