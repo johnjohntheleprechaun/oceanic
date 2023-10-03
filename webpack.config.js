@@ -22,7 +22,7 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                use: ["extract-loader", "css-loader"],
+                use: ["sass-loader"],
                 generator: {
                     filename: "[name][ext]"
                 }

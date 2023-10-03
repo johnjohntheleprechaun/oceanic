@@ -8,9 +8,10 @@
   "devDependencies": {
     "@types/serviceworker": "^0.0.68",
     "css-loader": "^6.8.1",
-    "extract-loader": "^5.1.0",
     "html-loader": "^4.2.0",
     "html-webpack-plugin": "^5.5.3",
+    "sass": "^1.68.0",
+    "sass-loader": "^13.3.2",
     "ts-loader": "^9.4.3",
     "typescript": "^5.0.4",
     "webpack": "^5.84.1",
