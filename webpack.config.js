@@ -1,5 +1,19 @@
 const path = require('path');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const WebpackAssetsManifest = require("webpack-assets-manifest");
+const fs = require("fs");
+
+const outputPath = "dist";
+
+class BuildHashLogger {
+    apply(compiler) {
+        compiler.hooks.done.tap("Hash Logger", (stats) => {
+            const data = stats.compilation.fullHash;
+            console.log(data);
+            fs.writeFileSync(outputPath + "/build-hash", data);
+        })
+    }
+}
 
 module.exports = {
     entry: {
@@ -11,7 +25,7 @@ module.exports = {
     },
     output: {
         filename: "[name].js",
-        path: path.resolve(__dirname, 'dist')
+        path: path.resolve(__dirname, outputPath)
     },
     module: {
         rules: [
@@ -74,7 +88,11 @@ module.exports = {
             templateContent: "",
             filename: "test.html",
             chunks: ["test", "pwa"]
-        })
+        }),
+        new WebpackAssetsManifest({
+            output: "manifest.json"
+        }),
+        new BuildHashLogger()
     ],
     mode: "development"
 }
