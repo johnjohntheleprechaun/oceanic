@@ -1,7 +1,7 @@
 async function test() {
-    console.log("hello world");
-    fetch(window.location.origin + "/test")
-    .then(out => console.log(out));
+    const manifest = await fetch("manifest.json").then(resp=>resp.json()) as Object;
+    const files = Object.entries(manifest).map(entry=>entry[1]);
+    console.log(files);
 }
 
 test();

@@ -1,52 +1,55 @@
-// cache version 0 will be used for testing only
-// otherwise cache versions should match application versions.
-const CACHE_VERSION = 1;
-const CACHE_FILES = [
-    "/home.html", "/home.js", "home.css", "/icon_add.svg", // journal list
-    "/journal.html", "/journal.js", "journal.css", "/icon_send.svg", // journal editor
-    "/oceanic-quill.svg" // other stuff
-];
 let cache: Cache;
+let installedVersion: string;
+const excluded = ["worker.js"];
 
-addEventListener("fetch", fetchEvent);
 addEventListener("activate", activateWorker);
+addEventListener("fetch", fetchHandler);
+
 async function activateWorker(event: ExtendableEvent) {
-    console.log("activating...");
-    cache = await loadCache(CACHE_VERSION);
-    console.log("activated");
+    event.waitUntil(cacheInit());
 }
 
-async function loadCache(version: number): Promise<Cache> {
-    const cacheName = `oceanicV${version}`;
-
-    // cache all required files if there's a new version (or if test)
-    if (!(cacheName in caches.keys()) || version === 0) {
-        let cache = await caches.open(cacheName);
-        for (let file of CACHE_FILES) {
-            await cache.add(file);
-        }
-    }
-
-    // delete all caches that aren't of the current version
-    const cacheList = await caches.keys();
-    for (let cache of cacheList) {
-        if (cache !== cacheName) {
-            caches.delete(cache);
-        }
-    }
-
-    return cache;
+async function cacheInit() {
+    cache = await caches.open("oceanic");
+    await updateCache();
+    setInterval(updateCache, 5000);
 }
 
-function fetchEvent(event: FetchEvent) {
+async function updateCache() {
+    const currentVersion = await fetch("/build-hash", {method: "GET", cache: "no-store"}).then(resp => resp.text());
+    console.log(currentVersion, installedVersion);
+    if (currentVersion !== installedVersion) {
+        // purge the cache (this is fuckin ugly but I'll fix it later)
+        console.log(await caches.delete("oceanic"));
+        cache = await caches.open("oceanic");
+        console.log(await cache.keys());
+
+        // fetch and parse manifest
+        const manifest = await fetch("manifest.json", {cache: "no-store"}).then(resp=>resp.json()) as Object;
+        const files = Object.entries(manifest)
+        .map(entry => entry[1])
+        .filter((filename) => !(excluded.includes(filename)));
+        
+        // cache all files from the manifest
+        files.forEach(filepath => {
+            cache.add(new Request(filepath, {cache: "no-store"}));
+        })
+        // cache the build hash
+        installedVersion = currentVersion;
+    }
+}
+
+async function fetchHandler(event: FetchEvent) {
     event.respondWith(
-      caches.match(event.request).then(function(match) {
-        if (match) {
-          console.log("Responded from cache");
-          return match;
-        }
-        return fetch(event.request);
-      })
-    );
-  }
-  
+        cache.match(event.request)
+        .then(match => {
+            if (match) {
+                console.log(match);
+                return match;
+            }
+            else {
+                return fetch(event.request, {method: event.request.method, cache: "no-store"});
+            }
+        })
+    )
+}

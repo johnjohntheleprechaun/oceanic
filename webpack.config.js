@@ -24,7 +24,7 @@ module.exports = {
         worker: "./src/scripts/service-worker.ts"
     },
     output: {
-        filename: "[name].js",
+        filename: "[name]-[hash].js",
         path: path.resolve(__dirname, outputPath)
     },
     module: {
@@ -38,14 +38,14 @@ module.exports = {
                 test: /\.css$/,
                 use: ["sass-loader"],
                 generator: {
-                    filename: "[name][ext]"
+                    filename: "[name]-[hash][ext]"
                 }
             },
             {
                 test: /\.(svg|png)$/,
                 type: "asset/resource",
                 generator: {
-                    filename: "[name][ext]"
+                    filename: "[name]-[hash][ext]"
                 }
             },
             {
@@ -53,7 +53,7 @@ module.exports = {
                 use: "webpack-webmanifest-loader",
                 type: "asset/resource",
                 generator: {
-                    filename: "[name][ext]"
+                    filename: "[name]-[hash][ext]"
                 }
             },
             {
