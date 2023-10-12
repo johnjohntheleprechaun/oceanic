@@ -25,7 +25,7 @@ async function updateCache() {
         console.log(await cache.keys());
 
         // fetch and parse manifest
-        const manifest = await fetch("manifest.json", {cache: "no-store"}).then(resp=>resp.json()) as Object;
+        const manifest = await fetch("/manifest.json", {cache: "no-store"}).then(resp=>resp.json()) as Object;
         const files = Object.entries(manifest)
         .map(entry => entry[1])
         .filter((filename) => !(excluded.includes(filename)));
