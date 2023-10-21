@@ -27,6 +27,9 @@ module.exports = {
         filename: "[name]-[hash].js",
         path: path.resolve(__dirname, outputPath)
     },
+    optimization: {
+        moduleIds: "deterministic"
+    },
     module: {
         rules: [
             {

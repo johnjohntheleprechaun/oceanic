@@ -1,22 +1,28 @@
 let cache: Cache;
 let installedVersion: string;
-const excluded = ["worker.js"];
 
 addEventListener("activate", activateWorker);
 addEventListener("fetch", fetchHandler);
 
 async function activateWorker(event: ExtendableEvent) {
-    event.waitUntil(cacheInit());
+    event.waitUntil(cacheInit().then(()=>clients.claim()));
 }
 
 async function cacheInit() {
     cache = await caches.open("oceanic");
     await updateCache();
-    setInterval(updateCache, 5000);
+    setInterval(updateCache, 600000);
 }
 
 async function updateCache() {
-    const currentVersion = await fetch("/build-hash", {method: "GET", cache: "no-store"}).then(resp => resp.text());
+    const buildHash = await fetch("/build-hash", {method: "GET", cache: "no-store"});
+    console.log(buildHash);
+    console.log(buildHash.body);
+    if (buildHash.status !== 200) {
+        // failed to fetch buildHash
+        return;
+    }
+    const currentVersion = await buildHash.text();
     console.log(currentVersion, installedVersion);
     if (currentVersion !== installedVersion) {
         // purge the cache (this is fuckin ugly but I'll fix it later)
@@ -26,9 +32,8 @@ async function updateCache() {
 
         // fetch and parse manifest
         const manifest = await fetch("/manifest.json", {cache: "no-store"}).then(resp=>resp.json()) as Object;
-        const files = Object.entries(manifest)
-        .map(entry => entry[1])
-        .filter((filename) => !(excluded.includes(filename)));
+        console.log(manifest);
+        const files = Object.entries(manifest).map(entry => entry[1]);
         
         // cache all files from the manifest
         files.forEach(filepath => {
