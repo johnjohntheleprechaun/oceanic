@@ -19,7 +19,7 @@ module.exports = {
     entry: {
         test: "./src/scripts/test.ts",
         home: "./src/scripts/home.ts",
-        journal: "./src/scripts/journal.ts",
+        messages: "./src/scripts/journals/messages.ts",
         pwa: "./src/scripts/pwa-loader.js",
         worker: "./src/scripts/service-worker.ts"
     },
@@ -84,7 +84,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: "src/html/journals/messages.template.html",
             filename: "journals/messages.html",
-            chunks: ["journal", "pwa"],
+            chunks: ["messages", "pwa"],
             favicon: "src/images/oceanic-quill.svg"
         }),
         new HtmlWebpackPlugin({
