@@ -15,10 +15,9 @@
         </div>
         <div id="create-journal">
             <img id="create-icon" src="<%= require('images/icon_add.svg') %>">
-            <img id="create-icon" src="<%= require('images/icon_add.svg') %>">
-            <img id="create-icon" src="<%= require('images/icon_add.svg') %>">
-            <img id="create-icon" src="<%= require('images/icon_add.svg') %>">
-            <img id="create-icon" src="<%= require('images/icon_add.svg') %>">
+            <% htmlWebpackPlugin.options.journals.forEach(journal => { %>
+            <img id="<%= journal+'Journal' %>" class="journal-type" src="<%= require(`@/journals/${journal}/icon.svg`) %>">
+            <% }); %>
         </div>
     </div>
 </body>

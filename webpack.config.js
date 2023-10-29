@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WebpackAssetsManifest = require("webpack-assets-manifest");
 const fs = require("fs");
@@ -17,9 +18,10 @@ class BuildHashLogger {
 
 const scripts = {};
 const htmlPlugins = [];
+let journals = []
 function mapPages() {
     const pages = fs.readdirSync("src/pages").filter((folder) => folder !== "journals" && folder !== "callback");
-    const journals = fs.readdirSync("./src/journals");
+    journals = fs.readdirSync("./src/journals");
 
     // load scripts
     for (let page of pages) {
@@ -37,6 +39,11 @@ function mapPages() {
             chunks: [page],
             favicon: "./src/images/oceanic-quill.svg"
         };
+
+        if (page === "home") {
+            options.journals = journals;
+        }
+
         htmlPlugins.push(new HtmlWebpackPlugin(options));
     }
     for (let journal of journals) {
@@ -100,6 +107,10 @@ module.exports = {
             "@": path.resolve(__dirname, "src")
         }
     },
-    plugins: htmlPlugins,
+    plugins: htmlPlugins.concat([
+        new webpack.DefinePlugin({
+            JOURNALS: journals.map(journal => JSON.stringify(journal))
+        })
+    ]),
     mode: "development"
 }

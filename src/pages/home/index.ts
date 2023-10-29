@@ -1,11 +1,14 @@
 import { Journal, createJournal, dbInit, listJournals } from "../../scripts/utils/storage";
-//const css = require("css/home.css");
 
+declare const JOURNALS: string[];
+const journalTypes = JOURNALS;
+
+let journalIcons: HTMLElement[];
 let entryTemplate: HTMLElement;
 let journalArea: HTMLElement;
 let createButton: HTMLElement;
 let createIcon: HTMLElement;
-const typeSelectionSpeed = 100;
+let typeSelectionSpeed: number;
 let maxSelectionHeight: number;
 
 window.addEventListener("load", async () => {
@@ -13,14 +16,24 @@ window.addEventListener("load", async () => {
     journalArea = document.getElementById("journals");
     createButton = document.getElementById("create-journal");
     createIcon = document.getElementById("create-icon");
+    journalIcons = [];
+    for (let type of journalTypes) {
+        document.getElementById(type + "Journal")
+        .addEventListener("click", (event: MouseEvent) => {
+            newJournal(type);
+        })
+    }
     
     let journalIconSize = createIcon.clientHeight;
-    maxSelectionHeight = journalIconSize * (3+1);
+    maxSelectionHeight = journalIconSize * createButton.childElementCount;
+    typeSelectionSpeed = 100;
 
     createButton.addEventListener("mouseenter", openJournalSelection);
     createButton.addEventListener("mouseleave", closeJournalSelection);
     await dbInit();
     await loadJournals();
+    
+    console.log(journalIcons);
 });
 
 function openJournalSelection() {
@@ -67,7 +80,9 @@ function closeJournalSelection() {
     );
 }
 
-function newJournal() {
+function newJournal(type: string) {
+    console.log(type);
+    return;
     const title = getDate(Date.now());
     createJournal(title)
     .then(id => openJournal(id));
