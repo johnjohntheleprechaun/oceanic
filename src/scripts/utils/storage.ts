@@ -1,10 +1,11 @@
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 let db: IDBDatabase;
 
 export interface Journal {
     id: string,
     created: number,
     title: string,
+    type: string,
     content: string
 }
 
@@ -28,12 +29,12 @@ export async function dbInit() {
             reject(new Error("Database is blocked"));
         };
         dbRequest.onupgradeneeded = function(event: IDBVersionChangeEvent) {
-            upgradeDB(event, dbRequest.result);
+            upgradeDB(event, dbRequest.result, dbRequest.transaction);
         };
     });
 }
 
-export async function createJournal(title: string): Promise<string> {
+export async function createJournal(title: string, type: string): Promise<string> {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
@@ -43,6 +44,7 @@ export async function createJournal(title: string): Promise<string> {
         id: crypto.randomUUID(),
         created: Date.now(),
         title: title,
+        type: type,
         content: ""
     }
     const addRequest = await addObject(journal, objectStore);
@@ -74,15 +76,8 @@ export async function updateJournal(id: string, content: string) {
 
     // make request
     const currentObject = await getObject(id, objectStore);
-    const putRequest = await putObject(
-        {
-            id: currentObject.id,
-            created: currentObject.created,
-            title: currentObject.title,
-            content: content
-        },
-        objectStore
-    );
+    currentObject.content = content
+    const putRequest = await putObject(currentObject, objectStore);
 
     // commit and return
     transaction.commit();
@@ -98,9 +93,11 @@ export async function getJournal(id: string): Promise<Journal> {
     return await getObject(id, objectStore);
 }
 
-export async function listJournals() {
+export async function listJournals(transaction?: IDBTransaction) {
     // create transaction
-    const transaction = db.transaction("entries", "readonly");
+    if (!transaction) {
+        transaction = db.transaction("entries", "readonly");
+    }
     const objectStore = transaction.objectStore("entries");
     const index = objectStore.index("created");
 
@@ -199,8 +196,20 @@ async function addObject(object: any, objectStore: IDBObjectStore): Promise<stri
     });
 }
 
-async function upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase) {
-    const objectStore = db.createObjectStore("entries", { keyPath: "id" });
-    objectStore.createIndex("created", "created", { unique: false });
-    objectStore.createIndex("title", "title", { unique: false });
+async function upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) {
+    console.log(event.oldVersion);
+    if (event.oldVersion === 0) { // no database previously
+        const objectStore = db.createObjectStore("entries", { keyPath: "id" });
+        objectStore.createIndex("created", "created", { unique: false });
+        objectStore.createIndex("title", "title", { unique: false });
+    }
+    else if (event.oldVersion === 1) {
+        const objectStore = transaction.objectStore("entries");
+        objectStore.createIndex("type", "type", { unique: false });
+        const journals = await listJournals(transaction);
+        for await (const journal of journals) {
+            journal.type = "messages";
+            await putObject(journal, objectStore);
+        }
+    }
 }

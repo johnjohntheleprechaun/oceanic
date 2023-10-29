@@ -82,11 +82,10 @@ function closeJournalSelection() {
 
 function newJournal(type: string) {
     console.log(type);
-    return;
     const title = getDate(Date.now());
-    createJournal(title)
+    createJournal(title, type)
     .then(id => openJournal(id));
-}   
+}
 
 async function loadJournals() {
     const journals = await listJournals();
