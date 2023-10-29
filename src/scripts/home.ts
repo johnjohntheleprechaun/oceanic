@@ -3,21 +3,75 @@ import { Journal, createJournal, dbInit, listJournals } from "./utils/storage";
 
 let entryTemplate: HTMLElement;
 let journalArea: HTMLElement;
+let createButton: HTMLElement;
+let createIcon: HTMLElement;
+const typeSelectionSpeed = 100;
+let maxSelectionHeight: number;
 
 window.addEventListener("load", async () => {
     entryTemplate = document.querySelector<HTMLTemplateElement>("#journal-entry-template").content.firstElementChild as HTMLElement;
     journalArea = document.getElementById("journals");
-    document.getElementById("create-journal").addEventListener("click", newJournal);
-    console.log("js is running!");
+    createButton = document.getElementById("create-journal");
+    createIcon = document.getElementById("create-icon");
+    
+    let journalIconSize = createIcon.clientHeight;
+    maxSelectionHeight = journalIconSize * (3+1);
+
+    createButton.addEventListener("mouseenter", openJournalSelection);
+    createButton.addEventListener("mouseleave", closeJournalSelection);
     await dbInit();
     await loadJournals();
 });
+
+function openJournalSelection() {
+    createButton.animate(
+        {
+            height: ["75px", `${maxSelectionHeight}px`]
+        },
+        {
+            duration: typeSelectionSpeed,
+            fill: "forwards"
+        }
+    );
+
+    createIcon.animate(
+        {
+            transform: ["rotate(0deg)", "rotate(180deg)"]
+        },
+        {
+            duration: typeSelectionSpeed,
+            fill: "forwards"
+        }
+    );
+}
+
+function closeJournalSelection() {
+    createButton.animate(
+        {
+            height: [`${maxSelectionHeight}px`, "75px"]
+        },
+        {
+            duration: typeSelectionSpeed,
+            fill: "forwards"
+        }
+    );
+
+    createIcon.animate(
+        {
+            transform: ["rotate(180deg)", "rotate(0deg)"]
+        },
+        {
+            duration: typeSelectionSpeed,
+            fill: "forwards"
+        }
+    );
+}
 
 function newJournal() {
     const title = getDate(Date.now());
     createJournal(title)
     .then(id => openJournal(id));
-}
+}   
 
 async function loadJournals() {
     const journals = await listJournals();
