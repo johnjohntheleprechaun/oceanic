@@ -19,32 +19,32 @@ const scripts = {};
 const htmlPlugins = [];
 function mapPages() {
     const pages = fs.readdirSync("src/pages").filter((folder) => folder !== "journals" && folder !== "callback");
-    const journals = fs.readdirSync("./src/pages/journals");
+    const journals = fs.readdirSync("./src/journals");
 
     // load scripts
     for (let page of pages) {
         scripts[page] = `./src/pages/${page}/index.ts`;
     }
     for (let journal of journals) {
-        scripts[journal+"Journal"] = `./src/pages/journals/${journal}/index.ts`;
+        scripts[journal+"Journal"] = `./src/journals/${journal}/index.ts`;
     }
 
     // load HTML
     for (let page of pages) {
-        const plugin = new HtmlWebpackPlugin({
+        const options = {
             template: `./src/pages/${page}/index.template.html`,
             filename: `${page}.html`,
             chunks: [page],
-            favicon: "src/images/oceanic-quill.svg"
-        });
-        htmlPlugins.push(plugin);
+            favicon: "./src/images/oceanic-quill.svg"
+        };
+        htmlPlugins.push(new HtmlWebpackPlugin(options));
     }
     for (let journal of journals) {
         const plugin = new HtmlWebpackPlugin({
-            template: `./src/pages/journals/${journal}/index.template.html`,
+            template: `./src/journals/${journal}/index.template.html`,
             filename: `journals/${journal}.html`,
             chunks: [journal+"Journal"],
-            favicon: "src/images/oceanic-quill.svg"
+            favicon: "./src/images/oceanic-quill.svg"
         });
         htmlPlugins.push(plugin);
     }
@@ -55,7 +55,7 @@ mapPages();
 module.exports = {
     entry: scripts,
     output: {
-        filename: "[name]-[hash].js",
+        filename: "[name]-[contenthash].js",
         path: path.resolve(__dirname, outputPath)
     },
     optimization: {
@@ -70,16 +70,16 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                use: ["sass-loader"],
+                type: "asset/resource",
                 generator: {
-                    filename: "[name]-[hash][ext]"
+                    filename: "[name]-[contenthash][ext]"
                 }
             },
             {
                 test: /\.(svg|png)$/,
                 type: "asset/resource",
                 generator: {
-                    filename: "[name]-[hash][ext]"
+                    filename: "[name]-[contenthash][ext]"
                 }
             },
             {
@@ -87,12 +87,8 @@ module.exports = {
                 use: "webpack-webmanifest-loader",
                 type: "asset/resource",
                 generator: {
-                    filename: "[name]-[hash][ext]"
+                    filename: "[name]-[contenthash][ext]"
                 }
-            },
-            {
-                test: /\.html$/,
-                use: ["html-loader"]
             }
         ]
     },
