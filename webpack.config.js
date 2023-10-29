@@ -15,14 +15,45 @@ class BuildHashLogger {
     }
 }
 
+const scripts = {};
+const htmlPlugins = [];
+function mapPages() {
+    const pages = fs.readdirSync("src/pages").filter((folder) => folder !== "journals" && folder !== "callback");
+    const journals = fs.readdirSync("./src/pages/journals");
+
+    // load scripts
+    for (let page of pages) {
+        scripts[page] = `./src/pages/${page}/index.ts`;
+    }
+    for (let journal of journals) {
+        scripts[journal+"Journal"] = `./src/pages/journals/${journal}/index.ts`;
+    }
+
+    // load HTML
+    for (let page of pages) {
+        const plugin = new HtmlWebpackPlugin({
+            template: `./src/pages/${page}/index.template.html`,
+            filename: `${page}.html`,
+            chunks: [page],
+            favicon: "src/images/oceanic-quill.svg"
+        });
+        htmlPlugins.push(plugin);
+    }
+    for (let journal of journals) {
+        const plugin = new HtmlWebpackPlugin({
+            template: `./src/pages/journals/${journal}/index.template.html`,
+            filename: `journals/${journal}.html`,
+            chunks: [journal+"Journal"],
+            favicon: "src/images/oceanic-quill.svg"
+        });
+        htmlPlugins.push(plugin);
+    }
+}
+
+mapPages();
+
 module.exports = {
-    entry: {
-        test: "./src/scripts/test.ts",
-        home: "./src/scripts/home.ts",
-        messages: "./src/scripts/journals/messages.ts",
-        pwa: "./src/scripts/pwa-loader.js",
-        worker: "./src/scripts/service-worker.ts"
-    },
+    entry: scripts,
     output: {
         filename: "[name]-[hash].js",
         path: path.resolve(__dirname, outputPath)
@@ -73,29 +104,6 @@ module.exports = {
             "@": path.resolve(__dirname, "src")
         }
     },
-    plugins: [
-        new HtmlWebpackPlugin({
-            title: "Journal List",
-            template: "src/html/home.template.html",
-            filename: "home.html",
-            chunks: ["home", "pwa"],
-            favicon: "src/images/oceanic-quill.svg"
-        }),
-        new HtmlWebpackPlugin({
-            template: "src/html/journals/messages.template.html",
-            filename: "journals/messages.html",
-            chunks: ["messages", "pwa"],
-            favicon: "src/images/oceanic-quill.svg"
-        }),
-        new HtmlWebpackPlugin({
-            templateContent: "",
-            filename: "test.html",
-            chunks: ["test", "pwa"]
-        }),
-        new WebpackAssetsManifest({
-            output: "manifest.json"
-        }),
-        new BuildHashLogger()
-    ],
+    plugins: htmlPlugins,
     mode: "development"
 }

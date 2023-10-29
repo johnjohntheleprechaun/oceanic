@@ -1,4 +1,4 @@
-import { Journal, appendToJournal, dbInit, getJournal } from "../utils/storage";
+import { Journal, appendToJournal, dbInit, getJournal } from "../../scripts/utils/storage";
 //const css = require("css/journal.css");
 
 let messageArea: HTMLElement;

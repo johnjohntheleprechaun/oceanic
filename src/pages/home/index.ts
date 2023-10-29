@@ -1,4 +1,4 @@
-import { Journal, createJournal, dbInit, listJournals } from "./utils/storage";
+import { Journal, createJournal, dbInit, listJournals } from "../../scripts/utils/storage";
 //const css = require("css/home.css");
 
 let entryTemplate: HTMLElement;
