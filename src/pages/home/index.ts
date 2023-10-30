@@ -81,10 +81,9 @@ function closeJournalSelection() {
 }
 
 function newJournal(type: string) {
-    console.log(type);
     const title = getDate(Date.now());
     createJournal(title, type)
-    .then(id => openJournal(id));
+    .then(id => openJournal(id, type));
 }
 
 async function loadJournals() {
@@ -99,8 +98,15 @@ function displayJournal(journal: Journal) {
     
     entry.querySelector<HTMLElement>(".date").innerText = getDate(journal.created);
     entry.querySelector<HTMLElement>(".time").innerText = getTime(journal.created);
-    entry.addEventListener("click", event => openJournal((event.target as HTMLElement).attributes.getNamedItem("data-entryid").value));
+    
+    entry.addEventListener("click", event => {
+        let element  = event.target as HTMLElement;
+        let entryID = element.attributes.getNamedItem("data-entryid").value;
+        let type = element.attributes.getNamedItem("data-type").value;
+        openJournal(entryID, type);
+    });
     entry.dataset.entryid = journal.id;
+    entry.dataset.type = journal.type;
     
     journalArea.appendChild(entry);
 }
@@ -114,6 +120,6 @@ function getTime(timestamp: number) {
     return date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0");
 }
 
-function openJournal(entryID: string) {
-    window.location.href = window.location.origin + "/journals/messages.html" + "#entryid=" + entryID;
+function openJournal(entryID: string, type: string) {
+    window.location.href = window.location.origin + `/journals/${type}.html` + "#entryid=" + entryID;
 }
