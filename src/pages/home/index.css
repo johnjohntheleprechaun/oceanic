@@ -36,6 +36,13 @@ html, body {
     border-radius: 10px;
 }
 
+.journal-type {
+    padding: 10px;
+    cursor: pointer;
+    width: 55px;
+    aspect-ratio: 1;
+}
+
 #create-journal {
     width: 75px;
     height: 75px;
@@ -45,7 +52,6 @@ html, body {
     background-color: #282092;
     border: 5px solid #fff;
     border-radius: 25px;
-    cursor: pointer;
     overflow: hidden;
 
     display: flex;
