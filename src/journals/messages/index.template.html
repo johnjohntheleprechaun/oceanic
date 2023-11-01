@@ -10,19 +10,17 @@
 </head>
 
 <body>
-    <div id="page">
-        <div id="navbar">
-            <span id="journal-title" onclick="window.location.href = '/home.html'"></span>
+    <div id="navbar">
+        <span id="journal-title" onclick="window.location.href = '/home.html'"></span>
+    </div>
+    <div id="messages">
+    </div>
+    <div id="input">
+        <div id="input-field-container">
+            <textarea id="input-field" rows="1" placeholder="write a message here :)"></textarea>
         </div>
-        <div id="messages">
-        </div>
-        <div id="input">
-            <div id="input-field-container">
-                <textarea id="input-field" rows="1" placeholder="write a message here :)"></textarea>
-            </div>
-            <div id="submit">
-                <img src="<%= require('images/icon_send.svg') %>">
-            </div>
+        <div id="submit">
+            <img src="<%= require('images/icon_send.svg') %>">
         </div>
     </div>
 </body>

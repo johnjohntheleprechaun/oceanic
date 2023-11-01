@@ -37,9 +37,11 @@ window.addEventListener("keydown", e => {
 });
 
 
-
 function resizeInputField() {
-    inputField.rows = Math.min((inputField.value.match(/\n/g) || []).length + 1, maxLines);
+    inputField.rows = 1;
+    while (inputField.clientHeight < inputField.scrollHeight && inputField.rows < maxLines) {
+        inputField.rows += 1;
+    }
     inputField.scrollTop = inputField.scrollHeight;
 }
 
@@ -95,6 +97,7 @@ async function addMessage() {
         await appendToJournal(entryID, `{${timestamp}} ${inputField.value}\n`);
         displayMessage(inputField.value, timestamp);
         inputField.value = "";
+        inputField.rows = 1;
     }
 }
 
