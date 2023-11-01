@@ -94,7 +94,8 @@ async function addMessage() {
     if (inputField.value !== "") {
         const timestamp = Date.now();
         // append message to journal
-        await appendToJournal(entryID, `{${timestamp}} ${inputField.value}\n`);
+        let content = inputField.value.replace(/\n/g, "\\n");
+        await appendToJournal(entryID, `{${timestamp}} ${content}\n`);
         displayMessage(inputField.value, timestamp);
         inputField.value = "";
         inputField.rows = 1;
@@ -104,6 +105,7 @@ async function addMessage() {
 function displayMessage(content: string, timestamp: number) {
     let message = messageTemplate.cloneNode(true) as HTMLElement;
     let date = new Date(timestamp);
+    content = content.replace(/\\n/g, "\n");
 
     // add text and timestamp to message
     message.querySelector<HTMLElement>(".message").innerText = content;
