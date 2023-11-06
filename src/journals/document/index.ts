@@ -38,16 +38,18 @@ function updateContent() {
 }
 
 function setPageSizes() {
-    let page = document.getElementsByClassName("page").item(0) as HTMLDivElement;
+    let pages = Array.from(document.getElementsByClassName("page")) as HTMLDivElement[];
 
     // one font point is 1/72 inch
     const fontSize = 12;
     const marginInches = 1;
-    const ppi = page.offsetHeight / 11;
+    const ppi = pages[0].offsetHeight / 11;
     const fontPixels = ppi * (fontSize / 72);
     const marginPixels = marginInches * ppi;
-    page.style.padding = marginPixels + "px";
-    page.style.fontSize = fontPixels + "px";
+    for (const page of pages) {
+        page.style.padding = marginPixels + "px";
+        page.style.fontSize = fontPixels + "px";
+    }
 }
 
 function setTitle(timestamp: number) {
