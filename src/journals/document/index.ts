@@ -37,6 +37,19 @@ function updateContent() {
     }
 }
 
+function splitParagraphs(text: string): string[] {
+    const output: string[] = [];
+    let lastSplit = 0;
+    for (let i = 0; i < text.length; i++) {
+        if (text[i] === "\n") {
+            output.push(text.slice(lastSplit, i));
+            lastSplit = i;
+        }
+    }
+
+    return output;
+}
+
 function setPageSizes() {
     let pages = Array.from(document.getElementsByClassName("page")) as HTMLDivElement[];
 
