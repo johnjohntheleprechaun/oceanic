@@ -22,13 +22,14 @@ window.addEventListener("resize", function() {
 
 function updateContent() {
     const content = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Facilisis leo vel fringilla est. Vitae congue mauris rhoncus aenean vel elit scelerisque mauris pellentesque. Tempus egestas sed sed risus pretium quam. Dolor sit amet consectetur adipiscing elit ut. Id porta nibh venenatis cras sed felis. Ornare arcu dui vivamus arcu felis bibendum ut tristique. Fermentum odio eu feugiat pretium nibh ipsum. Et pharetra pharetra massa massa. Magna eget est lorem ipsum dolor sit. Tortor condimentum lacinia quis vel eros.\n\n`.repeat(100);
-    const paragraphs = content.split(/\n+/);
+    const paragraphs = splitParagraphs(content);
     for (const paragraph of paragraphs) {
-        const page = pages[pages.length-1].children.item(0) as HTMLDivElement;
-        const prevText = page.innerText
-        page.innerText += paragraph;
-        if (page.scrollHeight > page.clientHeight) {
-            page.innerText = prevText;
+        const pageContent = pages[pages.length-1].children.item(0) as HTMLDivElement;
+        const paragraphSpan = document.createElement("span");
+        paragraphSpan.innerText = paragraph;
+        pageContent.appendChild(paragraphSpan);
+        if (pageContent.scrollHeight > pageContent.clientHeight) {
+            pageContent.removeChild(paragraphSpan);
             const newPage = pages[pages.length-1].cloneNode(true) as HTMLDivElement;
             (newPage.children.item(0) as HTMLDivElement).innerText = paragraph;
             editor.appendChild(newPage);
@@ -41,9 +42,9 @@ function splitParagraphs(text: string): string[] {
     const output: string[] = [];
     let lastSplit = 0;
     for (let i = 0; i < text.length; i++) {
-        if (text[i] === "\n") {
-            output.push(text.slice(lastSplit, i));
-            lastSplit = i;
+        if (text[i] === "\n") { 
+            output.push(text.slice(lastSplit, i+1));
+            lastSplit = i+1;
         }
     }
 
