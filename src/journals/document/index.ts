@@ -1,5 +1,5 @@
-import { Journal, appendToJournal, dbInit, getJournal } from "../../scripts/utils/storage";
-import { TinyMCE } from "../../tinymce/js/tinymce/tinymce";
+import { Journal, appendToJournal, dbInit, getJournal, updateJournal } from "../../scripts/utils/storage";
+import { Editor, TinyMCE } from "../../tinymce/js/tinymce/tinymce";
 
 let entryID: string;
 let journal: Journal;
@@ -14,9 +14,32 @@ window.addEventListener("load", async () => {
     tinymce.init({
         selector: "#editor",
         skin: "oxide-dark",
-        content_css: "dark"
+        content_css: "dark",
+        setup: editorSetup
     });
+    window.setTimeout(saveDoc, 5000);
 });
+window.addEventListener("beforeunload", (e) => {
+    if (journal.content !== tinymce.activeEditor.getContent()) {
+        e.preventDefault();
+    }
+});
+
+async function saveDoc() {
+    let content = tinymce.activeEditor.getContent();
+    if (journal.content !== content) {
+        journal.content = content;
+        await updateJournal(entryID, content);
+        console.log("saved new content");
+    }
+    window.setTimeout(saveDoc, 5000);
+}
+
+async function editorSetup(editor: Editor) {
+    editor.on("init", function(e) {
+        editor.setContent(journal.content);
+    })
+}
 
 function setTitle(timestamp: number) {
     let date = new Date(timestamp);
