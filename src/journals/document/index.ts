@@ -3,9 +3,6 @@ import { TinyMCE } from "../../tinymce/js/tinymce/tinymce";
 
 let entryID: string;
 let journal: Journal;
-let pages: HTMLDivElement[];
-let editor: HTMLDivElement;
-let pageTemplate: HTMLDivElement;
 
 declare const tinymce: TinyMCE;
 
@@ -14,13 +11,11 @@ window.addEventListener("load", async () => {
     entryID = parseHash().entryid;
     journal = await getJournal(entryID);
     setTitle(journal.created);
-    let editor = await tinymce.init({
+    tinymce.init({
         selector: "#editor",
-        branding: false,
         skin: "oxide-dark",
         content_css: "dark"
     });
-    console.log(editor);
 });
 
 function setTitle(timestamp: number) {
