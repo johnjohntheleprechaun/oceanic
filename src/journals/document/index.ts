@@ -38,7 +38,13 @@ async function saveDoc() {
 async function editorSetup(editor: Editor) {
     editor.on("init", function(e) {
         editor.setContent(journal.content);
-    })
+    });
+    editor.on("keydown", function(e) {
+        if (e.ctrlKey && e.key === "s") {
+            e.preventDefault();
+            saveDoc();
+        }
+    });
 }
 
 function setTitle(timestamp: number) {
