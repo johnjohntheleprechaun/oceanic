@@ -7,6 +7,7 @@
   },
   "devDependencies": {
     "@types/serviceworker": "^0.0.68",
+    "copy-webpack-plugin": "^11.0.0",
     "html-webpack-plugin": "^5.5.3",
     "ts-loader": "^9.4.3",
     "typescript": "^5.0.4",

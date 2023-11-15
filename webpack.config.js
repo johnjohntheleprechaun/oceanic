@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 const WebpackAssetsManifest = require("webpack-assets-manifest");
 const fs = require("fs");
 
@@ -110,6 +111,11 @@ module.exports = {
     plugins: htmlPlugins.concat([
         new webpack.DefinePlugin({
             JOURNALS: journals.map(journal => JSON.stringify(journal))
+        }),
+        new CopyPlugin({
+            patterns: [
+                { from: "src/tinymce/js/tinymce", to: "tinymce" }
+            ]
         })
     ]),
     mode: "development"
