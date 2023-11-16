@@ -11,6 +11,7 @@ window.addEventListener("load", async () => {
     messageArea = document.getElementById("messages");
     messageTemplate = (document.getElementById("message-template") as HTMLTemplateElement).content;
     inputField = document.getElementById("input-field") as HTMLTextAreaElement;
+    inputField.focus();
     inputField.addEventListener("input", resizeInputField);
     
     document.getElementById("submit").addEventListener("mousedown", e => {

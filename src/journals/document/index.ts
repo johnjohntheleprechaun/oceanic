@@ -49,6 +49,7 @@ async function saveDoc() {
 async function editorSetup(editor: Editor) {
     editor.on("init", function(e) {
         editor.setContent(journal.content);
+        editor.focus();
     });
     editor.on("keydown", function(e) {
         if (e.ctrlKey && e.key === "s") {
