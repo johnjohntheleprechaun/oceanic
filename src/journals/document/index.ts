@@ -15,10 +15,7 @@ window.addEventListener("load", async () => {
         selector: "#editor",
         menubar: false,
         skin: "oceanic",
-        content_css: [
-            require("css/theme.css"),
-            require("./tinymce-content.css")
-        ]
+        content_css: "oceanic"
     });
 });
 
