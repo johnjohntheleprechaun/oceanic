@@ -14,6 +14,7 @@ window.addEventListener("load", async () => {
     await tinymce.init({
         selector: "#editor",
         menubar: false,
+        statusbar: false,
         skin: "oceanic",
         content_css: "oceanic",
         elementpath: false,
