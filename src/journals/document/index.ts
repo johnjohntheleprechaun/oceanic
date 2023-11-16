@@ -11,10 +11,20 @@ window.addEventListener("load", async () => {
     entryID = parseHash().entryid;
     journal = await getJournal(entryID);
     setTitle(journal.created);
-    tinymce.init({
+    await tinymce.init({
         selector: "#editor",
+        elementpath: false,
+        menubar: false,
+        toolbar: "styles | bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent | quickimage table link",
+        toolbar_mode: "floating",
         skin: "oxide-dark",
         content_css: "dark",
+        resize: false,
+        quickbars_insert_toolbar: false,
+        plugins: "wordcount link autolink emoticons image lists quickbars searchreplace table",
+        mobile: {
+            toolbar_mode: "sliding"
+        },
         setup: editorSetup
     });
     window.setTimeout(saveDoc, 5000);
