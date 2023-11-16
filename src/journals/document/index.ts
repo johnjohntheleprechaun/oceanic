@@ -13,8 +13,12 @@ window.addEventListener("load", async () => {
     setTitle(journal.created);
     tinymce.init({
         selector: "#editor",
-        skin: "oxide-dark",
-        content_css: "dark"
+        menubar: false,
+        skin: "oceanic",
+        content_css: [
+            require("css/theme.css"),
+            require("./tinymce-content.css")
+        ]
     });
 });
 

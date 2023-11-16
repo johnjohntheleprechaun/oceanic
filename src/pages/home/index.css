@@ -10,7 +10,7 @@ html, body {
     height: 100%;
     padding: 10px;
     box-sizing: border-box;
-    background-color: #14104a;
+    background-color: var(--background);
     overflow-y: auto;
 }
 
@@ -22,10 +22,10 @@ html, body {
 }
 
 .journal-entry {
-    background-color: #1c1769;
+    background-color: var(--primary);
     font-family: sans-serif;
     height: 75px;
-    color: white;
+    color: var(--text);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -49,8 +49,8 @@ html, body {
     position: absolute;
     bottom: 25px;
     right: 25px;
-    background-color: #282092;
-    border: 5px solid #fff;
+    background-color: var(--primary);
+    border: 3px solid white;
     border-radius: 25px;
     overflow: hidden;
 
