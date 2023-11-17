@@ -6,6 +6,7 @@ let messageTemplate: DocumentFragment;
 let inputField: HTMLTextAreaElement;
 let entryID: string;
 let journal: Journal;
+let titleElement: HTMLInputElement;
 const maxLines = 5;
 
 window.addEventListener("load", async () => {
@@ -14,6 +15,11 @@ window.addEventListener("load", async () => {
     inputField = document.getElementById("input-field") as HTMLTextAreaElement;
     inputField.focus();
     inputField.addEventListener("input", resizeInputField);
+    titleElement = document.getElementById("journal-title") as HTMLInputElement;
+    titleElement.addEventListener("input", function() {
+        journal.title = titleElement.value;
+        updateJournal(journal);
+    });
     
     document.getElementById("submit").addEventListener("mousedown", e => {
         e.preventDefault();
@@ -48,7 +54,6 @@ function resizeInputField() {
 }
 
 function setTitle() {
-    const titleElement = document.getElementById("journal-title") as HTMLInputElement;
     titleElement.value = journal.title;
     titleElement.placeholder = getDate(journal.created);
 }
