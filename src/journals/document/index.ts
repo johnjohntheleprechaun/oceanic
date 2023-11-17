@@ -1,4 +1,4 @@
-import { Journal, appendToJournal, dbInit, getJournal, updateJournal } from "../../scripts/utils/storage";
+import { Journal, dbInit, getJournal, updateJournal } from "../../scripts/utils/storage";
 import { Editor, TinyMCE } from "../../tinymce/js/tinymce/tinymce";
 
 let entryID: string;

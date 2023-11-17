@@ -54,21 +54,6 @@ export async function createJournal(title: string, type: string): Promise<string
     return addRequest
 }
 
-export async function appendToJournal(id: string, text: string) {
-    // create transaction
-    const transaction = db.transaction("entries", "readwrite");
-    const objectStore = transaction.objectStore("entries");
-
-    // fetch current content
-    const currentJournal = await getObject(id, objectStore);
-    currentJournal.content += text;
-    const putRequest = await putObject(currentJournal, objectStore);
-
-    // commit and return
-    transaction.commit();
-    return putRequest;
-}
-
 export async function updateJournal(id: string, content: string) {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");

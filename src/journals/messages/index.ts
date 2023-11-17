@@ -1,10 +1,11 @@
-import { Journal, appendToJournal, dbInit, getJournal } from "../../scripts/utils/storage";
+import { Journal, dbInit, getJournal, updateJournal } from "../../scripts/utils/storage";
 //const css = require("css/journal.css");
 
 let messageArea: HTMLElement;
 let messageTemplate: DocumentFragment;
 let inputField: HTMLTextAreaElement;
 let entryID: string;
+let journal: Journal;
 const maxLines = 5;
 
 window.addEventListener("load", async () => {
@@ -71,7 +72,7 @@ function pickJournal() {
 async function loadJournal() {
     pickJournal();
     messageArea.innerHTML = "";
-    const journal = await getJournal(entryID);
+    journal = await getJournal(entryID);
     setTitle(journal.created);
     displayJournal(journal);
 }
@@ -96,7 +97,8 @@ async function addMessage() {
         const timestamp = Date.now();
         // append message to journal
         let content = inputField.value.replace(/\n/g, "\\n");
-        await appendToJournal(entryID, `{${timestamp}} ${content}\n`);
+        journal.content += `{${timestamp}} ${content}\n`;
+        await updateJournal(entryID, journal.content);
         displayMessage(inputField.value, timestamp);
         inputField.value = "";
         inputField.rows = 1;
