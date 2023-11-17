@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { htmlWebpackPluginTemplateCustomizer } = require("template-ejs-loader");
 const CopyPlugin = require("copy-webpack-plugin");
 const WebpackAssetsManifest = require("webpack-assets-manifest");
 const fs = require("fs");
@@ -42,7 +43,14 @@ function mapPages() {
         };
 
         if (page === "home") {
-            options.journals = journals;
+            options.template = htmlWebpackPluginTemplateCustomizer({
+                templatePath: "./src/pages/home/index.template.html",
+                templateEjsLoaderOption: {
+                    data: {
+                        journals: journals
+                    }
+                }
+            })
         }
 
         htmlPlugins.push(new HtmlWebpackPlugin(options));
@@ -97,6 +105,30 @@ module.exports = {
                 generator: {
                     filename: "[name]-[contenthash][ext]"
                 }
+            },
+            {
+                test: /\.html$/,
+                use: [
+                    {
+                        loader: "template-ejs-loader",
+
+                    },
+                    { 
+                        loader: "html-loader", 
+                        options: {
+                            sources: {
+                                urlFilter: (attribute, value, resourcePath) => {
+                                    if (/^~/.test(value)) {
+                                        return true;
+                                    }
+                                    return false;
+                                }
+                            }
+                        }
+                    },
+                    
+                ]
+                
             }
         ]
     },
