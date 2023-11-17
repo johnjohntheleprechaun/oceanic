@@ -40,7 +40,7 @@ async function saveDoc() {
     let content = tinymce.activeEditor.getContent();
     if (journal.content !== content) {
         journal.content = content;
-        await updateJournal(entryID, content);
+        await updateJournal(journal);
         console.log("saved new content");
     }
     window.setTimeout(saveDoc, 5000);

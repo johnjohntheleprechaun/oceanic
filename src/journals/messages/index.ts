@@ -108,7 +108,7 @@ async function addMessage() {
         // append message to journal
         let content = inputField.value.replace(/\n/g, "\\n");
         journal.content += `{${timestamp}} ${content}\n`;
-        await updateJournal(entryID, journal.content);
+        await updateJournal(journal);
         displayMessage(inputField.value, timestamp);
         inputField.value = "";
         inputField.rows = 1;
