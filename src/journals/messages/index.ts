@@ -47,10 +47,20 @@ function resizeInputField() {
     inputField.scrollTop = inputField.scrollHeight;
 }
 
-function setTitle(timestamp: number) {
-    let date = new Date(timestamp);
-    let title = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
-    document.getElementById("journal-title").innerText = title;
+function setTitle() {
+    const titleElement = document.getElementById("journal-title") as HTMLInputElement;
+    titleElement.value = journal.title;
+    titleElement.placeholder = getDate(journal.created);
+}
+
+function getDate(timestamp: number): string {
+    const date = new Date(timestamp);
+    return (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
+
+}
+function getTime(timestamp: number): string {
+    const date = new Date(timestamp);
+    return date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0") + ":" + date.getSeconds().toString().padStart(2,"0");
 }
 
 function parseHash() {
@@ -73,7 +83,7 @@ async function loadJournal() {
     pickJournal();
     messageArea.innerHTML = "";
     journal = await getJournal(entryID);
-    setTitle(journal.created);
+    setTitle();
     displayJournal(journal);
 }
 
