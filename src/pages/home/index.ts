@@ -81,8 +81,7 @@ function closeJournalSelection() {
 }
 
 function newJournal(type: string) {
-    const title = getDate(Date.now());
-    createJournal(title, type)
+    createJournal("", type)
     .then(id => openJournal(id, type));
 }
 
@@ -95,9 +94,16 @@ async function loadJournals() {
 
 function displayJournal(journal: Journal) {
     let entry = entryTemplate.cloneNode(true) as HTMLElement;
-    
-    entry.querySelector<HTMLElement>(".date").innerText = getDate(journal.created);
-    entry.querySelector<HTMLElement>(".time").innerText = getTime(journal.created);
+
+    let displayTitle: string;
+    if (journal.title === "") {
+        displayTitle = "Untitled";
+    }
+    else {
+        displayTitle = journal.title;
+    }
+    entry.querySelector<HTMLSpanElement>(".title").textContent = displayTitle;
+    entry.querySelector<HTMLElement>(".date").textContent = getDate(journal.created);
     
     entry.addEventListener("click", event => {
         let element  = event.target as HTMLElement;

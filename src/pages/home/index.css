@@ -35,6 +35,13 @@ html, body {
 
     border-radius: 10px;
 }
+.title, .date {
+    pointer-events: none;
+}
+.date {
+    font-size: 10pt;
+    color: var(--secondary-text);
+}
 
 .journal-type {
     padding: 10px;
@@ -59,8 +66,4 @@ html, body {
 }
 #create-icon {
     width: 100%;
-}
-
-.date, .time {
-    pointer-events: none;
 }
