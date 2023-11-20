@@ -109,15 +109,12 @@ module.exports = {
             {
                 test: /\.html$/,
                 use: [
-                    {
-                        loader: "template-ejs-loader",
-
-                    },
                     { 
                         loader: "html-loader", 
                         options: {
                             sources: {
                                 urlFilter: (attribute, value, resourcePath) => {
+                                    console.log(value);
                                     if (/^~/.test(value)) {
                                         return true;
                                     }
@@ -126,7 +123,10 @@ module.exports = {
                             }
                         }
                     },
-                    
+                    {
+                        loader: "template-ejs-loader",
+
+                    },
                 ]
                 
             }
