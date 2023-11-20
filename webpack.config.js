@@ -125,7 +125,12 @@ module.exports = {
                     },
                     {
                         loader: "template-ejs-loader",
-
+                        options: {
+                            data: {
+                                journalNavbarHTML: "../../partials/journal-navbar.html",
+                                journalNavbarCSS: "../../partials/journal-navbar.css"
+                            }
+                        }
                     },
                 ]
                 
