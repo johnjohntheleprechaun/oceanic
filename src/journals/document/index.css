@@ -21,28 +21,10 @@ body {
     font-size: 12pt;
 }
 
-#navbar {
-    color: white;
-    display: flex;
-    justify-content: center;
-    border-bottom: 1px solid var(--secondary);
-    height: 40px;
-    margin: 0px;
-    align-items: center;
-    padding: 3px;
-}
-#journal-title {
-    font-size: 20pt;
-    cursor: pointer;
-}
-
 #editor {
     width: 100%;
     height: 100%;
-    background-color: var(--background);
-    overflow-y: scroll;
 }
-
 
 @media only screen and (max-width: 800px) {
 }

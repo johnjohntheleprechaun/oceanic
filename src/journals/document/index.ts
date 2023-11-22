@@ -1,3 +1,4 @@
+import { navbarInit } from "../../scripts/utils/navbar";
 import { Journal, dbInit, getJournal, updateJournal } from "../../scripts/utils/storage";
 import { Editor, TinyMCE } from "../../tinymce/js/tinymce/tinymce";
 
@@ -10,6 +11,7 @@ window.addEventListener("load", async () => {
     await dbInit();
     entryID = parseHash().entryid;
     journal = await getJournal(entryID);
+    navbarInit(journal);
     setTitle(journal.created);
     await tinymce.init({
         selector: "#editor",
