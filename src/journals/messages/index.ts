@@ -1,4 +1,5 @@
 import { Journal, dbInit, getJournal, updateJournal } from "../../scripts/utils/storage";
+import { navbarInit } from "../../scripts/utils/navbar";
 //const css = require("css/journal.css");
 
 let messageArea: HTMLElement;
@@ -6,7 +7,6 @@ let messageTemplate: DocumentFragment;
 let inputField: HTMLTextAreaElement;
 let entryID: string;
 let journal: Journal;
-let titleElement: HTMLInputElement;
 const maxLines = 5;
 
 window.addEventListener("load", async () => {
@@ -15,11 +15,7 @@ window.addEventListener("load", async () => {
     inputField = document.getElementById("input-field") as HTMLTextAreaElement;
     inputField.focus();
     inputField.addEventListener("input", resizeInputField);
-    titleElement = document.getElementById("journal-title") as HTMLInputElement;
-    titleElement.addEventListener("input", function() {
-        journal.title = titleElement.value;
-        updateJournal(journal);
-    });
+    
     
     document.getElementById("submit").addEventListener("mousedown", e => {
         e.preventDefault();
@@ -28,6 +24,7 @@ window.addEventListener("load", async () => {
     
     await dbInit();
     await loadJournal();
+    navbarInit(journal);
 
     document.body.style.height = visualViewport.height + "px";
 });
@@ -51,11 +48,6 @@ function resizeInputField() {
         inputField.rows += 1;
     }
     inputField.scrollTop = inputField.scrollHeight;
-}
-
-function setTitle() {
-    titleElement.value = journal.title;
-    titleElement.placeholder = getDate(journal.created);
 }
 
 function getDate(timestamp: number): string {
@@ -88,7 +80,6 @@ async function loadJournal() {
     pickJournal();
     messageArea.innerHTML = "";
     journal = await getJournal(entryID);
-    setTitle();
     displayJournal(journal);
 }
 
@@ -122,13 +113,12 @@ async function addMessage() {
 
 function displayMessage(content: string, timestamp: number) {
     let message = messageTemplate.cloneNode(true) as HTMLElement;
-    let date = new Date(timestamp);
     content = content.replace(/\\n/g, "\n");
 
     // add text and timestamp to message
     message.querySelector<HTMLElement>(".message").innerText = content;
-    message.querySelector<HTMLElement>(".time").innerText = date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0") + ":" + date.getSeconds().toString().padStart(2,"0");
-    message.querySelector<HTMLElement>(".date").innerText = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
+    message.querySelector<HTMLElement>(".time").innerText = getTime(timestamp);
+    message.querySelector<HTMLElement>(".date").innerText = getDate(timestamp);
     
     // append and scroll to bottom
     messageArea.appendChild(message);
