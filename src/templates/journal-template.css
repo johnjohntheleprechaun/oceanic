@@ -29,4 +29,5 @@
 #home-button {
     height: 100%;
     margin-right: 10px;
+    cursor: pointer;
 }

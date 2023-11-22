@@ -1,6 +1,10 @@
 import { Journal, updateJournal } from "./storage";
 
 export async function navbarInit(journal: Journal) {
+    const homeButton = document.getElementById("home-button") as HTMLImageElement;
+    homeButton.addEventListener("click", (e) => {
+        window.location.href = "/home.html"
+    });
     const titleElement = document.getElementById("journal-title") as HTMLInputElement;
     titleElement.addEventListener("input", function() {
         journal.title = titleElement.value;
