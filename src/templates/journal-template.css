@@ -1,0 +1,26 @@
+#navbar {
+    color: var(--text);
+    display: flex;
+    justify-content: left;
+    border-bottom: 2px solid var(--secondary);
+    height: 40px;
+    margin: 0px;
+    align-items: center;
+    padding: 5px;
+}
+#journal-title {
+    font-size: 20pt;
+    background-color: var(--primary);
+    color: var(--text);
+    width: min-content;
+    align-content: center;
+    border: none;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+#journal-title:focus {
+    outline: none;
+}
+#journal-title::placeholder {
+    color: var(--secondary-text);
+}

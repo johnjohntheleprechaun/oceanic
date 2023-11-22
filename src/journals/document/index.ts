@@ -11,25 +11,9 @@ window.addEventListener("load", async () => {
     await dbInit();
     entryID = parseHash().entryid;
     journal = await getJournal(entryID);
+    loadTinyMCE();
     navbarInit(journal);
     setTitle(journal.created);
-    await tinymce.init({
-        selector: "#editor",
-        menubar: false,
-        statusbar: false,
-        skin: "oceanic",
-        content_css: "oceanic",
-        elementpath: false,
-        toolbar: "styles | bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent | quickimage table link",
-        toolbar_mode: "floating",
-        resize: false,
-        quickbars_insert_toolbar: false,
-        plugins: "wordcount link autolink emoticons image lists quickbars searchreplace table",
-        mobile: {
-            toolbar_mode: "sliding"
-        },
-        setup: editorSetup
-    });
     window.setTimeout(saveDoc, 5000);
 });
 window.addEventListener("beforeunload", (e) => {
@@ -37,6 +21,31 @@ window.addEventListener("beforeunload", (e) => {
         e.preventDefault();
     }
 });
+
+function loadTinyMCE() {
+    const script = document.createElement("script") as HTMLScriptElement;
+    script.src = "/tinymce/tinymce.min.js";
+    script.addEventListener("load", () => {
+        tinymce.init({
+            selector: "#editor",
+            menubar: false,
+            statusbar: false,
+            skin: "oceanic",
+            content_css: "oceanic",
+            elementpath: false,
+            toolbar: "styles | bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent | quickimage table link",
+            toolbar_mode: "floating",
+            resize: false,
+            quickbars_insert_toolbar: false,
+            plugins: "wordcount link autolink emoticons image lists quickbars searchreplace table",
+            mobile: {
+                toolbar_mode: "sliding"
+            },
+            setup: editorSetup
+        });
+    });
+    document.body.appendChild(script);
+}
 
 async function saveDoc() {
     let content = tinymce.activeEditor.getContent();

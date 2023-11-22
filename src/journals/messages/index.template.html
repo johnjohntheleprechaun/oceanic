@@ -1,28 +1,13 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, max-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-    <link rel="manifest" href="~@/oceanic.webmanifest">
-    <link rel="stylesheet" href="~css/theme.css" type="text/css">
-    <link rel="stylesheet" href="~index.css" type="text/css">
-    <title>Journal</title>
-</head>
-
-<body>
-    <%- include(journalNavbarHTML) %>
-    <div id="messages">
+<div id="messages">
+</div>
+<div id="input">
+    <div id="input-field-container">
+        <textarea id="input-field" rows="1" placeholder="write a message here :)"></textarea>
     </div>
-    <div id="input">
-        <div id="input-field-container">
-            <textarea id="input-field" rows="1" placeholder="write a message here :)"></textarea>
-        </div>
-        <div id="submit">
-            <img src="~images/icon_send.svg">
-        </div>
+    <div id="submit">
+        <img src="~images/icon_send.svg">
     </div>
-</body>
+</div>
 
 <template id="message-template">
     <div class="message-container">
@@ -30,4 +15,3 @@
         <div class="timestamp"><span class="time"></span><span class="date"></span></div>
     </div>
 </template>
-</html>

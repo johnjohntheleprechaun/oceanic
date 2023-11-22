@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, max-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <link rel="manifest" href="~@/oceanic.webmanifest">
+    <link rel="stylesheet" href="~css/theme.css" type="text/css">
+    <link rel="stylesheet" href="journal-template.css" type="text/css">
+    <link rel="stylesheet" href="<%- `../journals/${journalName}/index.css` %>" type="text/css">
+    <title>Journal</title>
+</head>
+
+<body>
+    <div id="navbar"><input type="text" id="journal-title"></div>
+    <%- include(`../journals/${journalName}/index.template.html`) %>
+</body>
+
+<template id="message-template">
+    <div class="message-container">
+        <div class="message"></div>
+        <div class="timestamp"><span class="time"></span><span class="date"></span></div>
+    </div>
+</template>
+</html>

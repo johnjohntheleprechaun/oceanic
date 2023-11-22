@@ -57,7 +57,14 @@ function mapPages() {
     }
     for (let journal of journals) {
         const plugin = new HtmlWebpackPlugin({
-            template: `./src/journals/${journal}/index.template.html`,
+            template: htmlWebpackPluginTemplateCustomizer({
+                templatePath: `./src/templates/journal-template.html`,
+                templateEjsLoaderOption: {
+                    data: {
+                        journalName: journal
+                    }
+                }
+            }),
             filename: `journals/${journal}.html`,
             chunks: [journal+"Journal"],
             favicon: "./src/images/oceanic-quill.svg"
@@ -122,16 +129,7 @@ module.exports = {
                                 }
                             }
                         }
-                    },
-                    {
-                        loader: "template-ejs-loader",
-                        options: {
-                            data: {
-                                journalNavbarHTML: "../../partials/journal-navbar.html",
-                                journalNavbarCSS: "../../partials/journal-navbar.css"
-                            }
-                        }
-                    },
+                    }
                 ]
                 
             }
