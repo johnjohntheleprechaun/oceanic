@@ -12,7 +12,10 @@
 </head>
 
 <body>
-    <div id="navbar"><input type="text" id="journal-title"></div>
+    <div id="navbar">
+        <img id="home-button" src="~images/icon_home.svg">
+        <input type="text" id="journal-title">
+    </div>
     <%- include(`../journals/${journalName}/index.template.html`) %>
 </body>
 </html>

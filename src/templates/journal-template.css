@@ -15,6 +15,7 @@
     width: min-content;
     align-content: center;
     border: none;
+    padding: 5px;
     padding-left: 10px;
     padding-right: 10px;
 }
@@ -23,4 +24,9 @@
 }
 #journal-title::placeholder {
     color: var(--secondary-text);
+}
+
+#home-button {
+    height: 100%;
+    margin-right: 10px;
 }
