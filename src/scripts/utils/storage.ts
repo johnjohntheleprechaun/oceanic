@@ -1,7 +1,6 @@
 const DB_VERSION = 2;
-let db: IDBDatabase;
 
-export interface Journal {
+interface JournalInterface {
     id: string,
     created: number,
     title: string,
@@ -9,7 +8,81 @@ export interface Journal {
     content: string
 }
 
-export async function dbInit() {
+class Journal {
+    id: string;
+    journal: JournalInterface;
+    db: IDBDatabase;
+    loaded: boolean;
+
+    constructor (id: string, db?: IDBDatabase) {
+        this.id = id;
+        if (db) {
+            this.db = db;
+        }
+    }
+    async ensureLoaded() {
+        if (!this.db) {
+            this.db = await dbInit();
+        }
+        if (!this.loaded) {
+            await this.loadJournal();
+        }
+    }
+    async loadJournal() {
+        // create transaction
+        const transaction = this.db.transaction("entries", "readonly");
+        const objectStore = transaction.objectStore("entries");
+
+        // make request
+        this.journal = await getObject(this.id, objectStore) as JournalInterface;
+        this.loaded = true;
+    }
+
+    public async getCreated() {
+        await this.ensureLoaded();
+        return this.journal.created;
+    }
+    public async getType() {
+        await this.ensureLoaded();
+        return this.journal.type;
+    }
+    public async getTitle() {
+        await this.ensureLoaded();
+        return this.journal.title;
+    }
+    public async getContent() {
+        await this.ensureLoaded();
+        return this.journal.content;
+    }
+
+
+    public async setTitle(newTitle: string) {
+        await this.ensureLoaded();
+        this.journal.title = newTitle;
+        await this.updateJournal();
+    }
+    public async setContent(newContent: string) {
+        await this.ensureLoaded();
+        this.journal.content = newContent;
+        await this.updateJournal();
+    }
+
+
+    async updateJournal() {
+        // create transaction
+        const transaction = this.db.transaction("entries", "readwrite");
+        const objectStore = transaction.objectStore("entries");
+    
+        // make request
+        const putRequest = await putObject(this.journal, objectStore);
+    
+        // commit and return
+        transaction.commit();
+        return putRequest;
+    }
+}
+
+async function dbInit(): Promise<IDBDatabase> {
     // requeset persistent storage
     if (navigator.storage && !await navigator.storage.persisted()){
         await navigator.storage.persist();
@@ -19,7 +92,6 @@ export async function dbInit() {
     return new Promise((resolve, reject) => {
         const dbRequest = window.indexedDB.open("journal", DB_VERSION);
         dbRequest.onsuccess = function() {
-            db = dbRequest.result;
             resolve(dbRequest.result);
         };
         dbRequest.onerror = function() {
@@ -34,7 +106,7 @@ export async function dbInit() {
     });
 }
 
-export async function createJournal(title: string, type: string): Promise<string> {
+async function createJournal(title: string, type: string): Promise<string> {
     // create transaction
     const transaction = db.transaction("entries", "readwrite");
     const objectStore = transaction.objectStore("entries");
@@ -54,29 +126,7 @@ export async function createJournal(title: string, type: string): Promise<string
     return addRequest
 }
 
-export async function updateJournal(journal: Journal) {
-    // create transaction
-    const transaction = db.transaction("entries", "readwrite");
-    const objectStore = transaction.objectStore("entries");
-
-    // make request
-    const putRequest = await putObject(journal, objectStore);
-
-    // commit and return
-    transaction.commit();
-    return putRequest;
-}
-
-export async function getJournal(id: string): Promise<Journal> {
-    // create transaction
-    const transaction = db.transaction("entries", "readonly");
-    const objectStore = transaction.objectStore("entries");
-
-    // make request
-    return await getObject(id, objectStore);
-}
-
-export async function listJournals(transaction?: IDBTransaction) {
+async function listJournals(transaction?: IDBTransaction) {
     // create transaction
     if (!transaction) {
         transaction = db.transaction("entries", "readonly");
@@ -132,7 +182,7 @@ async function openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCu
     });
 }
 
-async function getObject(id: string, objectStore: IDBObjectStore | IDBIndex): Promise<Journal> {
+async function getObject(id: string, objectStore: IDBObjectStore | IDBIndex): Promise<Object> {
     return new Promise((resolve, reject) => {
         // add an empty journal entry
         const addRequest = objectStore.get(id);
@@ -196,3 +246,4 @@ async function upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transact
         }
     }
 }
+
