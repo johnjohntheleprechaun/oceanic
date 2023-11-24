@@ -244,3 +244,8 @@ async function addObject(object: any, objectStore: IDBObjectStore): Promise<stri
         };
     });
 }
+
+export {
+    Journal,
+    JournalDatabase
+}
