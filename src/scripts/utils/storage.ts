@@ -11,31 +11,19 @@ interface JournalInterface {
 class Journal {
     id: string;
     journal: JournalInterface;
-    db: IDBDatabase;
+    db: JournalDatabase;
     loaded: boolean;
 
-    constructor (id: string, db?: IDBDatabase) {
+    constructor (id: string) {
         this.id = id;
-        if (db) {
-            this.db = db;
-        }
     }
     async ensureLoaded() {
         if (!this.db) {
-            this.db = await dbInit();
+            this.db = new JournalDatabase();
         }
         if (!this.loaded) {
-            await this.loadJournal();
+            this.journal = await this.db.getJournal(this.id);
         }
-    }
-    async loadJournal() {
-        // create transaction
-        const transaction = this.db.transaction("entries", "readonly");
-        const objectStore = transaction.objectStore("entries");
-
-        // make request
-        this.journal = await getObject(this.id, objectStore) as JournalInterface;
-        this.loaded = true;
     }
 
     public async getCreated() {
@@ -59,128 +47,156 @@ class Journal {
     public async setTitle(newTitle: string) {
         await this.ensureLoaded();
         this.journal.title = newTitle;
-        await this.updateJournal();
+        await this.db.updateJournal(this.journal);
     }
     public async setContent(newContent: string) {
         await this.ensureLoaded();
         this.journal.content = newContent;
-        await this.updateJournal();
+        await this.db.updateJournal(this.journal);
+    }
+}
+
+class JournalDatabase {
+    db: IDBDatabase
+
+    async ensureLoaded() {
+        if (!this.db) {
+            await this.init();
+        }
     }
 
+    async init() {
+        await navigator.storage.persist();
+        const dbRequest = window.indexedDB.open("journal", DB_VERSION);
+        dbRequest.onsuccess = () => {
+            this.db = dbRequest.result;
+        }
+        dbRequest.onerror = () => {
+            throw dbRequest.error;
+        }
+        dbRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+            // upgrade
+        }
+    }
 
-    async updateJournal() {
+    async getJournal(id: string) {
+        // create transaction
+        const transaction = this.db.transaction("entries", "readonly");
+        const objectStore = transaction.objectStore("entries");
+
+        // make request
+        return await getObject(id, objectStore) as JournalInterface;
+    }
+
+    async createJournal(title: string, type: string): Promise<string> {
+        // create transaction
+        const transaction = this.db.transaction("entries", "readwrite");
+        const objectStore = transaction.objectStore("entries");
+        
+        // make request
+        const journal = {
+            id: crypto.randomUUID(),
+            created: Date.now(),
+            title: title,
+            type: type,
+            content: ""
+        }
+        const addRequest = await addObject(journal, objectStore);
+        
+        // commit and return
+        transaction.commit();
+        return addRequest
+    }
+
+    async updateJournal(journal: JournalInterface) {
         // create transaction
         const transaction = this.db.transaction("entries", "readwrite");
         const objectStore = transaction.objectStore("entries");
     
         // make request
-        const putRequest = await putObject(this.journal, objectStore);
+        const putRequest = await putObject(journal, objectStore);
     
         // commit and return
         transaction.commit();
         return putRequest;
     }
-}
 
-async function dbInit(): Promise<IDBDatabase> {
-    // requeset persistent storage
-    if (navigator.storage && !await navigator.storage.persisted()){
-        await navigator.storage.persist();
-    } else if (!navigator.storage) {
-        // notify users somehow
-    }
-    return new Promise((resolve, reject) => {
-        const dbRequest = window.indexedDB.open("journal", DB_VERSION);
-        dbRequest.onsuccess = function() {
-            resolve(dbRequest.result);
-        };
-        dbRequest.onerror = function() {
-            reject(dbRequest.error);
-        };
-        dbRequest.onblocked = function() {
-            reject(new Error("Database is blocked"));
-        };
-        dbRequest.onupgradeneeded = function(event: IDBVersionChangeEvent) {
-            upgradeDB(event, dbRequest.result, dbRequest.transaction);
-        };
-    });
-}
-
-async function createJournal(title: string, type: string): Promise<string> {
-    // create transaction
-    const transaction = db.transaction("entries", "readwrite");
-    const objectStore = transaction.objectStore("entries");
-    
-    // make request
-    const journal = {
-        id: crypto.randomUUID(),
-        created: Date.now(),
-        title: title,
-        type: type,
-        content: ""
-    }
-    const addRequest = await addObject(journal, objectStore);
-    
-    // commit and return
-    transaction.commit();
-    return addRequest
-}
-
-async function listJournals(transaction?: IDBTransaction) {
-    // create transaction
-    if (!transaction) {
-        transaction = db.transaction("entries", "readonly");
-    }
-    const objectStore = transaction.objectStore("entries");
-    const index = objectStore.index("created");
-
-    const cursor = await openCursor(index);
-
-    return {
-        [Symbol.asyncIterator]() {
-            return {
-                async next() {
-                    if (!cursor) {
-                        return { done: true };
-                    }
-                    if (cursor.value) {
-                        const returnVal = { value: cursor.value, done: false };
-                        await continueCursor(cursor);
-                        return returnVal;
-                    } else {
-                        return { done: true };
-                    }
-                }
-            };
+    async listJournals(transaction?: IDBTransaction) {
+        await this.ensureLoaded();
+        // create transaction
+        if (!transaction) {
+            transaction = this.db.transaction("entries", "readonly");
         }
-    };
+        const objectStore = transaction.objectStore("entries");
+        const index = objectStore.index("created");
+    
+        const cursor = await this.openCursor(index);
+    
+        return {
+            [Symbol.asyncIterator]() {
+                return {
+                    async next() {
+                        if (!cursor) {
+                            return { done: true };
+                        }
+                        if (cursor.value) {
+                            const returnVal = { value: cursor.value, done: false };
+                            await this.continueCursor(cursor);
+                            return returnVal;
+                        } else {
+                            return { done: true };
+                        }
+                    }
+                };
+            }
+        };
+    }
+    
+    async continueCursor(cursor: IDBCursor) {
+        return new Promise((resolve, reject) => {
+            cursor.request.onsuccess = function() {
+                resolve(cursor);
+            };
+            cursor.request.onerror = function() {
+                reject(cursor.request.error);
+            };
+            cursor.continue();
+        });
+    }
+    
+    async openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCursorWithValue> {
+        return new Promise((resolve, reject) => {
+            const request = objectStore.openCursor();
+    
+            // bind functions
+            request.onsuccess = function() {
+                resolve(request.result);
+            };
+            request.onerror = function() {
+                reject(request.error);
+            };
+        });
+    }
+
+    async upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) {
+        console.log(event.oldVersion);
+        if (event.oldVersion === 0) { // no database previously
+            const objectStore = db.createObjectStore("entries", { keyPath: "id" });
+            objectStore.createIndex("created", "created", { unique: false });
+            objectStore.createIndex("title", "title", { unique: false });
+        }
+        else if (event.oldVersion === 1) {
+            const objectStore = transaction.objectStore("entries");
+            objectStore.createIndex("type", "type", { unique: false });
+            const journals = await this.listJournals(transaction);
+            for await (const journal of journals) {
+                journal.type = "messages";
+                await putObject(journal, objectStore);
+            }
+        }
+    }
 }
 
-async function continueCursor(cursor: IDBCursor) {
-    return new Promise((resolve, reject) => {
-        cursor.request.onsuccess = function() {
-            resolve(cursor);
-        };
-        cursor.request.onerror = function() {
-            reject(cursor.request.error);
-        };
-        cursor.continue();
-    });
-}
-
-async function openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCursorWithValue> {
-    return new Promise((resolve, reject) => {
-        const request = objectStore.openCursor();
-
-        // bind functions
-        request.onsuccess = function() {
-            resolve(request.result);
-        };
-        request.onerror = function() {
-            reject(request.error);
-        };
-    });
-}
 
 async function getObject(id: string, objectStore: IDBObjectStore | IDBIndex): Promise<Object> {
     return new Promise((resolve, reject) => {
@@ -228,22 +244,3 @@ async function addObject(object: any, objectStore: IDBObjectStore): Promise<stri
         };
     });
 }
-
-async function upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) {
-    console.log(event.oldVersion);
-    if (event.oldVersion === 0) { // no database previously
-        const objectStore = db.createObjectStore("entries", { keyPath: "id" });
-        objectStore.createIndex("created", "created", { unique: false });
-        objectStore.createIndex("title", "title", { unique: false });
-    }
-    else if (event.oldVersion === 1) {
-        const objectStore = transaction.objectStore("entries");
-        objectStore.createIndex("type", "type", { unique: false });
-        const journals = await listJournals(transaction);
-        for await (const journal of journals) {
-            journal.type = "messages";
-            await putObject(journal, objectStore);
-        }
-    }
-}
-
