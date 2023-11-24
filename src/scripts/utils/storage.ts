@@ -22,14 +22,10 @@ class Journal {
     }
     async ensureLoaded() {
         if (!this.db) {
-            console.log("no db");
             this.db = new JournalDatabase();
-            console.log("created db");
         }
         if (!this.loaded) {
-            console.log("not loaded");
             this.journal = await this.db.getJournal(this.id);
-            console.log("loaded");
         }
     }
 
@@ -46,9 +42,7 @@ class Journal {
         return this.journal.title;
     }
     public async getContent() {
-        console.log("get content");
         await this.ensureLoaded();
-        console.log("loaded");
         return this.journal.content;
     }
 
@@ -101,14 +95,10 @@ class JournalDatabase {
     }
 
     async getJournal(id: string) {
-        console.log("getting journal", id);
         await this.ensureLoaded();
-        console.log("loaded");
         // create transaction
         const transaction = this.db.transaction("entries", "readonly");
-        console.log("transaction", transaction);
         const objectStore = transaction.objectStore("entries");
-        console.log("store", objectStore);
 
         // make request
         return await getObject(id, objectStore) as JournalInterface;
@@ -184,7 +174,6 @@ class JournalDatabase {
     }
 
     async upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) {
-        console.log(event.oldVersion);
         if (event.oldVersion === 0) { // no database previously
             const objectStore = db.createObjectStore("entries", { keyPath: "id" });
             objectStore.createIndex("created", "created", { unique: false });
@@ -229,12 +218,9 @@ async function openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCu
 }
 
 async function getObject(id: string, objectStore: IDBObjectStore | IDBIndex): Promise<Object> {
-    console.log("getting object in store", objectStore);
-    console.log(id);
     return new Promise((resolve, reject) => {
         // add an empty journal entry
         const addRequest = objectStore.get(id);
-        console.log("request", addRequest);
 
         // add event listeners
         addRequest.onsuccess = function() {
