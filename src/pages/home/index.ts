@@ -1,4 +1,4 @@
-import { Journal, createJournal, dbInit, listJournals } from "../../scripts/utils/storage";
+import { JournalDatabase, Journal } from "../../scripts/utils/storage";
 
 declare const JOURNALS: string[];
 const journalTypes = JOURNALS;
@@ -10,6 +10,7 @@ let createButton: HTMLElement;
 let createIcon: HTMLElement;
 let typeSelectionSpeed: number;
 let maxSelectionHeight: number;
+let db: JournalDatabase
 
 window.addEventListener("load", async () => {
     entryTemplate = document.querySelector<HTMLTemplateElement>("#journal-entry-template").content.firstElementChild as HTMLElement;
@@ -30,7 +31,7 @@ window.addEventListener("load", async () => {
 
     createButton.addEventListener("mouseenter", openJournalSelection);
     createButton.addEventListener("mouseleave", closeJournalSelection);
-    await dbInit();
+    db = new JournalDatabase();
     await loadJournals();
     
     console.log(journalIcons);
@@ -81,29 +82,29 @@ function closeJournalSelection() {
 }
 
 function newJournal(type: string) {
-    createJournal("", type)
+    db.createJournal("", type)
     .then(id => openJournal(id, type));
 }
 
 async function loadJournals() {
-    const journals = await listJournals();
+    const journals = await db.listJournals();
     for await (const journal of journals) {
         displayJournal(journal);
     }
 }
 
-function displayJournal(journal: Journal) {
+async function displayJournal(journal: Journal) {
     let entry = entryTemplate.cloneNode(true) as HTMLElement;
 
     let displayTitle: string;
-    if (journal.title === "") {
+    if (await journal.getTitle() === "") {
         displayTitle = "Untitled";
     }
     else {
-        displayTitle = journal.title;
+        displayTitle = await journal.getTitle();
     }
     entry.querySelector<HTMLSpanElement>(".title").textContent = displayTitle;
-    entry.querySelector<HTMLElement>(".date").textContent = getDate(journal.created);
+    entry.querySelector<HTMLElement>(".date").textContent = getDate(await journal.getCreated());
     
     entry.addEventListener("click", event => {
         let element  = event.target as HTMLElement;
@@ -112,7 +113,7 @@ function displayJournal(journal: Journal) {
         openJournal(entryID, type);
     });
     entry.dataset.entryid = journal.id;
-    entry.dataset.type = journal.type;
+    entry.dataset.type = await journal.getType();
     
     journalArea.appendChild(entry);
 }

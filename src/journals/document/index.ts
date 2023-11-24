@@ -1,5 +1,5 @@
 import { navbarInit } from "../../scripts/utils/navbar";
-import { Journal, dbInit, getJournal, updateJournal } from "../../scripts/utils/storage";
+import { Journal } from "../../scripts/utils/storage";
 import { Editor, TinyMCE } from "../../tinymce/js/tinymce/tinymce";
 
 let entryID: string;
@@ -8,16 +8,14 @@ let journal: Journal;
 declare const tinymce: TinyMCE;
 
 window.addEventListener("load", async () => {
-    await dbInit();
-    entryID = parseHash().entryid;
-    journal = await getJournal(entryID);
+    entryID = parseHash()["entryid"];
+    journal = new Journal(entryID);
     loadTinyMCE();
     navbarInit(journal);
-    setTitle(journal.created);
     window.setTimeout(saveDoc, 5000);
 });
-window.addEventListener("beforeunload", (e) => {
-    if (journal.content !== tinymce.activeEditor.getContent()) {
+window.addEventListener("beforeunload", async (e) => {
+    if (await journal.getContent() !== tinymce.activeEditor.getContent()) {
         e.preventDefault();
     }
 });
@@ -49,17 +47,17 @@ function loadTinyMCE() {
 
 async function saveDoc() {
     let content = tinymce.activeEditor.getContent();
-    if (journal.content !== content) {
-        journal.content = content;
-        await updateJournal(journal);
+    if (await journal.getContent() !== content) {
+        journal.setContent(content);
         console.log("saved new content");
     }
     window.setTimeout(saveDoc, 5000);
 }
 
 async function editorSetup(editor: Editor) {
+    const journalContent = await journal.getContent();
     editor.on("init", function(e) {
-        editor.setContent(journal.content);
+        editor.setContent(journalContent);
         editor.focus();
     });
     editor.on("keydown", function(e) {
@@ -68,12 +66,6 @@ async function editorSetup(editor: Editor) {
             saveDoc();
         }
     });
-}
-
-function setTitle(timestamp: number) {
-    let date = new Date(timestamp);
-    let title = (date.getMonth() + 1).toString().padStart(2,"0") + "/" + date.getDate().toString().padStart(2,"0") + "/" + date.getFullYear();
-    document.getElementById("journal-title").innerText = title;
 }
 
 function parseHash() {

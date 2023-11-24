@@ -1,4 +1,4 @@
-import { Journal, dbInit, getJournal, updateJournal } from "../../scripts/utils/storage";
+import { Journal } from "../../scripts/utils/storage";
 import { navbarInit } from "../../scripts/utils/navbar";
 //const css = require("css/journal.css");
 
@@ -21,9 +21,9 @@ window.addEventListener("load", async () => {
         e.preventDefault();
         addMessage();
     });
-    
-    await dbInit();
-    await loadJournal();
+    entryID = parseHash()["entryid"]
+    journal = new Journal(entryID);
+    displayJournal(journal);
     navbarInit(journal);
 
     document.body.style.height = visualViewport.height + "px";
@@ -76,15 +76,8 @@ function pickJournal() {
     entryID = parseHash().entryid;
 }
 
-async function loadJournal() {
-    pickJournal();
-    messageArea.innerHTML = "";
-    journal = await getJournal(entryID);
-    displayJournal(journal);
-}
-
-function displayJournal(journal: Journal) {
-    displayMessageJournal(journal.content);
+async function displayJournal(journal: Journal) {
+    displayMessageJournal(await journal.getContent());
 }
 
 function displayMessageJournal(content: string) {
@@ -103,8 +96,7 @@ async function addMessage() {
         const timestamp = Date.now();
         // append message to journal
         let content = inputField.value.replace(/\n/g, "\\n");
-        journal.content += `{${timestamp}} ${content}\n`;
-        await updateJournal(journal);
+        await journal.appendContent(`{${timestamp}} ${content}\n`);
         displayMessage(inputField.value, timestamp);
         inputField.value = "";
         inputField.rows = 1;

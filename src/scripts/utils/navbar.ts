@@ -1,4 +1,4 @@
-import { Journal, updateJournal } from "./storage";
+import { Journal } from "./storage";
 
 export async function navbarInit(journal: Journal) {
     const homeButton = document.getElementById("home-button") as HTMLImageElement;
@@ -7,15 +7,14 @@ export async function navbarInit(journal: Journal) {
     });
     const titleElement = document.getElementById("journal-title") as HTMLInputElement;
     titleElement.addEventListener("input", function() {
-        journal.title = titleElement.value;
-        updateJournal(journal);
+        journal.setTitle(titleElement.value);
     });
     setTitle(titleElement, journal);
 }
 
-function setTitle(element: HTMLInputElement, journal: Journal) {
-    element.value = journal.title;
-    element.placeholder = getDate(journal.created);
+async function setTitle(element: HTMLInputElement, journal: Journal) {
+    element.value = await journal.getTitle();
+    element.placeholder = getDate(await journal.getCreated());
 }
 function getDate(timestamp: number): string {
     const date = new Date(timestamp);

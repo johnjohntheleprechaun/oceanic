@@ -14,15 +14,22 @@ class Journal {
     db: JournalDatabase;
     loaded: boolean;
 
-    constructor (id: string) {
+    constructor (id: string, db?: JournalDatabase, journal?: JournalInterface) {
         this.id = id;
+        this.db = db ? db : undefined;
+        this.journal = journal ? journal : undefined;
+        this.loaded = !!journal;
     }
     async ensureLoaded() {
         if (!this.db) {
+            console.log("no db");
             this.db = new JournalDatabase();
+            console.log("created db");
         }
         if (!this.loaded) {
+            console.log("not loaded");
             this.journal = await this.db.getJournal(this.id);
+            console.log("loaded");
         }
     }
 
@@ -39,7 +46,9 @@ class Journal {
         return this.journal.title;
     }
     public async getContent() {
+        console.log("get content");
         await this.ensureLoaded();
+        console.log("loaded");
         return this.journal.content;
     }
 
@@ -53,6 +62,11 @@ class Journal {
         await this.ensureLoaded();
         this.journal.content = newContent;
         await this.db.updateJournal(this.journal);
+    }
+    public async appendContent(data: string) {
+        await this.ensureLoaded();
+        this.journal.content += data;
+        this.db.updateJournal(this.journal);
     }
 }
 
@@ -68,27 +82,40 @@ class JournalDatabase {
     async init() {
         await navigator.storage.persist();
         const dbRequest = window.indexedDB.open("journal", DB_VERSION);
-        dbRequest.onsuccess = () => {
-            this.db = dbRequest.result;
-        }
-        dbRequest.onerror = () => {
-            throw dbRequest.error;
-        }
-        dbRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-            // upgrade
-        }
+
+        return new Promise((resolve, reject) => {
+            dbRequest.onsuccess = () => {
+                this.db = dbRequest.result;
+                resolve(dbRequest.result);
+            };
+            dbRequest.onerror = function() {
+                reject(dbRequest.error);
+            };
+            dbRequest.onblocked = function() {
+                reject(new Error("Database is blocked"));
+            };
+            dbRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+                this.upgradeDB(event, dbRequest.result, dbRequest.transaction);
+            };
+        });
     }
 
     async getJournal(id: string) {
+        console.log("getting journal", id);
+        await this.ensureLoaded();
+        console.log("loaded");
         // create transaction
         const transaction = this.db.transaction("entries", "readonly");
+        console.log("transaction", transaction);
         const objectStore = transaction.objectStore("entries");
+        console.log("store", objectStore);
 
         // make request
         return await getObject(id, objectStore) as JournalInterface;
     }
 
     async createJournal(title: string, type: string): Promise<string> {
+        await this.ensureLoaded();
         // create transaction
         const transaction = this.db.transaction("entries", "readwrite");
         const objectStore = transaction.objectStore("entries");
@@ -109,6 +136,7 @@ class JournalDatabase {
     }
 
     async updateJournal(journal: JournalInterface) {
+        await this.ensureLoaded();
         // create transaction
         const transaction = this.db.transaction("entries", "readwrite");
         const objectStore = transaction.objectStore("entries");
@@ -130,7 +158,7 @@ class JournalDatabase {
         const objectStore = transaction.objectStore("entries");
         const index = objectStore.index("created");
     
-        const cursor = await this.openCursor(index);
+        const cursor = await openCursor(index);
     
         return {
             [Symbol.asyncIterator]() {
@@ -140,8 +168,11 @@ class JournalDatabase {
                             return { done: true };
                         }
                         if (cursor.value) {
-                            const returnVal = { value: cursor.value, done: false };
-                            await this.continueCursor(cursor);
+                            const returnVal = {
+                                value: new Journal(cursor.value.id, this, cursor.value),
+                                done: false
+                            };
+                            await continueCursor(cursor);
                             return returnVal;
                         } else {
                             return { done: true };
@@ -150,32 +181,6 @@ class JournalDatabase {
                 };
             }
         };
-    }
-    
-    async continueCursor(cursor: IDBCursor) {
-        return new Promise((resolve, reject) => {
-            cursor.request.onsuccess = function() {
-                resolve(cursor);
-            };
-            cursor.request.onerror = function() {
-                reject(cursor.request.error);
-            };
-            cursor.continue();
-        });
-    }
-    
-    async openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCursorWithValue> {
-        return new Promise((resolve, reject) => {
-            const request = objectStore.openCursor();
-    
-            // bind functions
-            request.onsuccess = function() {
-                resolve(request.result);
-            };
-            request.onerror = function() {
-                reject(request.error);
-            };
-        });
     }
 
     async upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) {
@@ -197,11 +202,39 @@ class JournalDatabase {
     }
 }
 
+async function continueCursor(cursor: IDBCursor) {
+    return new Promise((resolve, reject) => {
+        cursor.request.onsuccess = function() {
+            resolve(cursor);
+        };
+        cursor.request.onerror = function() {
+            reject(cursor.request.error);
+        };
+        cursor.continue();
+    });
+}
+
+async function openCursor(objectStore: IDBObjectStore | IDBIndex): Promise<IDBCursorWithValue> {
+    return new Promise((resolve, reject) => {
+        const request = objectStore.openCursor();
+
+        // bind functions
+        request.onsuccess = function() {
+            resolve(request.result);
+        };
+        request.onerror = function() {
+            reject(request.error);
+        };
+    });
+}
 
 async function getObject(id: string, objectStore: IDBObjectStore | IDBIndex): Promise<Object> {
+    console.log("getting object in store", objectStore);
+    console.log(id);
     return new Promise((resolve, reject) => {
         // add an empty journal entry
         const addRequest = objectStore.get(id);
+        console.log("request", addRequest);
 
         // add event listeners
         addRequest.onsuccess = function() {
