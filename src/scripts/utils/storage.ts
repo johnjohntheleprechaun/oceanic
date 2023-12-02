@@ -16,14 +16,11 @@ class Journal {
 
     constructor (id: string, db?: JournalDatabase, journal?: JournalInterface) {
         this.id = id;
-        this.db = db ? db : undefined;
+        this.db = db ? db : new JournalDatabase();
         this.journal = journal ? journal : undefined;
         this.loaded = !!journal;
     }
     async ensureLoaded() {
-        if (!this.db) {
-            this.db = new JournalDatabase();
-        }
         if (!this.loaded) {
             this.journal = await this.db.getJournal(this.id);
         }
@@ -81,11 +78,15 @@ class JournalDatabase {
     async init() {
         await navigator.storage.persist();
         const dbRequest = window.indexedDB.open("journal", DB_VERSION);
+        let upgrading: boolean;
 
         return new Promise((resolve, reject) => {
             dbRequest.onsuccess = () => {
                 this.db = dbRequest.result;
-                resolve(dbRequest.result);
+                if (!upgrading) {
+                    console.log("success");
+                    resolve(dbRequest.result);
+                }
             };
             dbRequest.onerror = function() {
                 reject(dbRequest.error);
@@ -94,7 +95,9 @@ class JournalDatabase {
                 reject(new Error("Database is blocked"));
             };
             dbRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-                this.upgradeDB(event, dbRequest.result, dbRequest.transaction);
+                console.log(dbRequest.transaction.objectStore("entries"))
+                upgrading = true;
+                this.upgradeDB(event, dbRequest.result, dbRequest.transaction, resolve);
             };
         });
     }
@@ -144,16 +147,18 @@ class JournalDatabase {
         return putRequest;
     }
 
-    async listJournals(transaction?: IDBTransaction) {
+    async listJournals(index?: IDBObjectStore | IDBIndex) {
         await this.ensureLoaded();
-        // create transaction
-        if (!transaction) {
-            transaction = this.db.transaction("entries", "readonly");
+
+        if (!index) {
+            console.log(this.db);
+            const transaction = this.db.transaction("entries");
+            index = transaction.objectStore("entries").index("created");
         }
-        const objectStore = transaction.objectStore("entries");
-        const index = objectStore.index("created");
     
         const cursor = await openCursor(index);
+        
+        const journalDatabase = this;
     
         return {
             [Symbol.asyncIterator]() {
@@ -164,7 +169,7 @@ class JournalDatabase {
                         }
                         if (cursor.value) {
                             const returnVal = {
-                                value: new Journal(cursor.value.id, this, cursor.value),
+                                value: new Journal(cursor.value.id, journalDatabase, cursor.value),
                                 done: false
                             };
                             await continueCursor(cursor);
@@ -178,7 +183,7 @@ class JournalDatabase {
         };
     }
 
-    async upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) {
+    async upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction, resolve: (value: any) => void) {
         if (event.oldVersion === 0) { // no database previously
             const objectStore = db.createObjectStore("entries", { keyPath: "id" });
             objectStore.createIndex("created", "created", { unique: false });
@@ -187,11 +192,22 @@ class JournalDatabase {
         else if (event.oldVersion === 1) {
             const objectStore = transaction.objectStore("entries");
             objectStore.createIndex("type", "type", { unique: false });
-            const journals = await this.listJournals(transaction);
+            
+            transaction.oncomplete = async () => {
+                const journals = await this.listJournals() as AsyncGenerator<Journal>;
+                console.log("got iter");
+                for await (const journal of journals) {
+                    console.log(journal);
+                    await journal.setType("messages");
+                }
+                resolve(db);
+            }
+            /*const index = objectStore.index("created");
+            const journals = await this.listJournals(index);
             for await (const journal of journals) {
                 journal.type = "messages";
                 await putObject(journal, objectStore);
-            }
+            }*/
         }
     }
 }
