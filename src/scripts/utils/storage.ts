@@ -57,6 +57,11 @@ class Journal {
         this.journal.content = newContent;
         await this.db.updateJournal(this.journal);
     }
+    public async setType(newType: string) {
+        await this.ensureLoaded();
+        this.journal.type = newType
+        await this.db.updateJournal(this.journal);
+    }
     public async appendContent(data: string) {
         await this.ensureLoaded();
         this.journal.content += data;
