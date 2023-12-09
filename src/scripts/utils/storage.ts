@@ -70,13 +70,10 @@ class JournalDatabase {
     db: IDBDatabase
     operationQueue: Promise<any>[]
 
-    async ensureLoaded() {
-        if (!this.db) {
-            await this.init();
-            console.log("initialized");
-        }
+    constructor () {
+        this.operationQueue = [];
+        this.operationQueue.push(this.init());
     }
-
     async init() {
         await navigator.storage.persist();
         const dbRequest = window.indexedDB.open("journal", DB_VERSION);
@@ -108,35 +105,32 @@ class JournalDatabase {
         }
     }
 
-    async execOperation(func: () => Promise<any>, params: any[], mode: IDBTransactionMode) {
+    async execOperation(func: (...args: any[]) => Promise<any>, params: any[], mode: IDBTransactionMode = "readwrite") {
         if (!this.operationQueue) {
             this.operationQueue = [];
         }
-        this.operationQueue.push(new Promise(async (resolve) => {
-            console.log(this.operationQueue);
-            await this.operationQueue[this.operationQueue.length-1]
-            await func.apply(null, params);
-            resolve(null);
-        }));
+        const promise = new Promise(async (resolve) => {
+            // wait your turn
+            await this.operationQueue[this.operationQueue.length-1];
+
+            // execute the operation
+            const transaction = this.db.transaction("entries", mode);
+            const objectStore = transaction.objectStore("entries");
+            params.push(objectStore);
+            const returnVal = await func.apply(null, params);
+
+            resolve(returnVal);
+        });
+        this.operationQueue.push(promise);
+        return promise;
     }
 
     async getJournal(id: string) {
-        await this.ensureLoaded();
-        // create transaction
-        const transaction = this.db.transaction("entries", "readonly");
-        const objectStore = transaction.objectStore("entries");
-
-        // make request
-        return await getObject(id, objectStore) as JournalInterface;
+        const journal = await this.execOperation(getObject, [id], "readonly");
+        return journal as JournalInterface;
     }
 
     async createJournal(title: string, type: string): Promise<string> {
-        await this.ensureLoaded();
-        // create transaction
-        const transaction = this.db.transaction("entries", "readwrite");
-        const objectStore = transaction.objectStore("entries");
-        
-        // make request
         const journal = {
             id: crypto.randomUUID(),
             created: Date.now(),
@@ -144,32 +138,20 @@ class JournalDatabase {
             type: type,
             content: ""
         }
-        const addRequest = await addObject(journal, objectStore);
-        
-        // commit and return
-        transaction.commit();
-        return addRequest
+        const id = await this.execOperation(addObject, [journal]);
+        return id as string;
     }
 
     async updateJournal(journal: JournalInterface) {
-        await this.ensureLoaded();
-        // create transaction
-        const transaction = this.db.transaction("entries", "readwrite");
-        const objectStore = transaction.objectStore("entries");
-    
-        // make request
-        const putRequest = await putObject(journal, objectStore);
-    
-        // commit and return
-        transaction.commit();
-        return putRequest;
+        await this.execOperation(putObject, [journal]);
     }
 
     async* listJournals() {
-        await this.ensureLoaded();
-
-        console.log(this.db);
+        await this.operationQueue[this.operationQueue.length-1];
         const transaction = this.db.transaction("entries", "readonly");
+        this.operationQueue.push(new Promise(resolve => {
+            transaction.oncomplete = () => {resolve(null); console.log("done")};
+        }));
         const index = transaction.objectStore("entries").index("created");
     
         const cursor = await openCursor(index);
@@ -178,6 +160,7 @@ class JournalDatabase {
             yield new Journal(cursor.value.id, this, cursor.value);
             await continueCursor(cursor);
         }
+        transaction.commit();
     }
 
     upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction, resolve: (value: any) => void) {

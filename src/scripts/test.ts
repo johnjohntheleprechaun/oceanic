@@ -2,8 +2,13 @@ import { JournalDatabase } from "./utils/storage"
 
 async function test() {
     const db = new JournalDatabase();
-    db.execOperation(two, [], "readonly");
-    db.execOperation(one, [], "readonly");
+    let id: string;
+    for await (let journal of db.listJournals()) {
+        journal.setTitle("chimken");
+        id = journal.id;
+    }
+    const journal = await db.getJournal(id);
+    console.log(journal);
 }
 
 async function one() {
