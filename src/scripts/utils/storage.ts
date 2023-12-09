@@ -68,6 +68,7 @@ class Journal {
 
 class JournalDatabase {
     db: IDBDatabase
+    operationQueue: Promise<any>[]
 
     async ensureLoaded() {
         if (!this.db) {
@@ -105,6 +106,18 @@ class JournalDatabase {
             await upgradeFunc();
             console.log("upgrade func finished");
         }
+    }
+
+    async execOperation(func: () => Promise<any>, params: any[], mode: IDBTransactionMode) {
+        if (!this.operationQueue) {
+            this.operationQueue = [];
+        }
+        this.operationQueue.push(new Promise(async (resolve) => {
+            console.log(this.operationQueue);
+            await this.operationQueue[this.operationQueue.length-1]
+            await func.apply(null, params);
+            resolve(null);
+        }));
     }
 
     async getJournal(id: string) {

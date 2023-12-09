@@ -1,7 +1,19 @@
+import { JournalDatabase } from "./utils/storage"
+
 async function test() {
-    const manifest = await fetch("manifest.json").then(resp=>resp.json()) as Object;
-    const files = Object.entries(manifest).map(entry=>entry[1]);
-    console.log(files);
+    const db = new JournalDatabase();
+    db.execOperation(two, [], "readonly");
+    db.execOperation(one, [], "readonly");
 }
 
-test();
+async function one() {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log("one");
+}
+
+async function two() {
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    console.log("two");
+}
+
+export {test}
