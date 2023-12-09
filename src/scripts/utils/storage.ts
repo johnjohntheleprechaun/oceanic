@@ -152,40 +152,19 @@ class JournalDatabase {
         return putRequest;
     }
 
-    async listJournals(index?: IDBObjectStore | IDBIndex) {
+    async* listJournals() {
         await this.ensureLoaded();
 
-        if (!index) {
-            console.log(this.db);
-            const transaction = this.db.transaction("entries");
-            index = transaction.objectStore("entries").index("created");
-        }
+        console.log(this.db);
+        const transaction = this.db.transaction("entries", "readonly");
+        const index = transaction.objectStore("entries").index("created");
     
         const cursor = await openCursor(index);
         
-        const journalDatabase = this;
-    
-        return {
-            [Symbol.asyncIterator]() {
-                return {
-                    async next() {
-                        if (!cursor.request) {
-                            return { done: true };
-                        }
-                        if (cursor.value) {
-                            const returnVal = {
-                                value: new Journal(cursor.value.id, journalDatabase, cursor.value),
-                                done: false
-                            };
-                            await continueCursor(cursor);
-                            return returnVal;
-                        } else {
-                            return { done: true };
-                        }
-                    }
-                };
-            }
-        };
+        while (cursor.request) {
+            yield new Journal(cursor.value.id, this, cursor.value);
+            await continueCursor(cursor);
+        }
     }
 
     upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction, resolve: (value: any) => void) {
@@ -201,10 +180,13 @@ class JournalDatabase {
             objectStore.createIndex("type", "type", { unique: false });
             
             updateData = async () => {
-                const journals = await this.listJournals() as AsyncGenerator<Journal>;
-                console.log("got iter");
-                for await (const journal of journals) {
-                    console.log(journal);
+                console.log("updating data");
+                // yes I know this is jank as fuck
+                let journals: Journal[] = []
+                for await (const journal of this.listJournals()) {
+                    journals.push(journal);
+                }
+                for (const journal of journals) {
                     await journal.setType("messages");
                 }
             }

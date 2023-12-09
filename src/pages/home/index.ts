@@ -87,8 +87,7 @@ function newJournal(type: string) {
 }
 
 async function loadJournals() {
-    const journals = await db.listJournals();
-    for await (const journal of journals) {
+    for await (const journal of db.listJournals()) {
         displayJournal(journal);
     }
 }
