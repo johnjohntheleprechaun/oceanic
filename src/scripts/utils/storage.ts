@@ -72,6 +72,7 @@ class JournalDatabase {
     async ensureLoaded() {
         if (!this.db) {
             await this.init();
+            console.log("initialized");
         }
     }
 
@@ -79,14 +80,12 @@ class JournalDatabase {
         await navigator.storage.persist();
         const dbRequest = window.indexedDB.open("journal", DB_VERSION);
         let upgrading: boolean;
-
-        return new Promise((resolve, reject) => {
+        
+        let upgradeFunc: () => Promise<any>;
+        let initPromise = new Promise((resolve, reject) => {
             dbRequest.onsuccess = () => {
                 this.db = dbRequest.result;
-                if (!upgrading) {
-                    console.log("success");
-                    resolve(dbRequest.result);
-                }
+                resolve(dbRequest.result);
             };
             dbRequest.onerror = function() {
                 reject(dbRequest.error);
@@ -97,9 +96,15 @@ class JournalDatabase {
             dbRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
                 console.log(dbRequest.transaction.objectStore("entries"))
                 upgrading = true;
-                this.upgradeDB(event, dbRequest.result, dbRequest.transaction, resolve);
+                upgradeFunc = this.upgradeDB(event, dbRequest.result, dbRequest.transaction, resolve);
             };
         });
+        await initPromise;
+        console.log("initialize promise finished");
+        if (upgradeFunc) {
+            await upgradeFunc();
+            console.log("upgrade func finished");
+        }
     }
 
     async getJournal(id: string) {
@@ -183,25 +188,27 @@ class JournalDatabase {
         };
     }
 
-    async upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction, resolve: (value: any) => void) {
+    upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction, resolve: (value: any) => void) {
+        let updateData: () => Promise<any>;
         if (event.oldVersion === 0) { // no database previously
             const objectStore = db.createObjectStore("entries", { keyPath: "id" });
             objectStore.createIndex("created", "created", { unique: false });
             objectStore.createIndex("title", "title", { unique: false });
+            objectStore.createIndex("type", "type", { unique: false });
         }
         else if (event.oldVersion === 1) {
             const objectStore = transaction.objectStore("entries");
             objectStore.createIndex("type", "type", { unique: false });
             
-            transaction.oncomplete = async () => {
+            updateData = async () => {
                 const journals = await this.listJournals() as AsyncGenerator<Journal>;
                 console.log("got iter");
                 for await (const journal of journals) {
                     console.log(journal);
                     await journal.setType("messages");
                 }
-                resolve(db);
             }
+            
             /*const index = objectStore.index("created");
             const journals = await this.listJournals(index);
             for await (const journal of journals) {
@@ -209,6 +216,7 @@ class JournalDatabase {
                 await putObject(journal, objectStore);
             }*/
         }
+        return updateData
     }
 }
 
