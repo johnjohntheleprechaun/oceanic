@@ -169,7 +169,7 @@ class JournalDatabase {
             [Symbol.asyncIterator]() {
                 return {
                     async next() {
-                        if (!cursor) {
+                        if (!cursor.request) {
                             return { done: true };
                         }
                         if (cursor.value) {
