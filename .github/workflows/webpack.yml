@@ -1,5 +1,9 @@
 name: NodeJS with Webpack
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 on:
   push:
     branches: [ "master" ]
@@ -13,6 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Setup Github Pages
+      uses: actions/configure-pages@v4
 
     - name: Use Node.js 21.x
       uses: actions/setup-node@v3
@@ -23,3 +29,16 @@ jobs:
       run: |
         npm install
         npx webpack --mode production
+
+    - name: Upload Artifacts
+      uses: actions/upload-pages-artifact@v2
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to github pages
+        id: deployment
+        uses: actions/deploy-pages@v3
