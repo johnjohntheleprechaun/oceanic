@@ -97,11 +97,12 @@ class JournalDatabase {
             };
         });
         await initPromise;
-        console.log("initialize promise finished");
+        //console.log("initialize promise finished");
         if (upgradeFunc) {
             await upgradeFunc();
-            console.log("upgrade func finished");
+            //console.log("upgrade func finished");
         }
+        console.log("Database initialized");
     }
 
     async execOperation(func: (...args: any[]) => Promise<any>, params: any[], mode: IDBTransactionMode = "readwrite") {
@@ -149,7 +150,7 @@ class JournalDatabase {
         await this.operationQueue[this.operationQueue.length-1];
         const transaction = this.db.transaction("entries", "readonly");
         this.operationQueue.push(new Promise(resolve => {
-            transaction.oncomplete = () => {resolve(null); console.log("done")};
+            transaction.oncomplete = () => {resolve(null)};
         }));
         const index = transaction.objectStore("entries").index("created");
     
