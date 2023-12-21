@@ -92,7 +92,6 @@ class JournalDatabase {
                 reject(new Error("Database is blocked"));
             };
             dbRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-                console.log(dbRequest.transaction.objectStore("entries"))
                 upgrading = true;
                 upgradeFunc = this.upgradeDB(event, dbRequest.result, dbRequest.transaction, resolve);
             };
@@ -155,8 +154,8 @@ class JournalDatabase {
         const index = transaction.objectStore("entries").index("created");
     
         const cursor = await openCursor(index);
-        
-        while (cursor.request) {
+
+        while (cursor && cursor.request) {
             yield new Journal(cursor.value.id, this, cursor.value);
             await continueCursor(cursor);
         }
