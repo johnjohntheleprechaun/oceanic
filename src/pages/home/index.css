@@ -1,0 +1,69 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+}
+
+#page {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    background-color: var(--background);
+    overflow-y: auto;
+}
+
+#journals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-rows: repeat(auto-fit);
+    grid-gap: 10px;
+}
+
+.journal-entry {
+    background-color: var(--primary);
+    font-family: sans-serif;
+    height: 75px;
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    font-size: 14pt;
+    cursor: pointer;
+
+    border-radius: 10px;
+}
+.title, .date {
+    pointer-events: none;
+}
+.date {
+    font-size: 10pt;
+    color: var(--secondary-text);
+}
+
+.journal-type {
+    padding: 10px;
+    cursor: pointer;
+    width: 55px;
+    aspect-ratio: 1;
+}
+
+#create-journal {
+    width: 75px;
+    height: 75px;
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
+    background-color: var(--primary);
+    border: 3px solid white;
+    border-radius: 25px;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column-reverse;
+}
+#create-icon {
+    width: 100%;
+}

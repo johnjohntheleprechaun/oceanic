@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, max-scale=1, user-scalable=no">
+    <link rel="manifest" href="~@/oceanic.webmanifest">
+    <link rel="stylesheet" href="~css/theme.css" type="text/css">
+    <link rel="stylesheet" href="~index.css" type="text/css"> 
+    <title>Journal List</title>
+</head>
+
+<body>
+    <div id="page">
+        <div id="journals">
+        </div>
+        <div id="create-journal">
+            <img id="create-icon" src="~images/icon_add.svg">
+            <% journals.forEach(journal => { %>
+                <img id="<%=journal + 'Journal'%>" class="journal-type" src="<%=`~@/journals/${journal}/icon.svg`%>">
+            <% }); %>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<template id="journal-entry-template">
+    <div class="journal-entry">
+        <span class="title"></span>
+        <span class="date"></span>
+    </div>
+</template>

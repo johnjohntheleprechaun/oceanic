@@ -3,10 +3,19 @@
     "@aws-sdk/client-dynamodb": "^3.332.0",
     "@aws-sdk/client-s3": "^3.341.0",
     "@aws-sdk/credential-providers": "^3.332.0",
-    "jwt-decode": "^3.1.2",
-    "webpack": "^5.82.0"
+    "jwt-decode": "^3.1.2"
   },
   "devDependencies": {
-    "webpack-cli": "^5.1.1"
+    "@types/serviceworker": "^0.0.68",
+    "copy-webpack-plugin": "^11.0.0",
+    "html-loader": "^4.2.0",
+    "html-webpack-plugin": "^5.5.3",
+    "template-ejs-loader": "^0.9.4",
+    "ts-loader": "^9.4.3",
+    "typescript": "^5.0.4",
+    "webpack": "^5.84.1",
+    "webpack-assets-manifest": "^5.1.0",
+    "webpack-cli": "^5.1.1",
+    "webpack-webmanifest-loader": "^2.0.2"
   }
 }
