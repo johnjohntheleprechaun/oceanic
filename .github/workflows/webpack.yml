@@ -34,9 +34,8 @@ jobs:
         npx webpack --mode production
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-pages-artifact@v2
       with:
-        name: "github-pages"
         path: "dist"
 
   deploy:
