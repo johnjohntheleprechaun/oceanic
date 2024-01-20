@@ -1,9 +1,3 @@
-name: NodeJS with Webpack
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 on:
   push:
     branches: [ "master" ]
@@ -14,7 +8,7 @@ permissions:
   pages: write
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,7 +31,11 @@ jobs:
       uses: actions/upload-pages-artifact@v2
       with:
         path: "dist"
-        
-    - name: Deploy to github pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to github pages
+        id: deployment
+        uses: actions/deploy-pages@v3
