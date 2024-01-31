@@ -65,5 +65,8 @@ html, body {
     flex-direction: column-reverse;
 }
 #create-icon {
-    width: 100%;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-size: 75px;
+    color: var(--text);
+    cursor: default;
 }
