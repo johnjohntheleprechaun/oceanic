@@ -20,6 +20,7 @@ class BuildHashLogger {
 
 const scripts = {};
 const htmlPlugins = [];
+const fontLink = `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />`
 let journals = []
 function mapPages() {
     const pages = fs.readdirSync("src/pages").filter((folder) => folder !== "journals" && folder !== "callback");
@@ -39,19 +40,17 @@ function mapPages() {
             template: `./src/pages/${page}/index.template.html`,
             filename: `${page}.html`,
             chunks: [page],
-            favicon: "./src/images/oceanic-quill.svg"
-        };
-
-        if (page === "home") {
-            options.template = htmlWebpackPluginTemplateCustomizer({
+            favicon: "./src/images/oceanic-quill.svg",
+            template: htmlWebpackPluginTemplateCustomizer({
                 templatePath: "./src/pages/home/index.template.html",
                 templateEjsLoaderOption: {
                     data: {
-                        journals: journals
+                        journals: journals,
+                        fontLink: fontLink
                     }
                 }
             })
-        }
+        };
 
         htmlPlugins.push(new HtmlWebpackPlugin(options));
     }
@@ -61,7 +60,8 @@ function mapPages() {
                 templatePath: `./src/templates/journal-template.html`,
                 templateEjsLoaderOption: {
                     data: {
-                        journalName: journal
+                        journalName: journal,
+                        fontLink: fontLink
                     }
                 }
             }),
