@@ -18,7 +18,7 @@
         <div id="create-journal">
             <span id="create-icon" class="material-symbols-rounded">add</span>
             <% journals.forEach(journal => { %>
-                <img id="<%=journal + 'Journal'%>" class="journal-type" src="<%=`~@/journals/${journal}/icon.svg`%>">
+                <span id="<%=journal.name%>" class="material-symbols-rounded journal-type"><%=journal.iconName%></span>
             <% }); %>
         </div>
     </div>

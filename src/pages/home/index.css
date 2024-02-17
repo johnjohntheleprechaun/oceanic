@@ -44,10 +44,11 @@ html, body {
 }
 
 .journal-type {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-size: 55px !important;
     padding: 10px;
-    cursor: pointer;
-    width: 55px;
-    aspect-ratio: 1;
+    color: var(--text);
+    cursor: default;
 }
 
 #create-journal {

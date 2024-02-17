@@ -18,10 +18,10 @@ window.addEventListener("load", async () => {
     createButton = document.getElementById("create-journal");
     createIcon = document.getElementById("create-icon");
     journalIcons = [];
-    for (let type of journalTypes) {
-        document.getElementById(type + "Journal")
+    for (let journal of journalTypes) {
+        document.getElementById(journal)
         .addEventListener("click", (event: MouseEvent) => {
-            newJournal(type);
+            newJournal(journal);
         })
     }
     
