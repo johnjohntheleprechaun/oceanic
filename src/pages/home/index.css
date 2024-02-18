@@ -48,7 +48,7 @@ html, body {
     font-size: 55px !important;
     padding: 10px;
     color: var(--text);
-    cursor: default;
+    cursor: pointer;
 }
 
 #create-journal {
