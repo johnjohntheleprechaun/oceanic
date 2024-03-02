@@ -26,6 +26,7 @@ class Page {
         this.name = name ? name : path.basename(dir);
         this.scripts = {};
         this.scripts[this.name] = "./" + path.join(dir, "index.ts");
+        this.outputPath = outputPath ? outputPath : path.basename(dir) + ".html";
         console.log("scripts:", this.scripts);
         const chunks = Object.keys(this.scripts);
         console.log("chunks:", chunks);
@@ -36,7 +37,7 @@ class Page {
                     data: ejsData
                 }
             }),
-            filename: outputPath ? outputPath : path.basename(dir) + ".html",
+            filename: this.outputPath,
             chunks: chunks,
             favicon: "./src/images/oceanic-quill.svg"
         });
@@ -49,8 +50,8 @@ class Journal extends Page {
         const ejsData = {
             journalName: config.name,
         };
-        super(dir, ejsData, config.name + "-journal");
-        
+        const outputPath = path.join("journals", path.basename(dir) + ".html")
+        super(dir, ejsData, config.name + "-journal", outputPath);
         this.iconName = config["material-icon"];
     }
 }
@@ -138,7 +139,6 @@ module.exports = {
                         options: {
                             sources: {
                                 urlFilter: (attribute, value, resourcePath) => {
-                                    console.log(value);
                                     if (/^~/.test(value)) {
                                         return true;
                                     }
@@ -162,7 +162,7 @@ module.exports = {
     },
     plugins: htmlPlugins.concat([
         new webpack.DefinePlugin({
-            JOURNALS: journals.map(journal => JSON.stringify(journal.name))
+            JOURNALS: journals.map(journal => JSON.stringify(journal))
         }),
         new CopyPlugin({
             patterns: [

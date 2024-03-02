@@ -1,6 +1,6 @@
 import { JournalDatabase, Journal } from "../../scripts/utils/storage";
 
-declare const JOURNALS: string[];
+declare const JOURNALS: any[];
 const journalTypes = JOURNALS;
 
 let journalIcons: HTMLElement[];
@@ -11,7 +11,7 @@ let createIcon: HTMLElement;
 let typeSelectionSpeed: number;
 let maxSelectionHeight: number;
 let db: JournalDatabase
-
+console.log(journalTypes)
 window.addEventListener("load", async () => {
     entryTemplate = document.querySelector<HTMLTemplateElement>("#journal-entry-template").content.firstElementChild as HTMLElement;
     journalArea = document.getElementById("journals");
@@ -19,7 +19,7 @@ window.addEventListener("load", async () => {
     createIcon = document.getElementById("create-icon");
     journalIcons = [];
     for (let journal of journalTypes) {
-        document.getElementById(journal)
+        document.getElementById(journal.name)
         .addEventListener("click", (event: MouseEvent) => {
             newJournal(journal);
         })
@@ -81,8 +81,8 @@ function closeJournalSelection() {
     );
 }
 
-function newJournal(type: string) {
-    db.createJournal("", type)
+function newJournal(type: any) {
+    db.createJournal("", type.name)
     .then(id => openJournal(id, type));
 }
 
@@ -126,6 +126,11 @@ function getTime(timestamp: number) {
     return date.getHours().toString().padStart(2,"0") + ":" + date.getMinutes().toString().padStart(2,"0");
 }
 
+
+
 function openJournal(entryID: string, type: string) {
-    window.location.href = window.location.origin + `/journals/${type}.html` + "#entryid=" + entryID;
+    // find the journal object that matches type
+    console.log(type);
+    const journal = journalTypes.find(journal => journal.name === type);
+    window.location.href = window.location.origin + "/" + journal.outputPath + "#entryid=" + entryID;
 }
