@@ -126,7 +126,7 @@ function closeJournalSelection() {
 
 function newJournal(type: any) {
     db.createJournal("", type.name)
-    .then(id => openJournal(id, type));
+    .then(id => openJournal(id, type.name));
 }
 
 async function loadJournals() {
