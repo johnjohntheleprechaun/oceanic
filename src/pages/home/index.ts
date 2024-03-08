@@ -42,18 +42,20 @@ window.addEventListener("load", async () => {
 
 async function exportAll() {
     const zip = new JSZip();
-    let unnamed = 0;
+    const usedNames: string[] = [];
     for await (const journal of db.listJournals()) {
         const content = JSON.stringify(journal.journal);
         const blob = new Blob([content], { type: "application/json" });
-        const title = await journal.getTitle();
+        const title = await journal.getTitle() === "" ? "untitled" : await journal.getTitle();
+
+        // prevent repeat names
         let filename;
-        if (title === "") {
-            filename = `untitled(${unnamed}).json`;
-            unnamed++;
+        if (usedNames.includes(title)) {
+            filename = `${title} (${usedNames.filter(x=>x===title).length}).json`
         } else {
             filename = `${title}.json`
         }
+        usedNames.push(title);
 
         // create export link
         zip.file(filename, blob);
