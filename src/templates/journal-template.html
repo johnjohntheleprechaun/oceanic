@@ -8,12 +8,13 @@
     <link rel="stylesheet" href="~css/theme.css" type="text/css">
     <link rel="stylesheet" href="journal-template.css" type="text/css">
     <link rel="stylesheet" href="<%- `../journals/${journalName}/index.css` %>" type="text/css">
+    <%- fontLink %>
     <title>Journal</title>
 </head>
 
 <body>
     <div id="navbar">
-        <img id="home-button" src="~images/icon_home.svg">
+        <span id="home-button" class="material-symbols-rounded">home</span>
         <input type="text" id="journal-title">
     </div>
     <%- include(`../journals/${journalName}/index.template.html`) %>

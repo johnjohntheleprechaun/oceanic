@@ -65,10 +65,11 @@ body {
 }
 
 .journal-type {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-size: 55px !important;
     padding: 10px;
+    color: var(--text);
     cursor: pointer;
-    width: 55px;
-    aspect-ratio: 1;
 }
 
 #create-journal {
@@ -86,5 +87,9 @@ body {
     flex-direction: column-reverse;
 }
 #create-icon {
-    width: 100%;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-size: 75px;
+    color: var(--text);
+    cursor: default;
+    user-select: none;
 }

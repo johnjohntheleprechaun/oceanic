@@ -17,60 +17,78 @@ class BuildHashLogger {
         })
     }
 }
-
-const scripts = {};
-const htmlPlugins = [];
-let journals = []
-function mapPages() {
-    const pages = fs.readdirSync("src/pages").filter((folder) => folder !== "journals" && folder !== "callback");
-    journals = fs.readdirSync("./src/journals");
-
-    // load scripts
-    for (let page of pages) {
-        scripts[page] = `./src/pages/${page}/index.ts`;
-    }
-    for (let journal of journals) {
-        scripts[journal+"Journal"] = `./src/journals/${journal}/index.ts`;
-    }
-
-    // load HTML
-    for (let page of pages) {
-        const options = {
-            template: `./src/pages/${page}/index.template.html`,
-            filename: `${page}.html`,
-            chunks: [page],
-            favicon: "./src/images/oceanic-quill.svg"
-        };
-
-        if (page === "home") {
-            options.template = htmlWebpackPluginTemplateCustomizer({
-                templatePath: "./src/pages/home/index.template.html",
-                templateEjsLoaderOption: {
-                    data: {
-                        journals: journals
-                    }
-                }
-            })
-        }
-
-        htmlPlugins.push(new HtmlWebpackPlugin(options));
-    }
-    for (let journal of journals) {
-        const plugin = new HtmlWebpackPlugin({
+const materialIconLink = `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />`;
+class Page {
+    constructor (dir, ejsData={}, name=undefined, outputPath=undefined) {
+        ejsData.fontLink = materialIconLink;
+        console.log("template path:", "./" + path.join(dir, "index.html"))
+        console.log(name, ejsData)
+        this.name = name ? name : path.basename(dir);
+        this.scripts = {};
+        this.scripts[this.name] = "./" + path.join(dir, "index.ts");
+        this.outputPath = outputPath ? outputPath : path.basename(dir) + ".html";
+        console.log("scripts:", this.scripts);
+        const chunks = Object.keys(this.scripts);
+        console.log("chunks:", chunks);
+        this.htmlPlugin = new HtmlWebpackPlugin({
             template: htmlWebpackPluginTemplateCustomizer({
-                templatePath: `./src/templates/journal-template.html`,
+                templatePath: path.basename(path.join(dir, "..")) == "journals" ? "./src/templates/journal-template.html" : "./" + path.join(dir, "index.template.html"),
                 templateEjsLoaderOption: {
-                    data: {
-                        journalName: journal
-                    }
+                    data: ejsData
                 }
             }),
-            filename: `journals/${journal}.html`,
-            chunks: [journal+"Journal"],
+            filename: this.outputPath,
+            chunks: chunks,
             favicon: "./src/images/oceanic-quill.svg"
         });
-        htmlPlugins.push(plugin);
     }
+}
+class Journal extends Page {
+    constructor (dir) {
+        const configFile = fs.readFileSync(path.join(dir, "config.json"));
+        const config = JSON.parse(configFile.toString());
+        const ejsData = {
+            journalName: config.name,
+        };
+        const outputPath = path.join("journals", path.basename(dir) + ".html")
+        super(dir, ejsData, config.name + "-journal", outputPath);
+        this.iconName = config["material-icon"];
+    }
+}
+
+let scripts = {};
+let htmlPlugins = [];
+let journalDirs = [];
+let journals = [];
+function mapPages() {
+    const pageDirs = fs.readdirSync("src/pages").filter((folder) => folder !== "journals" && folder !== "callback");
+    journalDirs = fs.readdirSync("./src/journals");
+    
+    // load pages
+    journals = [];
+    const pages = [];
+    for (const journalDir of journalDirs) {
+        const journal = new Journal(path.join("src", "journals", journalDir));
+        journals.push(journal);
+        pages.push(journal);
+    }
+    for (const pageDir of pageDirs) {
+        let data = {};
+        if (pageDir === "home") {
+            data.journals = journals.map((journal) => ({ name: journal.name, iconName: journal.iconName }));
+            console.log(data.journals);
+        }
+        const dir = path.join("src/pages", pageDir);
+        const page = new Page(dir, data);
+        pages.push(page);
+    }
+
+    [htmlPlugins, scripts] = pages.reduce((prev, page) => {
+        prev[0].push(page.htmlPlugin); // HTML
+        prev[1] = { ...prev[1], ...page.scripts }; // JS
+        return prev
+    }, [[],{}]);
+    console.log(htmlPlugins.length, scripts);
 }
 
 mapPages();
@@ -121,7 +139,6 @@ module.exports = {
                         options: {
                             sources: {
                                 urlFilter: (attribute, value, resourcePath) => {
-                                    console.log(value);
                                     if (/^~/.test(value)) {
                                         return true;
                                     }

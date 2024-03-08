@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, max-scale=1, user-scalable=no">
     <link rel="manifest" href="~@/oceanic.webmanifest">
     <link rel="stylesheet" href="~css/theme.css" type="text/css">
-    <link rel="stylesheet" href="~index.css" type="text/css"> 
+    <link rel="stylesheet" href="~index.css" type="text/css">
+    <%- fontLink %>
     <title>Journal List</title>
 </head>
 
@@ -17,9 +18,9 @@
     <div id="journals">
     </div>
     <div id="create-journal">
-        <img id="create-icon" src="~images/icon_add.svg">
+        <span id="create-icon" class="material-symbols-rounded">add</span>
         <% journals.forEach(journal => { %>
-            <img id="<%=journal + 'Journal'%>" class="journal-type" src="<%=`~@/journals/${journal}/icon.svg`%>">
+            <span id="<%=journal.name%>" class="material-symbols-rounded journal-type"><%=journal.iconName%></span>
         <% }); %>
     </div>
 </body>
