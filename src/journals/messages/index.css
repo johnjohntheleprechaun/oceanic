@@ -107,7 +107,9 @@ body {
 }
 
 #submit {
-    height: calc(12pt + 16px);
+    font-size: calc(12pt + 16px);
+    font-variation-settings: "FILL" 1;
+    color: white;
     aspect-ratio: 1;
     cursor: pointer;
     resize: none;

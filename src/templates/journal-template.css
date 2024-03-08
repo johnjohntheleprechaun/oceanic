@@ -27,7 +27,8 @@
 }
 
 #home-button {
-    height: 100%;
+    font-size: 40px;
     margin-right: 10px;
     cursor: pointer;
+    font-variation-settings: "FILL" 1;
 }
