@@ -114,4 +114,5 @@ body {
     cursor: pointer;
     resize: none;
     align-self: center;
+    user-select: none;
 }

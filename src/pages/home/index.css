@@ -70,4 +70,5 @@ html, body {
     font-size: 75px;
     color: var(--text);
     cursor: default;
+    user-select: none;
 }
