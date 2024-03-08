@@ -31,7 +31,7 @@ window.addEventListener("load", async () => {
 
     createButton.addEventListener("mouseenter", openJournalSelection);
     createButton.addEventListener("mouseleave", closeJournalSelection);
-    db = new JournalDatabase();
+    db = await JournalDatabase.open();
     await loadJournals();
     
     console.log(journalIcons);
