@@ -1,3 +1,4 @@
+import * as JSZip from "jszip";
 import { JournalDatabase, Journal } from "../../scripts/utils/storage";
 
 declare const JOURNALS: string[];
@@ -35,7 +36,47 @@ window.addEventListener("load", async () => {
     await loadJournals();
     
     console.log(journalIcons);
+
+    document.getElementById("page-title").addEventListener("click", exportAll);
 });
+
+async function exportAll() {
+    const zip = new JSZip();
+    let unnamed = 0;
+    for await (const journal of db.listJournals()) {
+        const content = JSON.stringify(journal.journal);
+        const blob = new Blob([content], { type: "application/json" });
+        const title = await journal.getTitle();
+        let filename;
+        if (title === "") {
+            filename = `untitled(${unnamed}).json`;
+            unnamed++;
+        } else {
+            filename = `${title}.json`
+        }
+
+        // create export link
+        zip.file(filename, blob);
+    }
+    zip.generateAsync({type: "blob"}).then(blob => {
+        // create object URL
+        const url = URL.createObjectURL(blob);
+
+        // create link element
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "journals.zip";
+        link.style.display = "none";
+
+        // trigger download
+        document.body.appendChild(link);
+        link.click();
+
+        // cleanup
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    });
+}
 
 function openJournalSelection() {
     createButton.animate(

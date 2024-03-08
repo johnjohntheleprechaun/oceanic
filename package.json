@@ -3,6 +3,7 @@
     "@aws-sdk/client-dynamodb": "^3.332.0",
     "@aws-sdk/client-s3": "^3.341.0",
     "@aws-sdk/credential-providers": "^3.332.0",
+    "jszip": "^3.10.1",
     "jwt-decode": "^3.1.2"
   },
   "devDependencies": {

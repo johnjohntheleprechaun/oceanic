@@ -11,15 +11,16 @@
 </head>
 
 <body>
-    <div id="page">
-        <div id="journals">
-        </div>
-        <div id="create-journal">
-            <img id="create-icon" src="~images/icon_add.svg">
-            <% journals.forEach(journal => { %>
-                <img id="<%=journal + 'Journal'%>" class="journal-type" src="<%=`~@/journals/${journal}/icon.svg`%>">
-            <% }); %>
-        </div>
+    <div id="navbar">
+        <div id="page-title">Journal List</div>
+    </div>
+    <div id="journals">
+    </div>
+    <div id="create-journal">
+        <img id="create-icon" src="~images/icon_add.svg">
+        <% journals.forEach(journal => { %>
+            <img id="<%=journal + 'Journal'%>" class="journal-type" src="<%=`~@/journals/${journal}/icon.svg`%>">
+        <% }); %>
     </div>
 </body>
 
