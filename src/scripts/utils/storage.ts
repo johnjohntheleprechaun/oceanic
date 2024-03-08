@@ -1,4 +1,4 @@
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 interface JournalInterface {
     id: string,
@@ -16,13 +16,18 @@ class Journal {
 
     constructor (id: string, db?: JournalDatabase, journal?: JournalInterface) {
         this.id = id;
-        this.db = db ? db : new JournalDatabase();
-        this.journal = journal ? journal : undefined;
+        this.db = db;
+        this.journal = journal;
         this.loaded = !!journal;
     }
+
     async ensureLoaded() {
+        if (!this.db) {
+            this.db = await JournalDatabase.open();
+        }
         if (!this.loaded) {
             this.journal = await this.db.getJournal(this.id);
+            this.loaded = true;
         }
     }
 
@@ -68,16 +73,15 @@ class Journal {
 
 class JournalDatabase {
     db: IDBDatabase
-    operationQueue: Promise<any>[]
 
-    constructor () {
-        this.operationQueue = [];
-        this.operationQueue.push(this.init());
+    public static async open(): Promise<JournalDatabase> {
+        const database = new JournalDatabase();
+        await database.init();
+        return database;
     }
     async init() {
         await navigator.storage.persist();
         const dbRequest = window.indexedDB.open("journal", DB_VERSION);
-        let upgrading: boolean;
         
         let upgradeFunc: () => Promise<any>;
         let initPromise = new Promise((resolve, reject) => {
@@ -92,7 +96,6 @@ class JournalDatabase {
                 reject(new Error("Database is blocked"));
             };
             dbRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-                upgrading = true;
                 upgradeFunc = this.upgradeDB(event, dbRequest.result, dbRequest.transaction, resolve);
             };
         });
@@ -105,14 +108,15 @@ class JournalDatabase {
         console.log("Database initialized");
     }
 
+    /**
+     * Create a transaction on the "entries" object store, then execute the func param with that transaction.
+     * @param func The async function to execute (usually getObject, putObject, or addObject)
+     * @param params Any extra params for the functions
+     * @param mode The transaction mode
+     * @returns A promise that resolves when the function does
+     */
     async execOperation(func: (...args: any[]) => Promise<any>, params: any[], mode: IDBTransactionMode = "readwrite") {
-        if (!this.operationQueue) {
-            this.operationQueue = [];
-        }
         const promise = new Promise(async (resolve) => {
-            // wait your turn
-            await this.operationQueue[this.operationQueue.length-1];
-
             // execute the operation
             const transaction = this.db.transaction("entries", mode);
             const objectStore = transaction.objectStore("entries");
@@ -121,16 +125,15 @@ class JournalDatabase {
 
             resolve(returnVal);
         });
-        this.operationQueue.push(promise);
         return promise;
     }
 
-    async getJournal(id: string) {
+    public async getJournal(id: string) {
         const journal = await this.execOperation(getObject, [id], "readonly");
         return journal as JournalInterface;
     }
 
-    async createJournal(title: string, type: string): Promise<string> {
+    public async createJournal(title: string, type: string): Promise<string> {
         const journal = {
             id: crypto.randomUUID(),
             created: Date.now(),
@@ -142,16 +145,12 @@ class JournalDatabase {
         return id as string;
     }
 
-    async updateJournal(journal: JournalInterface) {
+    public async updateJournal(journal: JournalInterface) {
         await this.execOperation(putObject, [journal]);
     }
 
-    async* listJournals() {
-        await this.operationQueue[this.operationQueue.length-1];
+    public async* listJournals() {
         const transaction = this.db.transaction("entries", "readonly");
-        this.operationQueue.push(new Promise(resolve => {
-            transaction.oncomplete = () => {resolve(null)};
-        }));
         const index = transaction.objectStore("entries").index("created");
     
         const cursor = await openCursor(index);
@@ -160,7 +159,6 @@ class JournalDatabase {
             yield new Journal(cursor.value.id, this, cursor.value);
             await continueCursor(cursor);
         }
-        transaction.commit();
     }
 
     upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction, resolve: (value: any) => void) {
@@ -177,22 +175,19 @@ class JournalDatabase {
             
             updateData = async () => {
                 console.log("updating data");
-                // yes I know this is jank as fuck
-                let journals: Journal[] = []
                 for await (const journal of this.listJournals()) {
-                    journals.push(journal);
-                }
-                for (const journal of journals) {
-                    await journal.setType("messages");
+                    // DO NOT AWAIT, or blocking will happen. This essentially just adds the operation to the IDB transaction queue
+                    journal.setType("messages-journal");
                 }
             }
-            
-            /*const index = objectStore.index("created");
-            const journals = await this.listJournals(index);
-            for await (const journal of journals) {
-                journal.type = "messages";
-                await putObject(journal, objectStore);
-            }*/
+        }
+        else if (event.oldVersion === 2) {
+            updateData = async () => {
+                for await (const journal of this.listJournals()) {
+                    // Set the journal type to match the new format (but DO NOT AWAIT, otherwise everything will be blocked)
+                    journal.setType(`${await journal.getType()}-journal`);
+                }
+            }
         }
         return updateData
     }
