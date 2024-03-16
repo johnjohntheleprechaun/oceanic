@@ -1,6 +1,7 @@
-import { CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthResponse, RespondToAuthChallengeCommand } from "@aws-sdk/client-cognito-identity-provider";
+import { AssociateSoftwareTokenCommand, CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthResponse, RespondToAuthChallengeCommand, VerifySoftwareTokenCommand } from "@aws-sdk/client-cognito-identity-provider";
 import { formSubmit } from "../../scripts/utils/forms";
 import { newPasswordVerifier } from "./verifiers";
+import { toCanvas } from "qrcode";
 
 declare const cloudConfig: any;
 
@@ -70,40 +71,74 @@ async function login(event: SubmitEvent) {
         });
 
         const authResponse = await client.send(initiateCommand) as InitiateAuthResponse;
+        console.log(authResponse);
         
         if (authResponse.ChallengeName) {
-            respondToChallenge(authResponse.ChallengeName, formData.get("username").toString(), authResponse.Session);
+            respondToChallenge(authResponse.ChallengeName, authResponse.ChallengeParameters, formData.get("username").toString(), authResponse.Session);
         }
     } catch (error) {
         console.log(error);
     }
 }
 
-async function respondToChallenge(challengeName: string, username: string, session: string) {
+async function respondToChallenge(challengeName: string, challengeParams: Record<string, string>, username: string, session: string) {
     switch (challengeName) {
         case "NEW_PASSWORD_REQUIRED":
-            switchForms("new-password");
-            newPasswordChallenge(username, session);
+            newPasswordChallenge(username, session, challengeParams);
             break;
-    
+        case "MFA_SETUP":
+            switchForms("mfa-setup");
+            mfaSetupChallenge(username, session);
         default:
             break;
     }
 }
 
-async function newPasswordChallenge(username: string, session: string) {
+async function mfaSetupChallenge(username: string, session: string) {
+    const qrCanvas = forms["mfa-setup"].getElementsByTagName("canvas").item(0);
+    console.log("setup");
+    const setupCommand = new AssociateSoftwareTokenCommand({ Session: session });
+    const setupResponse = await client.send(setupCommand);
+
+    console.log(setupResponse.SecretCode);
+    const otpDataUri = `otpauth://totp/Oceanic: ${username}?secret=${setupResponse.SecretCode}`;
+    await toCanvas(qrCanvas, otpDataUri, { width: formsContainer.clientWidth });
+
+    const code = (await formSubmit(forms["mfa-setup"])).get("code").toString();
+    const confirmOtpCommand = new VerifySoftwareTokenCommand({
+        Session: setupResponse.Session,
+        UserCode: code
+    });
+    const confirmOtpResponse = client.send(confirmOtpCommand);
+    console.log(confirmOtpResponse);
+}
+
+async function newPasswordChallenge(username: string, session: string, challengeParams: Record<string, string>) {
+    const extraAttributes = JSON.parse(challengeParams["requiredAttributes"]) as Array<string>;
+    let email: string;
+    if (extraAttributes.includes("userAttributes.email")) {
+        // get the users email
+        switchForms("email");
+        email = (await formSubmit(forms["email"])).get("email").toString();
+    }
     // wait for the form to be submitted
+    switchForms("new-password");
     const formData = await formSubmit(forms["new-password"], newPasswordVerifier);
     const challengeRespondCommand = new RespondToAuthChallengeCommand({
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ClientId: cloudConfig.clientID,
         ChallengeResponses: {
             "USERNAME": username,
-            "NEW_PASSWORD": formData.get("password").toString()
+            "NEW_PASSWORD": formData.get("password").toString(),
+            "userAttributes.email": email
         },
         Session: session
     });
 
     const response = await client.send(challengeRespondCommand);
     console.log(response);
+
+    if (response.ChallengeName) {
+        respondToChallenge(response.ChallengeName, response.ChallengeParameters, username, response.Session);
+    }
 }

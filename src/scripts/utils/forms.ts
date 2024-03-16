@@ -15,7 +15,7 @@ export async function formSubmit(form: HTMLFormElement, verifier?: (formData: Fo
                 resolve(formData);
                 form.removeEventListener("submit", verifySubmit);
             }
-            if (verifier(formData)) {
+            else if (verifier(formData)) {
                 resolve(formData);
                 console.log("verified");
                 form.removeEventListener("submit", verifySubmit);

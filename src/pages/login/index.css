@@ -38,6 +38,17 @@ input[type="submit"] {
     cursor: pointer;
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  appearance: textfield;
+}
+
 .forms-container {
     position: relative; /* position is set to relative because the form switch animation uses position: absolute*/
     transition: height 0.3s ease;
