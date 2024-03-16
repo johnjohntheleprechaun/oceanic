@@ -1,4 +1,6 @@
-import { CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthResponse } from "@aws-sdk/client-cognito-identity-provider";
+import { CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthResponse, RespondToAuthChallengeCommand } from "@aws-sdk/client-cognito-identity-provider";
+import { formSubmit } from "../../scripts/utils/forms";
+import { newPasswordVerifier } from "./verifiers";
 
 declare const cloudConfig: any;
 
@@ -17,20 +19,13 @@ window.addEventListener("load", _ => {
     forms["login"].addEventListener("submit", login);
     // this is just hardcoded, so be careful if you decide to reuse this shit
     currentForm = forms["login"];
-
-    document.getElementById("animate").addEventListener("click", _ => {
-        switchForms(forms["new-password"]);
-    });
-    document.getElementById("animate1").addEventListener("click", _ => {
-        switchForms(forms["login"]);
-    });
 });
 
 /**
  * display a new form and hide the current one with an animation
- * @param newForm the new form to display
+ * @param formIds the id of the new form to display
  */
-function switchForms(newForm: HTMLFormElement) {
+function switchForms(formId: string) {
     // fetch the old height for animation purposes
     const oldHeight = formsContainer.offsetHeight;
     
@@ -40,6 +35,7 @@ function switchForms(newForm: HTMLFormElement) {
     currentForm.classList.toggle("hidden", true);
 
     // bring in the new form
+    const newForm = forms[formId];
     newForm.classList.toggle("center", true);
     newForm.classList.toggle("right", false);
     newForm.classList.toggle("hidden", false);
@@ -54,6 +50,9 @@ function switchForms(newForm: HTMLFormElement) {
         // animate to the target height
         formsContainer.style.height = `${newHeight}px`;
     });
+    // hide the old form
+    const current = currentForm;
+    window.setTimeout(() => current.style.display = "none", 300);
     currentForm = newForm;
 }
 
@@ -70,9 +69,41 @@ async function login(event: SubmitEvent) {
             ClientId: cloudConfig.clientID
         });
 
-        const initiateResponse = await client.send(initiateCommand) as InitiateAuthResponse;
-        console.log(initiateResponse);
-    } catch {
-
+        const authResponse = await client.send(initiateCommand) as InitiateAuthResponse;
+        
+        if (authResponse.ChallengeName) {
+            respondToChallenge(authResponse.ChallengeName, formData.get("username").toString(), authResponse.Session);
+        }
+    } catch (error) {
+        console.log(error);
     }
+}
+
+async function respondToChallenge(challengeName: string, username: string, session: string) {
+    switch (challengeName) {
+        case "NEW_PASSWORD_REQUIRED":
+            switchForms("new-password");
+            newPasswordChallenge(username, session);
+            break;
+    
+        default:
+            break;
+    }
+}
+
+async function newPasswordChallenge(username: string, session: string) {
+    // wait for the form to be submitted
+    const formData = await formSubmit(forms["new-password"], newPasswordVerifier);
+    const challengeRespondCommand = new RespondToAuthChallengeCommand({
+        ChallengeName: "NEW_PASSWORD_REQUIRED",
+        ClientId: cloudConfig.clientID,
+        ChallengeResponses: {
+            "USERNAME": username,
+            "NEW_PASSWORD": formData.get("password").toString()
+        },
+        Session: session
+    });
+
+    const response = await client.send(challengeRespondCommand);
+    console.log(response);
 }

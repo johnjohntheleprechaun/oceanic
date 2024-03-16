@@ -12,8 +12,6 @@
 </head>
 <body>
     <div id="login-container">
-        <button id="animate">animate</button>
-        <button id="animate1">animate1</button>
         <h1>Log in to Oceanic</h1>
         <div id="forms-container" class="forms-container">
             <form id="login" class="slide center">
@@ -24,8 +22,11 @@
                 <input type="submit" name="login" value="Login">
             </form>
             <form id="new-password" class="slide hidden right">
-                <label for="password">New password</label>
+                <label for="password">New Password</label>
                 <input type="password" name="password">
+                <label for="password-verify">Verify Password</label>
+                <input type="password" name="password-verify">
+                <input type="submit" value="Set Password">
             </form>
         </div>
     </div>
