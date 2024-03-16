@@ -1,12 +1,8 @@
-import { JournalDatabase } from "./utils/storage"
+import { AWSConnection } from "./utils/aws";
 
 async function test() {
-    const db = new JournalDatabase();
-    let id: string;
-    for await (const journal of db.listJournals()) {
-        console.log(journal);
-        await journal.setType(await journal.getType() + "test");
-    }
+    const cloud = AWSConnection.fromLocalStorage();
+    await cloud.putDynamoItem("asdfasdf", { test: "hello world"});
 }
 
 export {test}

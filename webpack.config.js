@@ -93,7 +93,7 @@ function mapPages() {
 
 mapPages();
 
-module.exports = {
+module.exports = async () => { return {
     entry: scripts,
     output: {
         filename: "[name]-[contenthash].js",
@@ -163,7 +163,7 @@ module.exports = {
     plugins: htmlPlugins.concat([
         new webpack.DefinePlugin({
             JOURNALS: journals.map(journal => JSON.stringify(journal)),
-            cloudConfig: fs.readFileSync("cloud_config.json").toString()
+            cloudConfig: await createCloudConfig()
         }),
         new CopyPlugin({
             patterns: [
@@ -172,4 +172,14 @@ module.exports = {
         })
     ]),
     mode: "development"
+}};
+
+async function createCloudConfig() {
+    const initialConfig = JSON.parse(fs.readFileSync("cloud_config.json").toString());
+    const awsResources = await fetch(initialConfig.resourceConfigURL).then(data => data.json());
+    const config = {
+        clientID: initialConfig.clientID,
+        ...awsResources
+    }
+    return JSON.stringify(config);
 }

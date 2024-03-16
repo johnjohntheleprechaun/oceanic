@@ -1,4 +1,4 @@
-import { AssociateSoftwareTokenCommand, AuthenticationResultType, CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthResponse, RespondToAuthChallengeCommand, VerifySoftwareTokenCommand } from "@aws-sdk/client-cognito-identity-provider";
+import { AssociateSoftwareTokenCommand, AuthenticationResultType, CognitoIdentityProviderClient, GetUserCommand, InitiateAuthCommand, InitiateAuthResponse, RespondToAuthChallengeCommand, VerifySoftwareTokenCommand } from "@aws-sdk/client-cognito-identity-provider";
 import { formSubmit } from "../../scripts/utils/forms";
 import { newPasswordVerifier } from "./verifiers";
 import { toCanvas } from "qrcode";
@@ -12,6 +12,7 @@ let currentForm: HTMLFormElement;
 let formsContainer: HTMLElement;
 
 window.addEventListener("load", _ => {
+    console.log(cloudConfig);
     // load all the forms
     formsContainer = document.getElementById("forms-container");
     for (const child of Array.from(formsContainer.getElementsByTagName("form"))) {
@@ -93,10 +94,14 @@ async function respondToChallenge(challengeName: string, challengeParams: Record
     }
 }
 
-function finishLogin(authResult: AuthenticationResultType) {
+async function finishLogin(authResult: AuthenticationResultType) {
     window.localStorage.setItem("id_token", authResult.IdToken);
     window.localStorage.setItem("access_token", authResult.AccessToken);
     window.localStorage.setItem("refresh_token", authResult.RefreshToken);
+    const getUser = new GetUserCommand({ AccessToken: authResult.AccessToken });
+    const user = await client.send(getUser);
+    window.localStorage.setItem("user_data", JSON.stringify(user));
+    window.location.href = "/test.html";
 }
 
 async function newPasswordChallenge(username: string, session: string, challengeParams: Record<string, string>) {

@@ -1,3 +1,4 @@
 {
-    "clientID": "4m35q5bqt7u983blm133q89jc6"
+    "clientID": "4m35q5bqt7u983blm133q89jc6",
+    "resourceConfigURL": "https://2w1fmd96k7.execute-api.us-west-2.amazonaws.com/v1/resources"
 }
