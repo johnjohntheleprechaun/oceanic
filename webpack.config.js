@@ -162,7 +162,8 @@ module.exports = {
     },
     plugins: htmlPlugins.concat([
         new webpack.DefinePlugin({
-            JOURNALS: journals.map(journal => JSON.stringify(journal))
+            JOURNALS: journals.map(journal => JSON.stringify(journal)),
+            cloudConfig: fs.readFileSync("cloud_config.json").toString()
         }),
         new CopyPlugin({
             patterns: [
