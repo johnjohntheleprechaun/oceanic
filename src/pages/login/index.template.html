@@ -35,12 +35,20 @@
                 <input type="submit" value="Set Email">
             </form>
 
+            <form id="otp-mfa" class="slide hidden right" autocomplete="off">
+                <label for="code">Authenticator App Code</label>
+                <input type="number" name="code">
+                <input type="submit" value="Verify">
+            </form>
+
+            <!--
             <form id="mfa-setup" class="slide hidden right">
                 <h3>Authenticator app setup</h3>
                 <canvas id="totp-qr" width="0" style="width: 100%; aspect-ratio: 1;">Authenticator app QR</canvas>
                 <label for="code">TOTP Code</label>
                 <input type="number" name="code">
             </form>
+            -->
         </div>
     </div>
 </body>

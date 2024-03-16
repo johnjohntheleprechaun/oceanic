@@ -1,4 +1,4 @@
-import { AssociateSoftwareTokenCommand, CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthResponse, RespondToAuthChallengeCommand, VerifySoftwareTokenCommand } from "@aws-sdk/client-cognito-identity-provider";
+import { AssociateSoftwareTokenCommand, AuthenticationResultType, CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthResponse, RespondToAuthChallengeCommand, VerifySoftwareTokenCommand } from "@aws-sdk/client-cognito-identity-provider";
 import { formSubmit } from "../../scripts/utils/forms";
 import { newPasswordVerifier } from "./verifiers";
 import { toCanvas } from "qrcode";
@@ -75,6 +75,8 @@ async function login(event: SubmitEvent) {
         
         if (authResponse.ChallengeName) {
             respondToChallenge(authResponse.ChallengeName, authResponse.ChallengeParameters, formData.get("username").toString(), authResponse.Session);
+        } else {
+            finishLogin(authResponse.AuthenticationResult);
         }
     } catch (error) {
         console.log(error);
@@ -86,31 +88,15 @@ async function respondToChallenge(challengeName: string, challengeParams: Record
         case "NEW_PASSWORD_REQUIRED":
             newPasswordChallenge(username, session, challengeParams);
             break;
-        case "MFA_SETUP":
-            switchForms("mfa-setup");
-            mfaSetupChallenge(username, session);
         default:
             break;
     }
 }
 
-async function mfaSetupChallenge(username: string, session: string) {
-    const qrCanvas = forms["mfa-setup"].getElementsByTagName("canvas").item(0);
-    console.log("setup");
-    const setupCommand = new AssociateSoftwareTokenCommand({ Session: session });
-    const setupResponse = await client.send(setupCommand);
-
-    console.log(setupResponse.SecretCode);
-    const otpDataUri = `otpauth://totp/Oceanic: ${username}?secret=${setupResponse.SecretCode}`;
-    await toCanvas(qrCanvas, otpDataUri, { width: formsContainer.clientWidth });
-
-    const code = (await formSubmit(forms["mfa-setup"])).get("code").toString();
-    const confirmOtpCommand = new VerifySoftwareTokenCommand({
-        Session: setupResponse.Session,
-        UserCode: code
-    });
-    const confirmOtpResponse = client.send(confirmOtpCommand);
-    console.log(confirmOtpResponse);
+function finishLogin(authResult: AuthenticationResultType) {
+    window.localStorage.setItem("id_token", authResult.IdToken);
+    window.localStorage.setItem("access_token", authResult.AccessToken);
+    window.localStorage.setItem("refresh_token", authResult.RefreshToken);
 }
 
 async function newPasswordChallenge(username: string, session: string, challengeParams: Record<string, string>) {
@@ -140,5 +126,31 @@ async function newPasswordChallenge(username: string, session: string, challenge
 
     if (response.ChallengeName) {
         respondToChallenge(response.ChallengeName, response.ChallengeParameters, username, response.Session);
+    } else {
+        finishLogin(response.AuthenticationResult);
     }
+}
+
+/**
+ * So technically this could be used but there's some Cognito bullshit stopping me from getting tokens after setting it up sooooo yeah no
+ * @param username 
+ * @param session 
+ */
+async function mfaSetupChallenge(username: string, session: string) {
+    const qrCanvas = forms["mfa-setup"].getElementsByTagName("canvas").item(0);
+    console.log("setup");
+    const setupCommand = new AssociateSoftwareTokenCommand({ Session: session });
+    const setupResponse = await client.send(setupCommand);
+
+    console.log(setupResponse.SecretCode);
+    const otpDataUri = `otpauth://totp/Oceanic: ${username}?secret=${setupResponse.SecretCode}`;
+    await toCanvas(qrCanvas, otpDataUri, { width: formsContainer.clientWidth });
+
+    const code = (await formSubmit(forms["mfa-setup"])).get("code").toString();
+    const confirmOtpCommand = new VerifySoftwareTokenCommand({
+        Session: setupResponse.Session,
+        UserCode: code
+    });
+    const confirmOtpResponse = client.send(confirmOtpCommand);
+    console.log(confirmOtpResponse);
 }
