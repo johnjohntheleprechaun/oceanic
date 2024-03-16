@@ -20,12 +20,12 @@ body {
     padding-top: 10px;
     border: 2px solid var(--secondary);
     font-family: "Roboto";
+    overflow: hidden;
 }
 
 form {
     display: flex;
     flex-direction: column;
-    
     gap: 10px;
 }
 
@@ -36,4 +36,31 @@ input[type="submit"] {
     margin-top: 10px;
     padding: 5px;
     cursor: pointer;
+}
+
+.forms-container {
+    position: relative; /* position is set to relative because the form switch animation uses position: absolute*/
+    transition: height 0.3s ease;
+    height: fit-content;
+}
+
+/* it's not *actually* hidden, but it makes itself positioned absolutely so that the new form can take its place */
+.hidden {
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    position: absolute;
+}
+
+.slide {
+    transition: transform 0.3s ease;
+}
+.slide.left {
+    transform: translate(calc(-100% - 40px * 2));
+}
+.slide.right {
+    transform: translate(calc(100% + 40px * 2));
+}
+.slide.center {
+    transform: translate(0%);
 }

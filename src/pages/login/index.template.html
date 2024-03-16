@@ -12,14 +12,22 @@
 </head>
 <body>
     <div id="login-container">
+        <button id="animate">animate</button>
+        <button id="animate1">animate1</button>
         <h1>Log in to Oceanic</h1>
-        <form id="login">
-            <label for="username">Email / Username</label>
-            <input type="text" name="username">
-            <label for="password">Password</label>
-            <input type="password" name="password">
-            <input type="submit" name="login" value="Login">
-        </form>
+        <div id="forms-container" class="forms-container">
+            <form id="login" class="slide center">
+                <label for="username">Email / Username</label>
+                <input type="text" name="username">
+                <label for="password">Password</label>
+                <input type="password" name="password">
+                <input type="submit" name="login" value="Login">
+            </form>
+            <form id="new-password" class="slide hidden right">
+                <label for="password">New password</label>
+                <input type="password" name="password">
+            </form>
+        </div>
     </div>
 </body>
 </html>
