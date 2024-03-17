@@ -1,8 +1,8 @@
 import { GetUserCommandOutput } from "@aws-sdk/client-cognito-identity-provider";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
-import { S3Client } from "@aws-sdk/client-s3";
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
-import { marshall } from "@aws-sdk/util-dynamodb";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { CognitoIdentityCredentialProvider, fromCognitoIdentity, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
+import { AwsCredentialIdentity, Provider } from "@smithy/types";
 
 declare const cloudConfig: any;
 
@@ -16,10 +16,11 @@ export class AWSConnection {
     private accessToken: string;
     private idToken: string;
     private refreshToken: string;
-    private credentials: any;
+    private credentials: CognitoIdentityCredentialProvider;
     private s3Client: S3Client;
     private dynamoClient: DynamoDBClient;
     public userData: GetUserCommandOutput;
+    public identityId: string;
 
     /**
      * Automatically use localStorage to create an AWSConnection object
@@ -50,10 +51,14 @@ export class AWSConnection {
     }
 
     public async putDynamoItem(key: string, data: any) {
-        data.user = this.userData.UserAttributes.find(val => val.Name === "sub");
-        console.log(data.user);
+        const userID = await this.credentials().then(val => val.identityId);
+        console.log(userID);
         const putCommand = new PutItemCommand({
-            Item: marshall(data),
+            Item: {
+                "user": { "S": userID },
+                "dataType": { "S": "TEST" },
+                "otherShit": { "S": "balls" }
+            },
             TableName: cloudConfig.tableName
         });
         const resp = await this.dynamoClient.send(putCommand);
