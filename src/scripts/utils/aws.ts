@@ -64,4 +64,15 @@ export class AWSConnection {
         const resp = await this.dynamoClient.send(putCommand);
         console.log(resp);
     }
+
+    public async putS3Object() {
+        const userID = await this.credentials().then(val => val.identityId);
+        const putCommand = new PutObjectCommand({
+            Bucket: cloudConfig.bucketName,
+            Key: `${userID}/test`,
+            Body: "hello world"
+        });
+        const resp = await this.s3Client.send(putCommand);
+        console.log(resp);
+    }
 }
