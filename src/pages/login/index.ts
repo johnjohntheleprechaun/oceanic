@@ -68,7 +68,7 @@ async function login(event: SubmitEvent) {
                 USERNAME: formData.get("username").toString(),
                 PASSWORD: formData.get("password").toString()
             },
-            ClientId: cloudConfig.clientID
+            ClientId: cloudConfig.clientId
         });
 
         const authResponse = await client.send(initiateCommand) as InitiateAuthResponse;
@@ -117,7 +117,7 @@ async function newPasswordChallenge(username: string, session: string, challenge
     const formData = await formSubmit(forms["new-password"], newPasswordVerifier);
     const challengeRespondCommand = new RespondToAuthChallengeCommand({
         ChallengeName: "NEW_PASSWORD_REQUIRED",
-        ClientId: cloudConfig.clientID,
+        ClientId: cloudConfig.clientId,
         ChallengeResponses: {
             "USERNAME": username,
             "NEW_PASSWORD": formData.get("password").toString(),
