@@ -1,9 +1,13 @@
-import { AWSConnection } from "./utils/aws";
+declare const cloudConfig: any;
 
 async function test() {
-    const cloud = AWSConnection.fromLocalStorage();
-    await cloud.putDynamoItem("asdfasdf", { test: "hello world"});
-    await cloud.putS3Object();
+    await fetch(cloudConfig.apiEndpoint + "users/register", {
+        headers: {
+            "Authorization": `Bearer ${window.localStorage.getItem("id_token")}`
+        },
+        method: "POST"
+    }).then(resp => resp.json())
+    .then(json => console.log(json));
 }
 
 export {test}
