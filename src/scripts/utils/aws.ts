@@ -1,10 +1,12 @@
 import { GetUserCommandOutput } from "@aws-sdk/client-cognito-identity-provider";
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { CognitoIdentityCredentialProvider, fromCognitoIdentity, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { AwsCredentialIdentity, Provider } from "@smithy/types";
+import jwtDecode from "jwt-decode";
 
-declare const cloudConfig: any;
+declare const cloudConfig: CloudConfig;
 
 export interface Tokens {
     accessToken: string;
@@ -19,7 +21,6 @@ export class AWSConnection {
     private credentials: CognitoIdentityCredentialProvider;
     private s3Client: S3Client;
     private dynamoClient: DynamoDBClient;
-    public userData: GetUserCommandOutput;
     public identityId: string;
 
     /**
@@ -30,15 +31,14 @@ export class AWSConnection {
         return new AWSConnection(
             window.localStorage.getItem("access_token"),
             window.localStorage.getItem("id_token"),
-            window.localStorage.getItem("refresh_token"),
-            JSON.parse(window.localStorage.getItem("user_data"))
+            window.localStorage.getItem("refresh_token")
         );
     }
-    constructor (accessToken: string, idToken: string, refreshToken: string, userData: GetUserCommandOutput) {
+    constructor (accessToken: string, idToken: string, refreshToken: string) {
         this.accessToken = accessToken;
         this.idToken = idToken;
         this.refreshToken = refreshToken;
-        this.userData = userData;
+        this.identityId = (jwtDecode(idToken) as any)["custom:identityId"];
         this.credentials = fromCognitoIdentityPool({
             identityPoolId: cloudConfig.identityPool,
             logins: {
@@ -48,6 +48,31 @@ export class AWSConnection {
         });
         this.s3Client = new S3Client({ credentials: this.credentials, region: "us-west-2" });
         this.dynamoClient = new DynamoDBClient({ credentials: this.credentials, region: "us-west-2" });
+    }
+
+    /**
+     * Fetch a document from S3, as a string
+     * @param id The document's ID
+     * @returns The document's content
+     */
+    public async getDocumentContent(id: string): Promise<string> {
+        const decoder = new TextDecoder();
+        const documentData = await this.getObject(id);
+        return decoder.decode(documentData);
+    }
+
+    /**
+     * Fetch an S3 object
+     * @param key The object key
+     * @returns The object's content
+     */
+    public async getObject(key: string) {
+        const getCommand = new GetObjectCommand({
+            Bucket: cloudConfig.bucketName,
+            Key: `${this.identityId}/${key}`
+        });
+        const document = await this.s3Client.send(getCommand);
+        return document.Body.transformToByteArray();
     }
 
     public async putDynamoItem(key: string, data: any) {
