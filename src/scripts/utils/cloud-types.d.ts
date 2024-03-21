@@ -3,6 +3,14 @@
  */
 export interface DocumentInfo {
     /**
+     * The identity ID of the document's owner
+     */
+    user: string
+    /**
+     * This property is the sort key in dynamodb. It's formatted as `document:{document id}`
+     */
+    dataType: string
+    /**
      * The document's title
      */
     title: string;
