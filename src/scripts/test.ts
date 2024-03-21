@@ -5,8 +5,8 @@ declare const cloudConfig: any;
 
 async function test() {
     const cloudConnection = CloudConnection.fromLocalStorage();
-    const doc = await cloudConnection.getDocumentContent("test");
-    console.log("content:", doc)
+    const doc = await cloudConnection.getDocumentInfo("test");
+    console.log(doc);
 }
 
 export {test}

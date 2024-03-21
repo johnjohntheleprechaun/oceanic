@@ -1,10 +1,9 @@
-import { GetUserCommandOutput } from "@aws-sdk/client-cognito-identity-provider";
 import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { CognitoIdentityCredentialProvider, fromCognitoIdentity, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import { AwsCredentialIdentity, Provider } from "@smithy/types";
+import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
+import { DocumentInfo } from "./cloud-types";
 
 declare const cloudConfig: CloudConfig;
 
@@ -73,6 +72,27 @@ export class AWSConnection {
         });
         const document = await this.s3Client.send(getCommand);
         return document.Body.transformToByteArray();
+    }
+
+    /**
+     * Fetch the document info from dynamodb
+     * @param id The document's ID
+     * @returns The unmarshalled DocumentInfo object
+     */
+    public async getDocumentInfo(id: string): Promise<DocumentInfo> {
+        const getCommand = new GetItemCommand({
+            TableName: cloudConfig.tableName,
+            Key: {
+                user: {
+                    "S": this.identityId
+                },
+                dataType: {
+                    "S": `document:${id}`
+                }
+            }
+        });
+        const document = await this.dynamoClient.send(getCommand);
+        return unmarshall(document.Item) as DocumentInfo;
     }
 
     public async putDynamoItem(key: string, data: any) {
