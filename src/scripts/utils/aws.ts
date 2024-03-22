@@ -61,7 +61,7 @@ export class CloudConnection {
     }
 
     /**
-     * Fetch an S3 object
+     * Fetch an S3 object's binary data. You should probably be using getDocumentContent
      * @param key The object key
      * @returns The object's content
      */
@@ -98,18 +98,29 @@ export class CloudConnection {
         return unmarshall(document.Item) as DocumentInfo;
     }
 
+    /**
+     * Create a new document and upload it to DynamoDB
+     * @param type The document's type
+     * @param title The document's title. Set as an empty string if none is provided
+     * @returns The DocumentInfo object that was sent to DynamoDB
+     */
     public async createDocument(type: string, title?: string): Promise<DocumentInfo> {
+        // Create a new document key
         const documentKey = await crypto.subtle.generateKey(
             { name: "AES-GCM", length: 256 },
             true, [ "encrypt", "decrypt" ]
         ) as CryptoKey;
-        console.log(documentKey);
-        // fetch the most recent public key, and wrap the document key
+
+        // fetch the most recent public key
         const publicKey = await this.getLatestPublicKey(this.identityId);
+
+        // wrap the document key
         const wrappedKey = await crypto.subtle.wrapKey("jwk", documentKey, publicKey.key, { name: "RSA-OAEP" }) as ArrayBuffer;
+
+        // set the document's properties
         const documentInfo: DocumentInfo = {
             user: this.identityId,
-            dataType: `document:${crypto.randomUUID()}`,
+            dataType: `document:${crypto.randomUUID()}`, // new UUID
             title: title || "",
             type: type,
             created: Date.now(),
@@ -120,19 +131,21 @@ export class CloudConnection {
                     user: this.identityId,
                     publicKeyVersion: publicKey.version,
                     documentKeyVersion: Date.now().toString(),
-                    wrappedKey: new Uint8Array(wrappedKey)
+                    wrappedKey: new Uint8Array(wrappedKey) // Convert to Uint8Array so that the dynamo client will automatically format it as b64 before upload
                 }
             ],
-            authorizedUsers: []
+            authorizedUsers: [] // the owner isn't included here, so just an empty list
         };
-        //console.log(documentInfo);
+
+        // marshall the document and upload it
         const marshalled = marshall(documentInfo);
         const putCommand = new PutItemCommand({
             TableName: cloudConfig.tableName,
             Item: marshalled
         });
-        const resp = await this.dynamoClient.send(putCommand);
-        console.log(resp);
+        await this.dynamoClient.send(putCommand);
+        
+        // return the file
         return documentInfo;
     }
 
