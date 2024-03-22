@@ -1,7 +1,7 @@
-import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
-import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
 import { DocumentInfo } from "./cloud-types";
 
@@ -93,6 +93,63 @@ export class AWSConnection {
         });
         const document = await this.dynamoClient.send(getCommand);
         return unmarshall(document.Item) as DocumentInfo;
+    }
+
+    public async createDocument(type: string, title?: string): Promise<DocumentInfo> {
+        const documentKey = await crypto.subtle.generateKey(
+            { name: "AES-GCM", length: 256 },
+            true, [ "encrypt", "decrypt" ]
+        ) as CryptoKey;
+        console.log(documentKey);
+        // fetch the most recent public key, and wrap the document key
+        const publicKey = await this.getLatestPublicKey(this.identityId);
+        const wrappedKey = await crypto.subtle.wrapKey("jwk", documentKey, publicKey.key, { name: "RSA-OAEP" }) as ArrayBuffer;
+        const documentInfo: DocumentInfo = {
+            user: this.identityId,
+            dataType: `document:${crypto.randomUUID()}`,
+            title: title || "",
+            type: type,
+            created: Date.now(),
+            updated: Date.now(),
+            attachments: [],
+            documentKeys: [
+                {
+                    user: this.identityId,
+                    publicKeyVersion: publicKey.version,
+                    documentKeyVersion: Date.now().toString(),
+                    wrappedKey: new Uint8Array(wrappedKey)
+                }
+            ],
+            authorizedUsers: []
+        };
+        //console.log(documentInfo);
+        const marshalled = marshall(documentInfo);
+        const putCommand = new PutItemCommand({
+            TableName: cloudConfig.tableName,
+            Item: marshalled
+        });
+        const resp = await this.dynamoClient.send(putCommand);
+        console.log(resp);
+        return documentInfo;
+    }
+
+    public async getLatestPublicKey(user: string) {
+        console.log("generating key");
+        const key = await crypto.subtle.generateKey(
+            {
+              name: "RSA-OAEP",
+              modulusLength: 4096,
+              publicExponent: new Uint8Array([1, 0, 1]),
+              hash: "SHA-256",
+            },
+            true,
+            ["encrypt", "decrypt", "wrapKey"],
+        );
+        console.log(key);
+        return {
+            key: key.publicKey,
+            version: ""
+        }
     }
 
     public async putDynamoItem(key: string, data: any) {

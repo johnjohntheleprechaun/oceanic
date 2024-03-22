@@ -57,9 +57,9 @@ export interface DocumentKey {
      */
     documentKeyVersion: string;
     /**
-     * The wrapped document key
+     * The wrapped document key. The original key is a JWK, and the wrapped key is a base64 encoded string
      */
-    wrappedKey: JsonWebKey;
+    wrappedKey: ArrayBuffer;
 }
 
 export interface AuthorizedUser {
