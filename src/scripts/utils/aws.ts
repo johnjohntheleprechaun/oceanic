@@ -3,7 +3,8 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
-import { DocumentInfo } from "./cloud-types";
+import { DocumentInfo, KeyPair } from "./cloud-types";
+import { passcodeToKey } from "./crypto";
 
 declare const cloudConfig: CloudConfig;
 
@@ -12,6 +13,13 @@ export interface Tokens {
     idToken: string;
     refreshToken: string;
 }
+
+const keypairParams = {
+    name: "RSA-OAEP",
+    modulusLength: 4096,
+    publicExponent: new Uint8Array([1, 0, 1]),
+    hash: "SHA-256",
+};
 
 export class CloudConnection {
     private accessToken: string;
@@ -147,6 +155,41 @@ export class CloudConnection {
         
         // return the file
         return documentInfo;
+    }
+
+    /**
+     * Generate a new key pair, and push it to DynamoDB
+     * @param wrapper Either the key to use for wrapping the private key, or the passcode to generate a key from
+     * @returns The generated keypair
+     */
+    public async createNewKeyPair(wrapper: CryptoKey | string) {
+        let wrappingKey: CryptoKey;
+        const encoder = new TextEncoder();
+        if (typeof wrapper === "string") {
+            wrappingKey = await passcodeToKey(wrapper, encoder.encode(this.identityId).buffer);
+        } else {
+            wrappingKey = wrapper
+        }
+        if (!wrappingKey.usages.includes("wrapKey")) {
+            throw new Error("Can't use that key for wrapping")
+        }
+        const keyPair = await crypto.subtle.generateKey(keypairParams, true, [ "wrapKey", "unwrapKey" ]);
+        const keyPairId = Date.now().toString();
+        const wrappedPrivateKey = await crypto.subtle.wrapKey(
+            "jwk", keyPair.privateKey, wrappingKey, "AES-KW"
+        )
+        const dynamoObject: KeyPair = {
+            user: this.identityId,
+            dataType: `keypair:${keyPairId}`,
+            privateKey: new Uint8Array(wrappedPrivateKey),
+            publicKey: await crypto.subtle.exportKey("jwk", keyPair.publicKey)
+        }
+        const putCommand = new PutItemCommand({
+            TableName: cloudConfig.tableName,
+            Item: marshall(dynamoObject)
+        });
+        await this.dynamoClient.send(putCommand);
+        return keyPair;
     }
 
     public async getLatestPublicKey(user: string) {

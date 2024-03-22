@@ -5,11 +5,10 @@ import { marshall } from "@aws-sdk/util-dynamodb";
 declare const cloudConfig: any;
 
 async function test() {
+    const testPassword = "thisisatestpassword";
     const cloudConnection = CloudConnection.fromLocalStorage();
-    const doc = await cloudConnection.createDocument("messages-journal");
-    console.log(doc);
-    const fetchedDoc = await cloudConnection.getDocumentInfo(doc.dataType);
-    console.log(fetchedDoc);
+    const keypair = await cloudConnection.createNewKeyPair(testPassword);
+    console.log(keypair);
 }
 
 export {test}

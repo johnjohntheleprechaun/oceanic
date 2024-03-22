@@ -80,3 +80,25 @@ export interface DocumentPermissions {
     read: boolean;
     write: boolean;
 }
+
+/**
+ * Represents a user's keypair
+ */
+export interface KeyPair {
+    /**
+     * The identity ID of the user who's keypair this is
+     */
+    user: string;
+    /**
+     * This will be of the format "keypair:{id}"
+     */
+    dataType: string;
+    /**
+     * The wrapped private key
+     */
+    privateKey: Uint8Array;
+    /**
+     * The public key
+     */
+    publicKey: JsonWebKey;
+}
