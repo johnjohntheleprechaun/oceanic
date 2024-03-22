@@ -96,7 +96,7 @@ export interface KeyPair {
     /**
      * The wrapped private key
      */
-    privateKey: Uint8Array;
+    privateKey?: Uint8Array;
     /**
      * The public key
      */

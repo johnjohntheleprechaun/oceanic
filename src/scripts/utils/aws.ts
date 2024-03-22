@@ -1,4 +1,4 @@
-import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, PutItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
@@ -204,22 +204,39 @@ export class CloudConnection {
         return keyPair;
     }
 
-    public async getLatestPublicKey(user: string) {
-        console.log("generating key");
-        const key = await crypto.subtle.generateKey(
-            {
-              name: "RSA-OAEP",
-              modulusLength: 4096,
-              publicExponent: new Uint8Array([1, 0, 1]),
-              hash: "SHA-256",
+    /**
+     * Get the most recent public key for a user
+     * @param user the identity ID of the user who's public key you are fetching
+     */
+    public async getLatestPublicKey(user?: string) {
+        const queryCommand = new QueryCommand({
+            TableName: cloudConfig.tableName,
+            ProjectionExpression: "publicKey, dataType, #owner", // don't try to get the private key, the request will 
+            ExpressionAttributeValues: {
+                ":user": { S: user || this.identityId },
+                ":type": { S: "keypair:" }
             },
-            true,
-            ["encrypt", "decrypt", "wrapKey"],
+            ExpressionAttributeNames: {
+                "#owner": "user" // "user" is a reserved name in dynamo
+            },
+            KeyConditionExpression: "#owner = :user AND begins_with ( dataType, :type )",
+            ScanIndexForward: false, // get the highest, since keypair IDs are just the timestamp of their creation
+            Limit: 1 // only get the most recent
+        });
+        const resp = await this.dynamoClient.send(queryCommand);
+
+        // extract the key object
+        const keyPair = unmarshall(resp.Items[0]) as KeyPair;
+
+        // import the key
+        const key: CryptoKey = await crypto.subtle.importKey(
+            "jwk", keyPair.publicKey,
+            keypairParams, false, [ "wrapKey" ]
         );
-        console.log(key);
+        
         return {
-            key: key.publicKey,
-            version: ""
+            version: keyPair.dataType.replace("keypair:", ""),
+            key: key
         }
     }
 }

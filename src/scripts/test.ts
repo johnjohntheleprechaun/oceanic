@@ -9,6 +9,9 @@ async function test() {
     const cloudConnection = CloudConnection.fromLocalStorage();
     const keypair = await cloudConnection.createNewKeyPair(testPassword);
     console.log(keypair);
+
+    const publicKey = await cloudConnection.getLatestPublicKey();
+    console.log(publicKey);
 }
 
 export {test}
