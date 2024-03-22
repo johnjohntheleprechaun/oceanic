@@ -164,20 +164,30 @@ export class CloudConnection {
      */
     public async createNewKeyPair(wrapper: CryptoKey | string) {
         let wrappingKey: CryptoKey;
+
+        // Derive a key if needed
         const encoder = new TextEncoder();
         if (typeof wrapper === "string") {
             wrappingKey = await passcodeToKey(wrapper, encoder.encode(this.identityId).buffer);
         } else {
             wrappingKey = wrapper
         }
+
+        // make sure the key can be used for wrapping
         if (!wrappingKey.usages.includes("wrapKey")) {
             throw new Error("Can't use that key for wrapping")
         }
+
+        // generate a new key pair
         const keyPair = await crypto.subtle.generateKey(keypairParams, true, [ "wrapKey", "unwrapKey" ]);
         const keyPairId = Date.now().toString();
+
+        // wrap the private key for storage in the cloud
         const wrappedPrivateKey = await crypto.subtle.wrapKey(
             "jwk", keyPair.privateKey, wrappingKey, "AES-KW"
         )
+
+        // upload the key to DynamoDB
         const dynamoObject: KeyPair = {
             user: this.identityId,
             dataType: `keypair:${keyPairId}`,
@@ -189,6 +199,8 @@ export class CloudConnection {
             Item: marshall(dynamoObject)
         });
         await this.dynamoClient.send(putCommand);
+
+        // return the newly generated key pair
         return keyPair;
     }
 
