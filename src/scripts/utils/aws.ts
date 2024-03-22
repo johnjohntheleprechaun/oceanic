@@ -1,5 +1,5 @@
-import { DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
@@ -153,31 +153,5 @@ export class AWSConnection {
             key: key.publicKey,
             version: ""
         }
-    }
-
-    public async putDynamoItem(key: string, data: any) {
-        const userID = await this.credentials().then(val => val.identityId);
-        console.log(userID);
-        const putCommand = new PutItemCommand({
-            Item: {
-                "user": { "S": userID },
-                "dataType": { "S": "TEST" },
-                "otherShit": { "S": "balls" }
-            },
-            TableName: cloudConfig.tableName
-        });
-        const resp = await this.dynamoClient.send(putCommand);
-        console.log(resp);
-    }
-
-    public async putS3Object() {
-        const userID = await this.credentials().then(val => val.identityId);
-        const putCommand = new PutObjectCommand({
-            Bucket: cloudConfig.bucketName,
-            Key: `${userID}/test`,
-            Body: "hello world"
-        });
-        const resp = await this.s3Client.send(putCommand);
-        console.log(resp);
     }
 }
