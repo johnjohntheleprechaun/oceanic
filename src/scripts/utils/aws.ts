@@ -13,7 +13,7 @@ export interface Tokens {
     refreshToken: string;
 }
 
-export class AWSConnection {
+export class CloudConnection {
     private accessToken: string;
     private idToken: string;
     private refreshToken: string;
@@ -27,7 +27,7 @@ export class AWSConnection {
      * @returns A new AWSConnection
      */
     public static fromLocalStorage() {
-        return new AWSConnection(
+        return new CloudConnection(
             window.localStorage.getItem("access_token"),
             window.localStorage.getItem("id_token"),
             window.localStorage.getItem("refresh_token")

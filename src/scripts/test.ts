@@ -1,5 +1,5 @@
 import { CognitoIdentityProviderClient, UpdateUserAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
-import { AWSConnection as CloudConnection } from "./utils/aws";
+import { CloudConnection as CloudConnection } from "./utils/aws";
 import { marshall } from "@aws-sdk/util-dynamodb";
 
 declare const cloudConfig: any;
