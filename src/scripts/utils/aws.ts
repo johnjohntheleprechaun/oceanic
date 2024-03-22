@@ -88,9 +88,7 @@ export class CloudConnection {
      * @returns The unmarshalled DocumentInfo object
      */
     public async getDocumentInfo(id: string): Promise<DocumentInfo> {
-        if (id.startsWith("document:")) {
-            id = id.slice(9)
-        }
+        id = id.replace(/^document:/, "");
         const getCommand = new GetItemCommand({
             TableName: cloudConfig.tableName,
             Key: {
@@ -235,7 +233,7 @@ export class CloudConnection {
         );
         
         return {
-            version: keyPair.dataType.replace("keypair:", ""),
+            version: keyPair.dataType.replace(/^keypair:/, ""),
             key: key
         }
     }
