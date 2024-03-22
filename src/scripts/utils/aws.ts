@@ -80,6 +80,9 @@ export class AWSConnection {
      * @returns The unmarshalled DocumentInfo object
      */
     public async getDocumentInfo(id: string): Promise<DocumentInfo> {
+        if (id.startsWith("document:")) {
+            id = id.slice(9)
+        }
         const getCommand = new GetItemCommand({
             TableName: cloudConfig.tableName,
             Key: {
