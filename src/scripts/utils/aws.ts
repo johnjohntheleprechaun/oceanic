@@ -5,14 +5,9 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
 import { DocumentInfo, KeyPair } from "./cloud-types";
 import { passcodeToKey } from "./crypto";
+import { Tokens } from "./tokens";
 
 declare const cloudConfig: CloudConfig;
-
-export interface Tokens {
-    accessToken: string;
-    idToken: string;
-    refreshToken: string;
-}
 
 const keypairParams = {
     name: "RSA-OAEP",
@@ -22,34 +17,36 @@ const keypairParams = {
 };
 
 export class CloudConnection {
-    private accessToken: string;
-    private idToken: string;
-    private refreshToken: string;
     private credentials: CognitoIdentityCredentialProvider;
     private s3Client: S3Client;
     private dynamoClient: DynamoDBClient;
+    private tokens: Tokens;
     public identityId: string;
 
     /**
      * Automatically use localStorage to create an AWSConnection object
      * @returns A new AWSConnection
      */
-    public static fromLocalStorage() {
-        return new CloudConnection(
-            window.localStorage.getItem("access_token"),
-            window.localStorage.getItem("id_token"),
-            window.localStorage.getItem("refresh_token")
-        );
+    public static async fromLocalStorage() {
+        const connection = new CloudConnection();
+        await connection.initialize( Tokens.fromLocalStorage() );
+        return connection;
     }
-    constructor (accessToken: string, idToken: string, refreshToken: string) {
-        this.accessToken = accessToken;
-        this.idToken = idToken;
-        this.refreshToken = refreshToken;
-        this.identityId = (jwtDecode(idToken) as any)["custom:identityId"];
+    /**
+     * Initialize credentials and clients
+     * @param tokens A tokens object
+     */
+    public async initialize(tokens?: Tokens) {
+        if (tokens) {
+            this.tokens = tokens;
+        } else {
+            this.tokens = Tokens.fromLocalStorage();
+        }
+        this.identityId = (jwtDecode(tokens.idToken) as any)["custom:identityId"];
         this.credentials = fromCognitoIdentityPool({
             identityPoolId: cloudConfig.identityPool,
             logins: {
-                [cloudConfig.userPool]: this.idToken
+                [cloudConfig.userPool]: await this.tokens.getIdToken()
             },
             clientConfig: { region: "us-west-2" }
         });
