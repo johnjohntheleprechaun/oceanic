@@ -7,7 +7,8 @@ declare const cloudConfig: any;
 async function test() {
     const testPassword = "thisisatestpassword";
     const cloudConnection = await CloudConnection.fromLocalStorage();
-    const keypair = await cloudConnection.createDocument("messages-journal");
+    const document = await cloudConnection.createDocument("messages-journal");
+    console.log(document);
 }
 
 export {test}

@@ -22,7 +22,7 @@ export class Tokens {
     public async getAccessToken(): Promise<string> {
         if (Tokens.isExpired(this.accessToken)) {
             // refresh the token
-            this.refresh();
+            await this.refresh();
         }
         return this.accessToken;
     }
@@ -33,7 +33,7 @@ export class Tokens {
     public async getIdToken(): Promise<string> {
         if (Tokens.isExpired(this.idToken)) {
             // refresh the token
-            this.refresh();
+            await this.refresh();
         }
         return this.idToken;
     }
@@ -84,7 +84,7 @@ export class Tokens {
      */
     public static isExpired(token: string): boolean {
         const decoded = jwtDecode(token) as JwtPayload;
-        if (decoded.exp > Date.now()) {
+        if (decoded.exp < Date.now() / 1000) {
             return true;
         } else {
             return false;
