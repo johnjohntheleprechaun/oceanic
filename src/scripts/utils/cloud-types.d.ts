@@ -31,35 +31,13 @@ export interface DocumentInfo {
      */
     attachments: string[];
     /**
-     * The document keys for everyone with access to the document
+     * The document key, wrapped with this user's public key
      */
-    documentKeys: DocumentKey[];
+    documentKey: Uint8Array;
     /**
      * All the users (exluding the owner) who have access to the document
      */
     authorizedUsers: AuthorizedUser[];
-}
-
-/**
- * A wrapped AES key for a document
- */
-export interface DocumentKey {
-    /**
-     * The identity ID of the user this key was wrapped for
-     */
-    user: string;
-    /**
-     * The version of the user's public key that this key was wrapped with
-     */
-    publicKeyVersion: string;
-    /**
-     * The version of the document key that was wrapped
-     */
-    documentKeyVersion: string;
-    /**
-     * The wrapped document key. The original key is a JWK, and the wrapped key is a base64 encoded string
-     */
-    wrappedKey: ArrayBuffer;
 }
 
 export interface AuthorizedUser {
@@ -81,8 +59,10 @@ export interface DocumentPermissions {
     write: boolean;
 }
 
+
+
 /**
- * Represents a user's keypair
+ * Represents a user's keypair, as stored in DynamoDB
  */
 export interface KeyPair {
     /**
@@ -90,9 +70,9 @@ export interface KeyPair {
      */
     user: string;
     /**
-     * This will be of the format "keypair:{id}"
+     * The DynamoDB sort key
      */
-    id: string;
+    id: "keypair";
     /**
      * The wrapped private key
      */
@@ -101,4 +81,9 @@ export interface KeyPair {
      * The public key
      */
     publicKey: JsonWebKey;
+}
+
+export interface MasterKeyPair {
+    privateKey: CryptoKey;
+    publicKey: CryptoKey;
 }
