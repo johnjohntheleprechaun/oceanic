@@ -61,6 +61,7 @@ export class Tokens {
         this.accessToken = response.AuthenticationResult.AccessToken;
         this.idToken = response.AuthenticationResult.IdToken;
         this.refreshToken = response.AuthenticationResult.RefreshToken;
+        console.log(response.AuthenticationResult);
     }
 
     /**

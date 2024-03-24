@@ -3,14 +3,13 @@ import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3
 import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
-import { DocumentInfo, KeyPair } from "./cloud-types";
+import { DocumentInfo, KeyPair, MasterKeyPair } from "./cloud-types";
 import { passcodeToKey } from "./crypto";
 import { Tokens } from "./tokens";
-import { StreamingBlobPayloadInputTypes } from "@smithy/types";
 
 declare const cloudConfig: CloudConfig;
 
-const keypairParams = {
+const keyPairParams = {
     name: "RSA-OAEP",
     modulusLength: 4096,
     publicExponent: new Uint8Array([1, 0, 1]),
@@ -18,11 +17,30 @@ const keypairParams = {
 };
 
 export class CloudConnection {
+    /**
+     * Credentials from the cognito identity pool
+     */
     private credentials: CognitoIdentityCredentialProvider;
+    /**
+     * S3 client
+     */
     private s3Client: S3Client;
+    /**
+     * DynamoDB client
+     */
     private dynamoClient: DynamoDBClient;
+    /**
+     * The user's cognito tokens (NOT the identity pool credentials)
+     */
     private tokens: Tokens;
+    /**
+     * The user's id (the one used as the dynamo partition key, and the s3 prefix)
+     */
     public identityId: string;
+    /**
+     * The master key that's used to wrap/unwrap all the document keys
+     */
+    private masterKey: MasterKeyPair;
 
     /**
      * Automatically use localStorage to create an AWSConnection object
@@ -61,23 +79,34 @@ export class CloudConnection {
      * @returns The document's content
      */
     public async getDocumentContent(id: string): Promise<string> {
+        const documentInfo = await this.getDocumentInfo(id);
+        const wrappedKey = documentInfo.documentKey;
+        const documentKey = await crypto.subtle.unwrapKey("raw", wrappedKey, this.masterKey.privateKey, { name: "RSA-OAEP" }, "AES-GCM", false, [ "encrypt", "decrypt" ]);
         const decoder = new TextDecoder();
-        const documentData = await this.getObject(id);
+        const documentData = await this.getObject(id, documentKey);
         return decoder.decode(documentData);
     }
 
     /**
      * Fetch an S3 object's binary data. You should probably be using getDocumentContent
-     * @param key The object key
+     * @param objectName The object's name
+     * @param key The key this object is encrypted with
      * @returns The object's content
      */
-    public async getObject(key: string) {
+    public async getObject(objectName: string, key: CryptoKey) {
         const getCommand = new GetObjectCommand({
             Bucket: cloudConfig.bucketName,
-            Key: `${this.identityId}/${key}`
+            Key: `${this.identityId}/${objectName}`
         });
         const document = await this.s3Client.send(getCommand);
-        return document.Body.transformToByteArray();
+        const body = await document.Body.transformToByteArray();
+        // decrypt the object
+        const iv = body.slice(0, 96/8); // extract the 96 bit IV
+        const encrypted = body.slice(96/8); // extract the encrypted data
+        return await crypto.subtle.decrypt(
+            { name: "AES-GCM", length: 256, iv },
+            key, encrypted
+        );
     }
 
     /**
@@ -102,6 +131,13 @@ export class CloudConnection {
         return unmarshall(document.Item) as DocumentInfo;
     }
 
+    /**
+     * Encrypt an object and upload it to S3
+     * @param objectName The name of the object in S3, not including the identity ID prefix
+     * @param data The object's data to be put in S3
+     * @param key The key to encrypt the object data with
+     * @returns The response from S3
+     */
     public async putObject(objectName: string, data: Uint8Array, key: CryptoKey) {
         // generate a 96 bit IV
         const iv = crypto.getRandomValues(new Uint8Array(96/8));
@@ -137,6 +173,7 @@ export class CloudConnection {
      */
     public async createDocument(type: string, title?: string): Promise<DocumentInfo> {
         // Create a new document key
+        console.log("generating key");
         const documentKey = await crypto.subtle.generateKey(
             { name: "AES-GCM", length: 256 },
             true, [ "encrypt", "decrypt" ]
@@ -146,7 +183,7 @@ export class CloudConnection {
         const publicKey = await this.getLatestPublicKey(this.identityId);
 
         // wrap the document key
-        const wrappedKey = await crypto.subtle.wrapKey("jwk", documentKey, publicKey.key, { name: "RSA-OAEP" }) as ArrayBuffer;
+        const wrappedKey = await crypto.subtle.wrapKey("jwk", documentKey, publicKey, { name: "RSA-OAEP" }) as ArrayBuffer;
 
         // generate a document ID
         const documentId = crypto.randomUUID();
@@ -160,14 +197,7 @@ export class CloudConnection {
             created: Date.now(),
             updated: Date.now(),
             attachments: [],
-            documentKeys: [
-                {
-                    user: this.identityId,
-                    publicKeyVersion: publicKey.version,
-                    documentKeyVersion: Date.now().toString(),
-                    wrappedKey: new Uint8Array(wrappedKey) // Convert to Uint8Array so that the dynamo client will automatically format it as b64 before upload
-                }
-            ],
+            documentKey: new Uint8Array(wrappedKey), // Convert to Uint8Array so that the dynamo client will automatically format it as b64 before upload
             authorizedUsers: [] // the owner isn't included here, so just an empty list
         };
 
@@ -209,8 +239,7 @@ export class CloudConnection {
         }
 
         // generate a new key pair
-        const keyPair = await crypto.subtle.generateKey(keypairParams, true, [ "wrapKey", "unwrapKey" ]);
-        const keyPairId = Date.now().toString();
+        const keyPair = await crypto.subtle.generateKey(keyPairParams, true, [ "wrapKey", "unwrapKey" ]);
 
         // wrap the private key for storage in the cloud
         const wrappedPrivateKey = await crypto.subtle.wrapKey(
@@ -220,7 +249,7 @@ export class CloudConnection {
         // upload the key to DynamoDB
         const dynamoObject: KeyPair = {
             user: this.identityId,
-            id: `keypair:${keyPairId}`,
+            id: "keypair",
             privateKey: new Uint8Array(wrappedPrivateKey),
             publicKey: await crypto.subtle.exportKey("jwk", keyPair.publicKey)
         }
@@ -234,11 +263,39 @@ export class CloudConnection {
         return keyPair;
     }
 
+    public async getMasterKeyPair(masterKey: CryptoKey | string): Promise<MasterKeyPair> {
+        // Derive a key if necessary
+        let wrappingKey: CryptoKey;
+        if (typeof masterKey === "string") {
+            wrappingKey = await passcodeToKey(masterKey, this.identityId);
+        } else {
+            wrappingKey = masterKey;
+        }
+
+        // Fetch the key pair from DynamoDB
+        const getCommand = new GetItemCommand({
+            TableName: cloudConfig.tableName,
+            Key: {
+                "user": { S: this.identityId },
+                "id": { S: "keypair" }
+            },
+            ProjectionExpression: `user, id, publicKey, privateKey`
+        });
+        const response = await this.dynamoClient.send(getCommand);
+        const keyPair = unmarshall(response.Item) as KeyPair;
+
+        // Import the keys and return
+        return {
+            publicKey: await crypto.subtle.importKey("jwk", keyPair.publicKey, keyPairParams, false, [ "wrapKey" ]),
+            privateKey: await crypto.subtle.unwrapKey("jwk", keyPair.privateKey, wrappingKey, "AES-KW", keyPairParams, false, [ "unwrapKey" ])
+        }
+    }
+
     /**
      * Get the most recent public key for a user
      * @param user the identity ID of the user who's public key you are fetching
      */
-    public async getLatestPublicKey(user?: string) {
+    public async getLatestPublicKey(user?: string): Promise<CryptoKey> {
         const queryCommand = new QueryCommand({
             TableName: cloudConfig.tableName,
             ProjectionExpression: "publicKey, id, #owner", // don't try to get the private key, the request will 
@@ -258,15 +315,10 @@ export class CloudConnection {
         // extract the key object
         const keyPair = unmarshall(resp.Items[0]) as KeyPair;
 
-        // import the key
-        const key: CryptoKey = await crypto.subtle.importKey(
+        // import the key and return it
+        return await crypto.subtle.importKey(
             "jwk", keyPair.publicKey,
-            keypairParams, false, [ "wrapKey" ]
+            keyPairParams, false, [ "wrapKey" ]
         );
-        
-        return {
-            version: keyPair.id.replace(/^keypair:/, ""),
-            key: key
-        }
     }
 }
