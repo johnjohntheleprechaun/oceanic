@@ -9,7 +9,7 @@ export interface DocumentInfo {
     /**
      * This property is the sort key in dynamodb. It's formatted as `document:{document id}`
      */
-    dataType: string
+    id: string
     /**
      * The document's title
      */
@@ -92,7 +92,7 @@ export interface KeyPair {
     /**
      * This will be of the format "keypair:{id}"
      */
-    dataType: string;
+    id: string;
     /**
      * The wrapped private key
      */
