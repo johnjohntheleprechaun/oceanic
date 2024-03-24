@@ -1,6 +1,7 @@
 import { CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthCommandOutput } from "@aws-sdk/client-cognito-identity-provider";
 import jwtDecode, { JwtPayload } from "jwt-decode";
 import { ExpiredTokenError, MissingTokenError } from "./tokens-errors";
+import { CloudConfig } from "./cloud-config";
 
 declare const cloudConfig: CloudConfig;
 

@@ -1,7 +1,7 @@
 /**
  * Represents mappings to cloud resources
  */
-interface CloudConfig {
+export interface CloudConfig {
     /**
      * The client ID for Cognito
      */
