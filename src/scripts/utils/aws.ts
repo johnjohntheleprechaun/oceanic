@@ -6,6 +6,7 @@ import jwtDecode from "jwt-decode";
 import { DocumentInfo, KeyPair, MasterKeyPair } from "./cloud-types";
 import { passcodeToKey } from "./crypto";
 import { Tokens } from "./tokens";
+import { CloudConfig } from "./cloud-config";
 
 declare const cloudConfig: CloudConfig;
 
