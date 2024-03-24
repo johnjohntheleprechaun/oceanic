@@ -93,7 +93,7 @@ export class CloudConnection {
                 user: {
                     "S": this.identityId
                 },
-                dataType: {
+                id: {
                     "S": `document:${id}`
                 }
             }
@@ -154,7 +154,7 @@ export class CloudConnection {
         // set the document's properties
         const documentInfo: DocumentInfo = {
             user: this.identityId,
-            dataType: `document:${documentId}`,
+            id: `document:${documentId}`,
             title: title || "",
             type: type,
             created: Date.now(),
@@ -197,9 +197,8 @@ export class CloudConnection {
         let wrappingKey: CryptoKey;
 
         // Derive a key if needed
-        const encoder = new TextEncoder();
         if (typeof wrapper === "string") {
-            wrappingKey = await passcodeToKey(wrapper, encoder.encode(this.identityId).buffer);
+            wrappingKey = await passcodeToKey(wrapper, this.identityId);
         } else {
             wrappingKey = wrapper
         }
@@ -221,7 +220,7 @@ export class CloudConnection {
         // upload the key to DynamoDB
         const dynamoObject: KeyPair = {
             user: this.identityId,
-            dataType: `keypair:${keyPairId}`,
+            id: `keypair:${keyPairId}`,
             privateKey: new Uint8Array(wrappedPrivateKey),
             publicKey: await crypto.subtle.exportKey("jwk", keyPair.publicKey)
         }
@@ -242,15 +241,15 @@ export class CloudConnection {
     public async getLatestPublicKey(user?: string) {
         const queryCommand = new QueryCommand({
             TableName: cloudConfig.tableName,
-            ProjectionExpression: "publicKey, dataType, #owner", // don't try to get the private key, the request will 
+            ProjectionExpression: "publicKey, id, #owner", // don't try to get the private key, the request will 
             ExpressionAttributeValues: {
                 ":user": { S: user || this.identityId },
-                ":type": { S: "keypair:" }
+                ":id": { S: "keypair:" }
             },
             ExpressionAttributeNames: {
                 "#owner": "user" // "user" is a reserved name in dynamo
             },
-            KeyConditionExpression: "#owner = :user AND begins_with ( dataType, :type )",
+            KeyConditionExpression: "#owner = :user AND begins_with ( id, :id )",
             ScanIndexForward: false, // get the highest, since keypair IDs are just the timestamp of their creation
             Limit: 1 // only get the most recent
         });
@@ -266,7 +265,7 @@ export class CloudConnection {
         );
         
         return {
-            version: keyPair.dataType.replace(/^keypair:/, ""),
+            version: keyPair.id.replace(/^keypair:/, ""),
             key: key
         }
     }

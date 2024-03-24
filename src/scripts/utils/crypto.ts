@@ -1,5 +1,8 @@
-export async function passcodeToKey(passcode: string, salt: ArrayBuffer): Promise<CryptoKey> {
+export async function passcodeToKey(passcode: string, salt: ArrayBuffer | string): Promise<CryptoKey> {
     const encoder = new TextEncoder();
+    if (typeof salt === "string") {
+        salt = encoder.encode(salt);
+    }
     const importedPassKey = await crypto.subtle.importKey(
         "raw",
         encoder.encode(passcode),
