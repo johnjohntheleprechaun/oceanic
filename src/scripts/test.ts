@@ -8,9 +8,13 @@ async function test() {
     //console.log(crypto.getRandomValues(new Uint8Array(96/8)));
     const testPassword = "thisisatestpassword";
     const cloudConnection = await CloudConnection.fromLocalStorage();
-    await cloudConnection.createNewKeyPair(testPassword);
+    //await cloudConnection.createNewKeyPair(testPassword);
 
-    await cloudConnection.createDocument("messages-journal");
+    const document = await cloudConnection.createDocument("messages-journal");
+    console.log(document);
+
+    const publicKey = await cloudConnection.getPublicKey(cloudConnection.identityId);
+    console.log(publicKey);
 }
 
 export {test}

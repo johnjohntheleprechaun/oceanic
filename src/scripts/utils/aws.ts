@@ -180,11 +180,8 @@ export class CloudConnection {
             true, [ "encrypt", "decrypt" ]
         ) as CryptoKey;
 
-        // fetch the most recent public key
-        const publicKey = await this.getLatestPublicKey(this.identityId);
-
         // wrap the document key
-        const wrappedKey = await crypto.subtle.wrapKey("jwk", documentKey, publicKey, { name: "RSA-OAEP" }) as ArrayBuffer;
+        const wrappedKey = await crypto.subtle.wrapKey("jwk", documentKey, this.masterKey.publicKey, { name: "RSA-OAEP" }) as ArrayBuffer;
 
         // generate a document ID
         const documentId = crypto.randomUUID();
@@ -221,17 +218,17 @@ export class CloudConnection {
 
     /**
      * Generate a new key pair, and push it to DynamoDB
-     * @param wrapper Either the key to use for wrapping the private key, or the passcode to generate a key from
+     * @param masterKey Either the key to use for wrapping the private key, or the passcode to generate a key from
      * @returns The generated keypair
      */
-    public async createNewKeyPair(wrapper: CryptoKey | string) {
+    public async createNewKeyPair(masterKey: CryptoKey | string) {
         let wrappingKey: CryptoKey;
 
         // Derive a key if needed
-        if (typeof wrapper === "string") {
-            wrappingKey = await passcodeToKey(wrapper, this.identityId);
+        if (typeof masterKey === "string") {
+            wrappingKey = await passcodeToKey(masterKey, this.identityId);
         } else {
-            wrappingKey = wrapper
+            wrappingKey = masterKey
         }
 
         // make sure the key can be used for wrapping
@@ -293,33 +290,22 @@ export class CloudConnection {
     }
 
     /**
-     * Get the most recent public key for a user
-     * @param user the identity ID of the user who's public key you are fetching
+     * Get a user's public key
+     * @param user The identity ID of the user who's public key you are fetching
      */
-    public async getLatestPublicKey(user?: string): Promise<CryptoKey> {
-        const queryCommand = new QueryCommand({
+    public async getPublicKey(user: string): Promise<CryptoKey> {
+        // Fetch the key pair from DynamoDB
+        const getCommand = new GetItemCommand({
             TableName: cloudConfig.tableName,
-            ProjectionExpression: "publicKey, id, #owner", // don't try to get the private key, the request will 
-            ExpressionAttributeValues: {
-                ":user": { S: user || this.identityId },
-                ":id": { S: "keypair:" }
+            Key: {
+                "user": { S: user },
+                "id": { S: "keypair" }
             },
-            ExpressionAttributeNames: {
-                "#owner": "user" // "user" is a reserved name in dynamo
-            },
-            KeyConditionExpression: "#owner = :user AND begins_with ( id, :id )",
-            ScanIndexForward: false, // get the highest, since keypair IDs are just the timestamp of their creation
-            Limit: 1 // only get the most recent
+            ProjectionExpression: `user, id, publicKey`
         });
-        const resp = await this.dynamoClient.send(queryCommand);
+        const response = await this.dynamoClient.send(getCommand);
+        const keyPair = unmarshall(response.Item) as KeyPair;
 
-        // extract the key object
-        const keyPair = unmarshall(resp.Items[0]) as KeyPair;
-
-        // import the key and return it
-        return await crypto.subtle.importKey(
-            "jwk", keyPair.publicKey,
-            keyPairParams, false, [ "wrapKey" ]
-        );
+        return crypto.subtle.importKey("jwk", keyPair.publicKey, keyPairParams, false, [ "wrapKey" ]);
     }
 }
