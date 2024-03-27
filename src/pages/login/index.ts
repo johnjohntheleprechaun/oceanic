@@ -2,8 +2,9 @@ import { AssociateSoftwareTokenCommand, AuthenticationResultType, CognitoIdentit
 import { formSubmit } from "../../scripts/utils/forms";
 import { newPasswordVerifier } from "./verifiers";
 import { toCanvas } from "qrcode";
+import { CloudConfig } from "../../scripts/utils/cloud-config";
 
-declare const cloudConfig: any;
+declare const cloudConfig: CloudConfig;
 
 const forms: { [key: string]: HTMLFormElement } = {};
 const client = new CognitoIdentityProviderClient({ region: "us-west-2" });
@@ -89,6 +90,12 @@ async function respondToChallenge(challengeName: string, challengeParams: Record
         case "NEW_PASSWORD_REQUIRED":
             newPasswordChallenge(username, session, challengeParams);
             break;
+        case "MFA_SETUP":
+            mfaSetupChallenge(username, session);
+            break;
+        case "SOFTWARE_TOKEN_MFA":
+            otpMfaChallenge(username, session);
+            break;
         default:
             break;
     }
@@ -142,6 +149,7 @@ async function newPasswordChallenge(username: string, session: string, challenge
  * @param session 
  */
 async function mfaSetupChallenge(username: string, session: string) {
+    switchForms("mfa-setup");
     const qrCanvas = forms["mfa-setup"].getElementsByTagName("canvas").item(0);
     console.log("setup");
     const setupCommand = new AssociateSoftwareTokenCommand({ Session: session });
@@ -156,6 +164,44 @@ async function mfaSetupChallenge(username: string, session: string) {
         Session: setupResponse.Session,
         UserCode: code
     });
-    const confirmOtpResponse = client.send(confirmOtpCommand);
-    console.log(confirmOtpResponse);
+    const confirmOtpResponse = await client.send(confirmOtpCommand);
+    
+
+    // Now respond to auth with the challenge, supposedly
+    const challengeResponse = new RespondToAuthChallengeCommand({
+        ChallengeName: "MFA_SETUP",
+        ClientId: cloudConfig.clientId,
+        Session: confirmOtpResponse.Session,
+        ChallengeResponses: {
+            "USERNAME": username
+        }
+    });
+    const response = await client.send(challengeResponse);
+    if (response.ChallengeName) {
+        respondToChallenge(response.ChallengeName, response.ChallengeParameters, username, response.Session);
+    } else {
+        finishLogin(response.AuthenticationResult);
+    }
+}
+
+async function otpMfaChallenge(username: string, session: string) {
+    switchForms("otp-mfa");
+    const form = await formSubmit(forms["otp-mfa"]);
+    const code = form.get("code").toString();
+
+    const challengeResponse = new RespondToAuthChallengeCommand({
+        ChallengeName: "SOFTWARE_TOKEN_MFA",
+        ClientId: cloudConfig.clientId,
+        ChallengeResponses: {
+            "USERNAME": username,
+            "SOFTWARE_TOKEN_MFA_CODE": code
+        },
+        Session: session
+    });
+    const response = await client.send(challengeResponse);
+    if (response.ChallengeName) {
+        respondToChallenge(response.ChallengeName, response.ChallengeParameters, username, response.Session);
+    } else {
+        finishLogin(response.AuthenticationResult);
+    }
 }
