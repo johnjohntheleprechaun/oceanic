@@ -17,46 +17,53 @@ const keyPairParams = {
     hash: "SHA-256",
 };
 
+
+/**
+ * A static class
+ */
 export class CloudConnection {
     /**
      * Credentials from the cognito identity pool
      */
-    private credentials: CognitoIdentityCredentialProvider;
+    private static credentials: CognitoIdentityCredentialProvider;
     /**
      * S3 client
      */
-    private s3Client: S3Client;
+    private static s3Client: S3Client;
     /**
      * DynamoDB client
      */
-    private dynamoClient: DynamoDBClient;
+    private static dynamoClient: DynamoDBClient;
     /**
      * The user's cognito tokens (NOT the identity pool credentials)
      */
-    private tokens: Tokens;
+    private static tokens: Tokens;
     /**
      * The user's id (the one used as the dynamo partition key, and the s3 prefix)
      */
-    public identityId: string;
+    public static identityId: string;
     /**
      * The master key that's used to wrap/unwrap all the document keys
      */
-    private masterKey: MasterKeyPair;
+    private static masterKey: MasterKeyPair;
+
+    static {
+        console.log("CloudConnection static initialization");
+    }
 
     /**
      * Automatically use localStorage to create an AWSConnection object
      * @returns A new AWSConnection
      */
     public static async fromLocalStorage() {
-        const connection = new CloudConnection();
-        await connection.initialize( Tokens.fromLocalStorage() );
-        return connection;
+        await CloudConnection.initialize( Tokens.fromLocalStorage() );
+        return CloudConnection;
     }
     /**
      * Initialize credentials and clients
      * @param tokens A tokens object
      */
-    public async initialize(tokens?: Tokens) {
+    public static async initialize(tokens?: Tokens) {
         if (tokens) {
             this.tokens = tokens;
         } else {
@@ -79,7 +86,7 @@ export class CloudConnection {
      * @param id The document's ID
      * @returns The document's content
      */
-    public async getDocumentContent(id: string): Promise<string> {
+    public static async getDocumentContent(id: string): Promise<string> {
         const documentInfo = await this.getDocumentInfo(id);
         const wrappedKey = documentInfo.documentKey;
         const documentKey = await crypto.subtle.unwrapKey("raw", wrappedKey, this.masterKey.privateKey, { name: "RSA-OAEP" }, "AES-GCM", false, [ "encrypt", "decrypt" ]);
@@ -94,7 +101,7 @@ export class CloudConnection {
      * @param key The key this object is encrypted with
      * @returns The object's content
      */
-    public async getObject(objectName: string, key: CryptoKey) {
+    public static  async getObject(objectName: string, key: CryptoKey) {
         const getCommand = new GetObjectCommand({
             Bucket: cloudConfig.bucketName,
             Key: `${this.identityId}/${objectName}`
@@ -115,7 +122,7 @@ export class CloudConnection {
      * @param id The document's ID
      * @returns The unmarshalled DocumentInfo object
      */
-    public async getDocumentInfo(id: string): Promise<DocumentInfo> {
+    public static async getDocumentInfo(id: string): Promise<DocumentInfo> {
         id = id.replace(/^document:/, "");
         const getCommand = new GetItemCommand({
             TableName: cloudConfig.tableName,
@@ -139,7 +146,7 @@ export class CloudConnection {
      * @param key The key to encrypt the object data with
      * @returns The response from S3
      */
-    public async putObject(objectName: string, data: Uint8Array, key: CryptoKey) {
+    public static async putObject(objectName: string, data: Uint8Array, key: CryptoKey) {
         // generate a 96 bit IV
         const iv = crypto.getRandomValues(new Uint8Array(96/8));
 
@@ -172,7 +179,7 @@ export class CloudConnection {
      * @param title The document's title. Set as an empty string if none is provided
      * @returns The DocumentInfo object that was sent to DynamoDB
      */
-    public async createDocument(type: string, title?: string): Promise<DocumentInfo> {
+    public static async createDocument(type: string, title?: string): Promise<DocumentInfo> {
         // Create a new document key
         console.log("generating key");
         const documentKey = await crypto.subtle.generateKey(
@@ -221,7 +228,7 @@ export class CloudConnection {
      * @param masterKey Either the key to use for wrapping the private key, or the passcode to generate a key from
      * @returns The generated keypair
      */
-    public async createNewKeyPair(masterKey: CryptoKey | string) {
+    public static async createNewKeyPair(masterKey: CryptoKey | string) {
         let wrappingKey: CryptoKey;
 
         // Derive a key if needed
@@ -261,7 +268,7 @@ export class CloudConnection {
         return keyPair;
     }
 
-    public async getMasterKeyPair(masterKey: CryptoKey | string): Promise<MasterKeyPair> {
+    public static async getMasterKeyPair(masterKey: CryptoKey | string): Promise<MasterKeyPair> {
         // Derive a key if necessary
         let wrappingKey: CryptoKey;
         if (typeof masterKey === "string") {
@@ -293,7 +300,7 @@ export class CloudConnection {
      * Get a user's public key
      * @param user The identity ID of the user who's public key you are fetching
      */
-    public async getPublicKey(user: string): Promise<CryptoKey> {
+    public static async getPublicKey(user: string): Promise<CryptoKey> {
         // Fetch the key pair from DynamoDB
         const getCommand = new GetItemCommand({
             TableName: cloudConfig.tableName,
