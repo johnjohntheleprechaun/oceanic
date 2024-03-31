@@ -51,4 +51,4 @@ const userSettingsSchema = {
     },
     required: [ "securitySettings" ]
 } as const satisfies JSONSchema;
-type UserSettings = FromSchema<typeof userSettingsSchema>;
+export type UserSettings = FromSchema<typeof userSettingsSchema>;
