@@ -193,6 +193,53 @@ class JournalDatabase {
     }
 }
 
+type UpgradeController = (event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) => (() => Promise<any>)
+
+export class Database {
+    /**
+     * Create a new Database object and initialize it
+     * @param name The name of the database
+     * @param version The database version
+     * @param upgradeFunc The function to call if an upgrade is needed
+     * @returns The fully initialized database
+     */
+    public static async open(name: string, version: number, upgradeFunc: UpgradeController) {
+        const database = new Database();
+        await database.init(name, version, upgradeFunc);
+        return database;
+    }
+
+    db: IDBDatabase;
+
+    async init(name: string, version: number, upgrade: UpgradeController) {
+        await navigator.storage.persist();
+        const dbRequest = window.indexedDB.open(name, version);
+        
+        let dataMutatorFunc: () => Promise<any>;
+        await new Promise((resolve, reject) => {
+            dbRequest.onsuccess = () => {
+                this.db = dbRequest.result;
+                resolve(dbRequest.result);
+            };
+            dbRequest.onerror = function() {
+                reject(dbRequest.error);
+            };
+            dbRequest.onblocked = function() {
+                reject(new Error("Database is blocked"));
+            };
+            dbRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+                dataMutatorFunc = upgrade(event, dbRequest.result, dbRequest.transaction);
+            };
+        });
+        //console.log("initialize promise finished");
+        if (dataMutatorFunc) {
+            await dataMutatorFunc();
+            //console.log("upgrade func finished");
+        }
+        console.log("Database initialized");
+    }
+}
+
 async function continueCursor(cursor: IDBCursor) {
     return new Promise((resolve, reject) => {
         cursor.request.onsuccess = function() {
