@@ -1,4 +1,7 @@
+import Ajv from "ajv";
 import { FromSchema, JSONSchema } from "json-schema-to-ts";
+
+const ajv = new Ajv();
 
 // All settings schemas should have local and global. Global settings are per-account, local are device-specific
 const settingsGroupTemplate = {
@@ -51,4 +54,5 @@ const userSettingsSchema = {
     },
     required: [ "securitySettings" ]
 } as const satisfies JSONSchema;
+export const userSettingsValidator = ajv.compile(userSettingsSchema);
 export type UserSettings = FromSchema<typeof userSettingsSchema>;

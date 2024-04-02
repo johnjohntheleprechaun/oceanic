@@ -6,6 +6,8 @@ declare const cloudConfig: any;
 
 async function test() {
     //console.log(crypto.getRandomValues(new Uint8Array(96/8)));
+    const data = "asdf";
+    
     const testPassword = "thisisatestpassword";
     await CloudConnection.fromLocalStorage();
     

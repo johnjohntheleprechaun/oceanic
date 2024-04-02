@@ -4,19 +4,11 @@ import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
 import { DocumentInfo, KeyPair, MasterKeyPair } from "./cloud-types";
-import { passcodeToKey } from "./crypto";
+import { keyPairParams, passcodeToKey } from "./crypto";
 import { Tokens } from "./tokens";
 import { CloudConfig } from "./cloud-config";
 
 declare const cloudConfig: CloudConfig;
-
-const keyPairParams = {
-    name: "RSA-OAEP",
-    modulusLength: 4096,
-    publicExponent: new Uint8Array([1, 0, 1]),
-    hash: "SHA-256",
-};
-
 
 /**
  * A static class
