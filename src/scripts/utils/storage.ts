@@ -195,6 +195,9 @@ class JournalDatabase {
 
 type UpgradeController = (event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) => (() => Promise<any>)
 
+/**
+ * A wrapper for an IndexedDB Database
+ */
 export class Database {
     /**
      * Create a new Database object and initialize it
@@ -211,6 +214,12 @@ export class Database {
 
     db: IDBDatabase;
 
+    /**
+     * Initialize a database object that's already been created. You should probably be using the static method `Database.open()`
+     * @param name The IDB Database name
+     * @param version The Database version
+     * @param upgrade The upgrade function
+     */
     async init(name: string, version: number, upgrade: UpgradeController) {
         await navigator.storage.persist();
         const dbRequest = window.indexedDB.open(name, version);
@@ -239,6 +248,12 @@ export class Database {
         console.log("Database initialized");
     }
 
+    /**
+     * Create a transaction and open an object store
+     * @param storeName The name of the object store
+     * @param write Whether it needs to be used for writing
+     * @returns The specified object store
+     */
     openStore(storeName: string, write?: boolean): IDBObjectStore {
         const transaction = this.db.transaction(
             storeName, write ? "readwrite" : "readonly"
@@ -246,15 +261,33 @@ export class Database {
         return transaction.objectStore(storeName);
     }
 
-    openIndex(storeName: string, indexName: string, write?: boolean): IDBIndex {
-        const objectStore = this.openStore(storeName, write);
+    /**
+     * Create a readonly trasaction and open and index on an object store
+     * @param storeName The name of the object store
+     * @param indexName The name of the index that's on the object store
+     * @returns The specified index
+     */
+    openIndex(storeName: string, indexName: string): IDBIndex {
+        const objectStore = this.openStore(storeName);
         return objectStore.index(indexName);
     }
 
+    /**
+     * This simply makes the index optional, since indexes and object stores share methods for reading
+     * @param storeName The name of the object store
+     * @param indexName An optional index name. If it's not provided, then only an object store will be opened
+     * @param write Whether it will be used for object writes. Nore 
+     * @returns The specified object store or index
+     */
     openStoreOrIndex(storeName: string, indexName?: string, write?: boolean): IDBObjectStore | IDBIndex {
-        return indexName ? this.openIndex(storeName, indexName, write) : this.openStore(storeName, write);
+        return indexName ? this.openIndex(storeName, indexName) : this.openStore(storeName, write);
     }
 
+    /**
+     * List all the items in an index or object store
+     * @param storeName The name of the object store
+     * @param indexName The name of the index
+     */
     public async* listItems(storeName: string, indexName?: string): AsyncGenerator<any, void, unknown> {
         const cursor = await this.openCursor(storeName, indexName);
         
@@ -264,6 +297,11 @@ export class Database {
         }
     }
 
+    /**
+     * Continue a cursor object
+     * @param cursor The cursor to continue
+     * @returns The cursor that was continued. The same object as the one passed into the method
+     */
     async continueCursor(cursor: IDBCursor) {
         return new Promise((resolve, reject) => {
             cursor.request.onsuccess = function() {
@@ -277,7 +315,7 @@ export class Database {
     }
     
     /**
-     * Open a cursor on a specified index
+     * Open a cursor on a specified index or object store
      * @param storeName The name of the object store
      * @returns A cursor with value
      */
@@ -296,11 +334,18 @@ export class Database {
         });
     }
     
-    async getObject(id: string, storeName: string, indexName?: string): Promise<Object> {
+    /**
+     * Get an object from an object store or index
+     * @param key The key for the object
+     * @param storeName The name of the object store
+     * @param indexName The name of an index
+     * @returns The object associated with the key
+     */
+    async getObject(key: string, storeName: string, indexName?: string): Promise<any> {
         const store = this.openStoreOrIndex(storeName, indexName);
         return new Promise((resolve, reject) => {
             // add an empty journal entry
-            const addRequest = store.get(id);
+            const addRequest = store.get(key);
     
             // add event listeners
             addRequest.onsuccess = function() {
@@ -312,16 +357,22 @@ export class Database {
         });
     }
     
+    /**
+     * Put an object in an object store (or update it if it already exists)
+     * @param newData The new object
+     * @param storeName The name of the object store
+     * @returns The key for the object
+     */
     async putObject(newData: any, storeName: string): Promise<string> {
         const store = this.openStore(storeName, true);
 
         return new Promise((resolve, reject) => {
-            // add an empty journal entry
+            // put the data
             const addRequest = store.put(newData);
     
             // add event listeners
             addRequest.onsuccess = function() {
-                // resolve with the journals ID (as per documentation the result should be the key)
+                // resolve with the object key
                 resolve(addRequest.result.toString());
             };
             addRequest.onerror = function() {
@@ -330,16 +381,21 @@ export class Database {
         });
     }
     
+    /**
+     * Create a new object in an object store. This will fail if the key is already being used
+     * @param object The new object
+     * @param storeName The name of the object store
+     * @returns The object key
+     */
     async addObject(object: any, storeName: string): Promise<string> {
         const store = this.openStore(storeName, true);
 
         return new Promise((resolve, reject) => {
-            // add an empty journal entry
+            // attempt to add the object
             const addRequest = store.add(object);
     
             // add event listeners
             addRequest.onsuccess = function() {
-                // resolve with the journals ID (as per documentation the result should be the key)
                 resolve(addRequest.result.toString());
             };
             addRequest.onerror = function() {
