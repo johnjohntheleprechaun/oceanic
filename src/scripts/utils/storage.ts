@@ -239,18 +239,29 @@ export class Database {
         console.log("Database initialized");
     }
 
-    openStore(storeName: string): IDBObjectStore {
-        const transaction = this.db.transaction(storeName);
+    openStore(storeName: string, write?: boolean): IDBObjectStore {
+        const transaction = this.db.transaction(
+            storeName, write ? "readwrite" : "readonly"
+        );
         return transaction.objectStore(storeName);
     }
 
-    openIndex(storeName: string, indexName?: string): IDBIndex {
-        const objectStore = this.openStore(storeName);
+    openIndex(storeName: string, indexName: string, write?: boolean): IDBIndex {
+        const objectStore = this.openStore(storeName, write);
         return objectStore.index(indexName);
     }
 
-    openStoreOrIndex(storeName: string, indexName?: string): IDBObjectStore | IDBIndex {
-        return indexName ? this.openIndex(storeName, indexName) : this.openStore(storeName);
+    openStoreOrIndex(storeName: string, indexName?: string, write?: boolean): IDBObjectStore | IDBIndex {
+        return indexName ? this.openIndex(storeName, indexName, write) : this.openStore(storeName, write);
+    }
+
+    public async* listItems(storeName: string, indexName?: string): AsyncGenerator<any, void, unknown> {
+        const cursor = await this.openCursor(storeName, indexName);
+        
+        while (cursor && cursor.value && cursor.request) {
+            yield cursor.value;
+            await this.continueCursor(cursor);
+        }
     }
 
     async continueCursor(cursor: IDBCursor) {
@@ -302,7 +313,7 @@ export class Database {
     }
     
     async putObject(newData: any, storeName: string): Promise<string> {
-        const store = this.openStore(storeName);
+        const store = this.openStore(storeName, true);
 
         return new Promise((resolve, reject) => {
             // add an empty journal entry
@@ -320,7 +331,7 @@ export class Database {
     }
     
     async addObject(object: any, storeName: string): Promise<string> {
-        const store = this.openStore(storeName);
+        const store = this.openStore(storeName, true);
 
         return new Promise((resolve, reject) => {
             // add an empty journal entry
