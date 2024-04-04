@@ -238,6 +238,104 @@ export class Database {
         }
         console.log("Database initialized");
     }
+
+    openStore(storeName: string): IDBObjectStore {
+        const transaction = this.db.transaction(storeName);
+        return transaction.objectStore(storeName);
+    }
+
+    openIndex(storeName: string, indexName?: string): IDBIndex {
+        const objectStore = this.openStore(storeName);
+        return objectStore.index(indexName);
+    }
+
+    openStoreOrIndex(storeName: string, indexName?: string): IDBObjectStore | IDBIndex {
+        return indexName ? this.openIndex(storeName, indexName) : this.openStore(storeName);
+    }
+
+    async continueCursor(cursor: IDBCursor) {
+        return new Promise((resolve, reject) => {
+            cursor.request.onsuccess = function() {
+                resolve(cursor);
+            };
+            cursor.request.onerror = function() {
+                reject(cursor.request.error);
+            };
+            cursor.continue();
+        });
+    }
+    
+    /**
+     * Open a cursor on a specified index
+     * @param storeName The name of the object store
+     * @returns A cursor with value
+     */
+    async openCursor(storeName: string, indexName?: string): Promise<IDBCursorWithValue> {
+        const store = this.openStoreOrIndex(storeName, indexName);
+        return new Promise((resolve, reject) => {
+            const request = store.openCursor();
+    
+            // bind functions
+            request.onsuccess = function() {
+                resolve(request.result);
+            };
+            request.onerror = function() {
+                reject(request.error);
+            };
+        });
+    }
+    
+    async getObject(id: string, storeName: string, indexName?: string): Promise<Object> {
+        const store = this.openStoreOrIndex(storeName, indexName);
+        return new Promise((resolve, reject) => {
+            // add an empty journal entry
+            const addRequest = store.get(id);
+    
+            // add event listeners
+            addRequest.onsuccess = function() {
+                resolve(addRequest.result);
+            };
+            addRequest.onerror = function() {
+                reject(addRequest.error);
+            };
+        });
+    }
+    
+    async putObject(newData: any, storeName: string): Promise<string> {
+        const store = this.openStore(storeName);
+
+        return new Promise((resolve, reject) => {
+            // add an empty journal entry
+            const addRequest = store.put(newData);
+    
+            // add event listeners
+            addRequest.onsuccess = function() {
+                // resolve with the journals ID (as per documentation the result should be the key)
+                resolve(addRequest.result.toString());
+            };
+            addRequest.onerror = function() {
+                reject(addRequest.error);
+            };
+        });
+    }
+    
+    async addObject(object: any, storeName: string): Promise<string> {
+        const store = this.openStore(storeName);
+
+        return new Promise((resolve, reject) => {
+            // add an empty journal entry
+            const addRequest = store.add(object);
+    
+            // add event listeners
+            addRequest.onsuccess = function() {
+                // resolve with the journals ID (as per documentation the result should be the key)
+                resolve(addRequest.result.toString());
+            };
+            addRequest.onerror = function() {
+                reject(addRequest.error);
+            };
+        });
+    }
 }
 
 async function continueCursor(cursor: IDBCursor) {
