@@ -1,4 +1,8 @@
+import { CloudConnection } from "./aws";
+import { formSubmit } from "./forms";
 import { SettingsManager } from "./settings";
+import { Database, userDatabaseUpgrade, userDatabaseVersion } from "./storage";
+const passwordPromptHTML: string = require("../../templates/password-prompt.html").default;
 
 export const keyPairParams = {
     name: "RSA-OAEP",
@@ -72,5 +76,17 @@ export class SecretManager {
                 break;
         }
         return this.privateKey
+    }
+
+    static async getUserPassword(): Promise<string> {
+        console.log(passwordPromptHTML);
+        const prompt = document.createElement("div");
+        document.body.appendChild(prompt);
+        prompt.outerHTML = passwordPromptHTML;
+
+        const form = document.getElementById("password-form") as HTMLFormElement;
+        const data = await formSubmit(form);
+        document.getElementById("password-form-wrapper").remove();
+        return data.get("password").toString();
     }
 }

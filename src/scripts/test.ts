@@ -4,12 +4,14 @@ import { marshall } from "@aws-sdk/util-dynamodb";
 import { Database } from "./utils/storage";
 import { UserSettings, userSettingsSchema, userSettingsValidator } from "./utils/settings-schemas";
 import { SettingsManager } from "./utils/settings";
+import { SecretManager } from "./utils/crypto";
 const defaults = require("json-schema-defaults");
 
 declare const cloudConfig: any;
 
 async function test() {
-    console.log(await SettingsManager.getSettings());
+    console.log( window.sessionStorage.getItem("poop") );
+    console.log(await SecretManager.getUserPassword());
 }
 
 export {test}
