@@ -19,18 +19,19 @@ const settingsGroupTemplate = {
 
 const securitySettingsSchema = {
     type: "object",
+    title: "Security Settings",
     properties: {
         "local": {
             type: "object",
             properties: {
-                "deviceTrustLevel": {
-                    enum: [ "none", "minimal", "secure" ],
+                "deviceTrust": {
+                    enum: [ "minimal", "full" ],
                     title: "Device Trust Level",
-                    description: "How much this device should be trusted. This affects where the unwrapped master key is stored, or if it's stored at all.",
-                    default: "none"
+                    description: "How much this device should be trusted. This affects how user secrets are stored.",
+                    default: "minimal"
                 }
             },
-            required: [ "deviceTrustLevel" ]
+            required: [ "deviceTrust" ]
         },
         "global": {
             type: "object",
@@ -38,19 +39,15 @@ const securitySettingsSchema = {
 
             }
         }
-    },
-    required: [ "global" ]
+    }
 } as const satisfies JSONSchema;
-// type SecuritySettings = FromSchema<typeof securitySettingsSchema>;
+export type SecuritySettings = FromSchema<typeof securitySettingsSchema>;
+export type SettingsGroup = SecuritySettings
 
-const userSettingsSchema = {
+export const userSettingsSchema = {
     type: "object",
     properties: {
-        "user": { type: "string", description: "The user's identity id"},
-        "securitySettings": {
-            title: "Security Settings",
-            oneOf: [ securitySettingsSchema ]
-        }
+        "securitySettings": { ...securitySettingsSchema },
     },
     required: [ "securitySettings" ]
 } as const satisfies JSONSchema;

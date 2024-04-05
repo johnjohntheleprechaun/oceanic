@@ -1,3 +1,6 @@
+import { SettingsGroup, userSettingsSchema, userSettingsValidator } from "./settings-schemas";
+const defaults = require("json-schema-defaults");
+
 const JOURNAL_DB_VERSION = 3;
 
 interface JournalInterface {
@@ -143,6 +146,21 @@ class JournalDatabase {
     }
 }
 
+
+export const userDatabaseVersion = 1;
+export function userDatabaseUpgrade(event: IDBVersionChangeEvent, database: IDBDatabase, transaction: IDBTransaction) {
+    let dataMutator: () => Promise<any>;
+    switch (event.oldVersion) {
+        case 0:
+            // first time initialization
+            const userDataStore = database.createObjectStore("data", { keyPath: "type" });
+            const userSecretStore = database.createObjectStore("secrets", { keyPath: "id" });
+            break;
+    }
+
+    return dataMutator;
+}
+
 type UpgradeController = (event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) => (() => Promise<any>)
 
 /**
@@ -245,6 +263,20 @@ class Database {
             yield cursor.value;
             await this.continueCursor(cursor);
         }
+    }
+
+    public async listAllKeys(storeName: string, indexName?: string) {
+        return new Promise((resolve, reject) => {
+            const index = this.openStoreOrIndex(storeName, indexName);
+            const request = index.getAllKeys();
+
+            request.onsuccess = function() {
+                resolve(request.result);
+            }
+            request.onerror = function() {
+                reject(request.error);
+            }
+        });
     }
 
     /**

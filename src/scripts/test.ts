@@ -2,20 +2,14 @@ import { CognitoIdentityProviderClient, UpdateUserAttributesCommand } from "@aws
 import { CloudConnection as CloudConnection } from "./utils/aws";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { Database } from "./utils/storage";
+import { UserSettings, userSettingsSchema, userSettingsValidator } from "./utils/settings-schemas";
+import { SettingsManager } from "./utils/settings";
+const defaults = require("json-schema-defaults");
 
 declare const cloudConfig: any;
 
 async function test() {
-    const database = await Database.open("journal", 3, null);
-    database.addObject({
-        "id": crypto.randomUUID(),
-        "created": 10,
-        "asdfasdf": "asdfnlaskjfnlekjanclkjnksjndclkjehlfaidshfkjahdsf"
-    }, "entries");
-
-    for await (const item of database.listItems("entries", "created")) {
-        console.log(item);
-    }
+    console.log(await SettingsManager.getSettings());
 }
 
 export {test}

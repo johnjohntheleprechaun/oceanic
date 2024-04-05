@@ -1,29 +1,47 @@
-import { UserSettings, userSettingsValidator } from "./settings-schemas";
+import { UserSettings, userSettingsSchema, userSettingsValidator } from "./settings-schemas";
+import { Database, userDatabaseUpgrade, userDatabaseVersion } from "./storage";
+const defaults = require("json-schema-defaults");
 
 export class SettingsManager {
-    private static settings: UserSettings;
+    private static database: Database;
 
     public static async ensureLoaded() {
-        if (this.settings) {
-            // assume it's loaded properly
-            // Better logic should be added later, perhaps
-            return;
-        } else {
-            // Load settings
+        if (!this.database) {
+            this.database = await Database.open("user", userDatabaseVersion, userDatabaseUpgrade);
         }
     }
 
-    public static async getSettings() {
+    public static async getSettings(): Promise<UserSettings> {
         await this.ensureLoaded();
-        return this.settings;
+        const settings = await this.database.getObject("settings", "data");
+        // remove the IDB key if needed so that the validator will work
+        if (settings && settings.type) {
+            delete settings.type;
+        }
+        console.log(settings, userSettingsValidator(settings));
+        console.log(userSettingsSchema)
+        if (!userSettingsValidator(settings)) {
+            // ditch the invalid settings, and set defaults
+            // something better should probably be made at some point
+            const defaultSettings = defaults(userSettingsSchema);
+            await this.overwriteSettings(defaultSettings);
+            return defaultSettings as UserSettings;
+        } else {
+            return settings as UserSettings;
+        }
     }
 
-    public static updateSetting(settingPath: string, value: string | boolean | number) {
-        const settingsCopy = structuredClone(this.settings);
+    private static async overwriteSettings(newSettings: UserSettings) {
+        newSettings["type"] = "settings";
+        await this.database.putObject(newSettings, "data");
+    }
+
+    public static async updateSetting(settingPath: string, value: string | boolean | number) {
+        const settingsCopy = await this.getSettings();
         const keys = settingPath.split(".");
         
         let currentObject: any = settingsCopy;
-        for (const key of keys) {
+        for (const key of keys.slice(0, -1)) {
             if (!currentObject[key]) {
                 currentObject[key] = {};
             }
@@ -32,8 +50,8 @@ export class SettingsManager {
 
         currentObject[ keys[keys.length - 1] ] = value;
 
-        if (userSettingsValidator(currentObject)) {
-            this.settings = settingsCopy;
+        if (userSettingsValidator(settingsCopy)) {
+            await this.overwriteSettings(settingsCopy);
         } else {
             throw new InvalidSettingValue(settingPath, value);
         }
