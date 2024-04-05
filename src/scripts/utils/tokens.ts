@@ -66,7 +66,7 @@ export class Tokens {
     }
 
     /**
-     * Fetch tokens from window.localStorage
+     * Fetch tokens from local storage
      * @returns A new token object
      */
     public static fromLocalStorage() {
@@ -76,6 +76,21 @@ export class Tokens {
 
         if ([accessToken, idToken, refreshToken].includes(null)) {
             throw new MissingTokenError("local storage");
+        }
+        return new Tokens(accessToken, idToken, refreshToken);
+    }
+
+    /**
+     * Fetch tokens from session storage
+     * @returns A new token object
+     */
+    public static fromSessionStorage() {
+        const accessToken = window.sessionStorage.getItem("access_token");
+        const idToken = window.sessionStorage.getItem("id_token");
+        const refreshToken = window.sessionStorage.getItem("refresh_token");
+
+        if ([accessToken, idToken, refreshToken].includes(null)) {
+            throw new MissingTokenError("session storage");
         }
         return new Tokens(accessToken, idToken, refreshToken);
     }

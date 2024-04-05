@@ -1,7 +1,9 @@
 import { CloudConnection } from "./aws";
+import { MasterKeyPair } from "./cloud-types";
 import { formSubmit } from "./forms";
 import { SettingsManager } from "./settings";
 import { Database, userDatabaseUpgrade, userDatabaseVersion } from "./storage";
+import { Tokens } from "./tokens";
 const passwordPromptHTML: string = require("../../templates/password-prompt.html").default;
 
 export const keyPairParams = {
@@ -52,30 +54,120 @@ export function decode(data: string) {
     return bytes.buffer;
 }
 
+export function encode(data: ArrayBuffer) {
+    let binaryString = "";
+    const bytes = new Uint8Array(data);
+
+    for (let i = 0; i < data.byteLength; i++) {
+        binaryString += String.fromCharCode(bytes.at(i));
+    }
+    return btoa(binaryString);
+}
+
 export class SecretManager {
-    private static privateKey: CryptoKey;
-    public static async getPrivateKey() {
-        if (this.privateKey) {
-            return this.privateKey;
+    private static keyPair: MasterKeyPair;
+    private static database: Database;
+    private static tokens: Tokens;
+
+    private static async loadDatabase() {
+        if (!this.database) {
+            this.database = await Database.open("user", userDatabaseVersion, userDatabaseUpgrade);
+        }
+    }
+
+    public static async getTokens(): Promise<Tokens> {
+        if (this.tokens) {
+            return this.tokens;
+        }
+        const settings = await SettingsManager.getSettings();
+        if (settings.securitySettings.local.deviceTrust === "full") {
+            this.tokens = Tokens.fromLocalStorage();
+        }
+        else if (settings.securitySettings.local.deviceTrust === "minimal") {
+            this.tokens = Tokens.fromSessionStorage();
+        }
+        return this.tokens;
+    }
+
+    public static async getMasterKeyPair(): Promise<MasterKeyPair> {
+        if (this.keyPair) {
+            return this.keyPair;
         }
         const settings = await SettingsManager.getSettings();
 
         // Check the location
-        switch (settings.securitySettings.local.deviceTrustLevel) {
-            case "none":
-                // prompt the user for their password
-                break;
+        let foundKey = false;
+        switch (settings.securitySettings.local.deviceTrust) {
             case "minimal":
                 // fetch from session storage
-                const keyData = window.sessionStorage.getItem("private_key");
-                const keyBuffer = decode(keyData);
-                this.privateKey = await crypto.subtle.importKey("pkcs8", keyBuffer, keyPairParams, false, [ "unwrapKey" ]);
+                const privateKeyData = window.sessionStorage.getItem("private_key");
+                const publicKeyData = window.sessionStorage.getItem("public_key");
+                if (!privateKeyData || !publicKeyData) {
+                    // key wasn't in storage, need to reprompt the user
+                    break;
+                }
+                // decode both keys
+                const privateKeyBuffer = decode(privateKeyData);
+                const publicKeyBuffer = decode(publicKeyData);
+
+                this.keyPair = {
+                    "privateKey": await crypto.subtle.importKey("pkcs8", privateKeyBuffer, keyPairParams, false, [ "unwrapKey" ]),
+                    "publicKey": await crypto.subtle.importKey("spki", publicKeyBuffer, keyPairParams, true, [ "wrapKey" ])
+                };
+                foundKey = true;
                 break;
-            case "secure":
-                // fetch from indexedDB
+
+
+            case "full":
+                // fetch the cryptoKey object from indexedDB
+                await this.loadDatabase();
+                const keyPair = await this.database.getObject("keyPair", "secrets");
+                if (!keyPair) {
+                    // key wasn't in storage
+                    break;
+                }
+                this.keyPair = keyPair;
+                foundKey = true;
                 break;
         }
-        return this.privateKey
+
+        if (!foundKey) {
+            const password = await this.getUserPassword();
+            const keyPair = await CloudConnection.getMasterKeyPair(password);
+            await this.storeKeyPair(keyPair);
+            this.keyPair = keyPair
+        }
+
+        return this.keyPair
+    }
+
+    public static async storeKeyPair(keyPair: MasterKeyPair) {
+        const settings = await SettingsManager.getSettings();
+        switch (settings.securitySettings.local.deviceTrust) {
+            case "minimal":
+                // export keys
+                const privateKeyData = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+                const publicKeyData = await crypto.subtle.exportKey("spki", keyPair.publicKey);
+
+                // encode keys
+                const privateKeyEncoded = encode(privateKeyData);
+                const publicKeyEncoded = encode(publicKeyData);
+
+                // store keys
+                window.sessionStorage.setItem("private_key", privateKeyEncoded);
+                window.sessionStorage.setItem("public_key", publicKeyEncoded);
+                break;
+            
+            case "full":
+                await this.loadDatabase();
+                await this.database.putObject(
+                    {
+                        "id": "keyPair",
+                        "data": keyPair
+                    }, "secrets"
+                );
+                break;
+        }
     }
 
     static async getUserPassword(): Promise<string> {

@@ -98,9 +98,6 @@ async function finishLogin(authResult: AuthenticationResultType) {
     window.localStorage.setItem("id_token", authResult.IdToken);
     window.localStorage.setItem("access_token", authResult.AccessToken);
     window.localStorage.setItem("refresh_token", authResult.RefreshToken);
-    const getUser = new GetUserCommand({ AccessToken: authResult.AccessToken });
-    const user = await client.send(getUser);
-    window.localStorage.setItem("user_data", JSON.stringify(user));
     window.location.href = "/test.html";
 }
 

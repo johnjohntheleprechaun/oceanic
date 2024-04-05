@@ -1,17 +1,18 @@
-import { CognitoIdentityProviderClient, UpdateUserAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
-import { CloudConnection as CloudConnection } from "./utils/aws";
-import { marshall } from "@aws-sdk/util-dynamodb";
-import { Database } from "./utils/storage";
-import { UserSettings, userSettingsSchema, userSettingsValidator } from "./utils/settings-schemas";
-import { SettingsManager } from "./utils/settings";
+import { CloudConnection } from "./utils/aws";
+import { CloudConfig } from "./utils/cloud-config";
 import { SecretManager } from "./utils/crypto";
+import { SettingsManager } from "./utils/settings";
+import { Tokens } from "./utils/tokens";
 const defaults = require("json-schema-defaults");
 
-declare const cloudConfig: any;
+declare const cloudConfig: CloudConfig;
 
 async function test() {
-    console.log( window.sessionStorage.getItem("poop") );
-    console.log(await SecretManager.getUserPassword());
+    //console.log("putting");
+    //await CloudConnection.createNewKeyPair(await SecretManager.getUserPassword());
+
+    console.log("getting");
+    console.log(await SecretManager.getMasterKeyPair());
 }
 
 export {test}

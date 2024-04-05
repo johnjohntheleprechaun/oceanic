@@ -80,7 +80,7 @@ export interface KeyPair {
     /**
      * The public key
      */
-    publicKey: JsonWebKey;
+    publicKey: Uint8Array;
 }
 
 export interface MasterKeyPair {
