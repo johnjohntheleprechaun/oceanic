@@ -3,7 +3,7 @@ import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3
 import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
-import { DocumentInfo, KeyPair, MasterKeyPair } from "./cloud-types";
+import { DocumentInfo, WrappedMasterKeyPair, MasterKeyPair } from "./cloud-types";
 import { SecretManager, keyPairParams, passcodeToKey } from "./crypto";
 import { Tokens } from "./tokens";
 import { CloudConfig } from "./cloud-config";
@@ -258,7 +258,7 @@ export class CloudConnection {
         console.log("wrapped");
 
         // upload the key to DynamoDB
-        const dynamoObject: KeyPair = {
+        const dynamoObject: WrappedMasterKeyPair = {
             user: this.identityId,
             id: "keypair",
             privateKey: new Uint8Array(wrappedPrivateKey),
@@ -290,14 +290,17 @@ export class CloudConnection {
         // Fetch the key pair from DynamoDB
         const getCommand = new GetItemCommand({
             TableName: cloudConfig.tableName,
+            ExpressionAttributeNames: {
+                "#user": "user"
+            },
             Key: {
                 "user": { S: this.identityId },
                 "id": { S: "keypair" }
             },
-            ProjectionExpression: "publicKey, privateKey"
+            ProjectionExpression: "user, publicKey, privateKey"
         });
         const response = await this.dynamoClient.send(getCommand);
-        const keyPair = unmarshall(response.Item) as KeyPair;
+        const keyPair = unmarshall(response.Item) as WrappedMasterKeyPair;
 
         // Import the keys and return
         return {
@@ -323,7 +326,7 @@ export class CloudConnection {
             ProjectionExpression: `user, id, publicKey`
         });
         const response = await this.dynamoClient.send(getCommand);
-        const keyPair = unmarshall(response.Item) as KeyPair;
+        const keyPair = unmarshall(response.Item) as WrappedMasterKeyPair;
 
         return crypto.subtle.importKey("spki", keyPair.publicKey, keyPairParams, false, [ "wrapKey" ]);
     }

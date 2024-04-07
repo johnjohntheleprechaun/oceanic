@@ -138,7 +138,7 @@ export class SecretManager {
             case "full":
                 // fetch the cryptoKey object from indexedDB
                 await this.loadDatabase();
-                const keyPair = await this.database.getObject("keyPair", "secrets");
+                const keyPair = await this.database.getObject("keypair", "secrets");
                 if (!keyPair) {
                     // key wasn't in storage
                     break;
@@ -177,12 +177,10 @@ export class SecretManager {
             
             case "full":
                 await this.loadDatabase();
-                await this.database.putObject(
-                    {
-                        "id": "keyPair",
-                        "data": keyPair
-                    }, "secrets"
-                );
+                if (!keyPair.id) {
+                    keyPair.id = "keypair";
+                }
+                await this.database.putObject(keyPair, "secrets");
                 break;
         }
     }
