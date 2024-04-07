@@ -277,7 +277,7 @@ export class CloudConnection {
     public static async getMasterKeyPair(masterKey: CryptoKey | string): Promise<MasterKeyPair> {
         await this.initialize();
 
-        console.log(masterKey, this.identityId);
+        //console.log(masterKey, this.identityId);
 
         // Derive a key if necessary
         let wrappingKey: CryptoKey;
@@ -290,14 +290,11 @@ export class CloudConnection {
         // Fetch the key pair from DynamoDB
         const getCommand = new GetItemCommand({
             TableName: cloudConfig.tableName,
-            ExpressionAttributeNames: {
-                "#user": "user"
-            },
             Key: {
-                "#user": { S: this.identityId },
+                "user": { S: this.identityId },
                 "id": { S: "keypair" }
             },
-            ProjectionExpression: `#user, id, publicKey, privateKey`
+            ProjectionExpression: "publicKey, privateKey"
         });
         const response = await this.dynamoClient.send(getCommand);
         const keyPair = unmarshall(response.Item) as KeyPair;
@@ -305,7 +302,7 @@ export class CloudConnection {
         // Import the keys and return
         return {
             publicKey: await crypto.subtle.importKey("spki", keyPair.publicKey, keyPairParams, true, [ "wrapKey" ]),
-            privateKey: await crypto.subtle.unwrapKey("pkcs8", keyPair.privateKey, wrappingKey, "AES-KW", keyPairParams, true, [ "unwrapKey" ])
+            privateKey: await crypto.subtle.unwrapKey("jwk", keyPair.privateKey, wrappingKey, "AES-KW", keyPairParams, true, [ "unwrapKey" ])
         }
     }
 

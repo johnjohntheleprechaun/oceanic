@@ -37,7 +37,7 @@ export async function passcodeToKey(passcode: string, salt: ArrayBuffer | string
             name: "AES-KW",
             length: 256
         },
-        false, [ "wrapKey" ]
+        false, [ "wrapKey", "unwrapKey" ]
     )
 }
 
@@ -80,6 +80,7 @@ export class SecretManager {
             return this.tokens;
         }
         const settings = await SettingsManager.getSettings();
+        //console.log(settings.securitySettings.local.deviceTrust)
         if (settings.securitySettings.local.deviceTrust === "full") {
             this.tokens = Tokens.fromLocalStorage();
         }
@@ -87,6 +88,22 @@ export class SecretManager {
             this.tokens = Tokens.fromSessionStorage();
         }
         return this.tokens;
+    }
+
+    public static async setTokens(accessToken: string, idToken: string, refreshToken: string) {
+        const settings = await SettingsManager.getSettings();
+        if (settings.securitySettings.local.deviceTrust === "full") {
+            window.localStorage.setItem("access_token", accessToken);
+            window.localStorage.setItem("id_token", idToken);
+            window.localStorage.setItem("refresh_token", refreshToken);
+        }
+        else if (settings.securitySettings.local.deviceTrust === "minimal") {
+            window.sessionStorage.setItem("access_token", accessToken);
+            window.sessionStorage.setItem("id_token", idToken);
+            window.sessionStorage.setItem("refresh_token", refreshToken);
+        }
+
+        this.tokens = new Tokens(accessToken, idToken, refreshToken);
     }
 
     public static async getMasterKeyPair(): Promise<MasterKeyPair> {
