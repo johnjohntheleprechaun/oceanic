@@ -82,12 +82,12 @@ export class SecretManager {
         }
         const settings = await SettingsManager.getSettings();
         //console.log(settings.securitySettings.local.deviceTrust)
-        if (settings.securitySettings.local.deviceTrust === "full") {
+        if ([ "full", "minimal" ].includes(settings.securitySettings.local.deviceTrust)) {
             await this.loadDatabase();
             const tokenObject = await this.database.getObject("tokens", "secrets");
             this.tokens = Tokens.import(tokenObject);
         }
-        else if (settings.securitySettings.local.deviceTrust === "minimal") {
+        else if (settings.securitySettings.local.deviceTrust === "none") {
             this.tokens = Tokens.fromSessionStorage();
         }
         return this.tokens;
