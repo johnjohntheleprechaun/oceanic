@@ -25,9 +25,15 @@ const securitySettingsSchema = {
             type: "object",
             properties: {
                 "deviceTrust": {
-                    enum: [ "minimal", "full" ],
+                    enum: [ "none", "minimal", "full" ],
                     title: "Device Trust Level",
-                    description: "How much this device should be trusted. This affects how user secrets are stored.",
+                    description:
+`How much this device should be trusted. This affects how user secrets are stored. More specifically: 
+| Trust Level | Effect |
+| ----------- | ------ |
+| \`none\` | Tokens and the unwrapped master key pair are stored in session storage, and will be destroyed when you close the page. Journals and notes won't be stored on-device. |
+| \`minimal\` | Tokens and the *wrapped* master key pair are stored in IndexedDB, while the *unwrapped* master key pair is stored in session storage. Journals and notes that are stored locally will be encrypted. Someone with access to this device will have access to your account, but won't be able to decrypt your journals or notes without entering your master password |
+| \`full\` | Tokens and the unwrapped master key pair are stored in IndexedDB. Journals and notes that are stored locally will be encrypted only to reduce code complexity/redundancy, and can be decrypted without needing to enter your master password. Only do this on a device that only you can access. |`,
                     default: "minimal"
                 }
             },
