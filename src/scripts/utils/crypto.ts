@@ -93,7 +93,7 @@ export class SecretManager {
         return this.tokens;
     }
 
-    public static async setTokens(accessToken: string, idToken: string, refreshToken: string) {
+    public static async storeTokens(accessToken: string, idToken: string, refreshToken: string) {
         const settings = await SettingsManager.getSettings();
         this.tokens = new Tokens(accessToken, idToken, refreshToken);
 

@@ -102,7 +102,7 @@ async function respondToChallenge(challengeName: string, challengeParams: Record
 }
 
 async function finishLogin(authResult: AuthenticationResultType) {
-    await SecretManager.setTokens(authResult.AccessToken, authResult.IdToken, authResult.RefreshToken);
+    await SecretManager.storeTokens(authResult.AccessToken, authResult.IdToken, authResult.RefreshToken);
 }
 
 async function newPasswordChallenge(username: string, session: string, challengeParams: Record<string, string>) {
