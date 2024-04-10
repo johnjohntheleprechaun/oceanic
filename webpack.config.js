@@ -79,7 +79,11 @@ function mapPages() {
             console.log(data.journals);
         }
         const dir = path.join("src/pages", pageDir);
-        const page = new Page(dir, data);
+        let outputPath = undefined;
+        if (pageDir === "landing") {
+            outputPath = "index.html";
+        }
+        const page = new Page(dir, data, undefined, outputPath);
         pages.push(page);
     }
 
@@ -166,7 +170,8 @@ module.exports = {
         }),
         new CopyPlugin({
             patterns: [
-                { from: "src/tinymce/js/tinymce", to: "tinymce" }
+                { from: "src/tinymce/js/tinymce", to: "tinymce" },
+                { from: "src/fonts", to: "fonts" }
             ]
         })
     ]),
