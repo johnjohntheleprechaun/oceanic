@@ -247,7 +247,7 @@ export class CloudConnection {
 
         // generate a new key pair
         const keyPair = await crypto.subtle.generateKey(keyPairParams, true, [ "wrapKey", "unwrapKey" ]);
-        await SecretManager.storeKeyPair(keyPair);
+        await SecretManager.storeMasterKeyPair(keyPair);
 
         // wrap the private key for storage in the cloud
         console.log("wrapping");
@@ -297,7 +297,7 @@ export class CloudConnection {
                 "user": { S: this.identityId },
                 "id": { S: "keypair" }
             },
-            ProjectionExpression: "user, publicKey, privateKey"
+            ProjectionExpression: "#user, publicKey, privateKey"
         });
         const response = await this.dynamoClient.send(getCommand);
         const keyPair = unmarshall(response.Item) as WrappedMasterKeyPair;
@@ -305,7 +305,8 @@ export class CloudConnection {
         // Import the keys and return
         return {
             publicKey: await crypto.subtle.importKey("spki", keyPair.publicKey, keyPairParams, true, [ "wrapKey" ]),
-            privateKey: await crypto.subtle.unwrapKey("jwk", keyPair.privateKey, wrappingKey, "AES-KW", keyPairParams, true, [ "unwrapKey" ])
+            privateKey: await crypto.subtle.unwrapKey("jwk", keyPair.privateKey, wrappingKey, "AES-KW", keyPairParams, true, [ "unwrapKey" ]),
+            wrappedPrivateKey: keyPair.privateKey
         }
     }
 

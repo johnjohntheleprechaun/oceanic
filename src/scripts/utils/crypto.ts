@@ -1,3 +1,4 @@
+import jwtDecode from "jwt-decode";
 import { CloudConnection } from "./aws";
 import { MasterKeyPair } from "./cloud-types";
 import { formSubmit } from "./forms";
@@ -82,7 +83,9 @@ export class SecretManager {
         const settings = await SettingsManager.getSettings();
         //console.log(settings.securitySettings.local.deviceTrust)
         if (settings.securitySettings.local.deviceTrust === "full") {
-            this.tokens = Tokens.fromLocalStorage();
+            await this.loadDatabase();
+            const tokenObject = await this.database.getObject("tokens", "secrets");
+            this.tokens = Tokens.import(tokenObject);
         }
         else if (settings.securitySettings.local.deviceTrust === "minimal") {
             this.tokens = Tokens.fromSessionStorage();
@@ -92,76 +95,83 @@ export class SecretManager {
 
     public static async setTokens(accessToken: string, idToken: string, refreshToken: string) {
         const settings = await SettingsManager.getSettings();
-        if (settings.securitySettings.local.deviceTrust === "full") {
-            window.localStorage.setItem("access_token", accessToken);
-            window.localStorage.setItem("id_token", idToken);
-            window.localStorage.setItem("refresh_token", refreshToken);
+        this.tokens = new Tokens(accessToken, idToken, refreshToken);
+
+        if ([ "minimal", "full" ].includes(settings.securitySettings.local.deviceTrust)) {
+            await this.loadDatabase();
+            this.database.putObject(this.tokens.export(), "secrets");
         }
-        else if (settings.securitySettings.local.deviceTrust === "minimal") {
+        else if (settings.securitySettings.local.deviceTrust === "none") {
             window.sessionStorage.setItem("access_token", accessToken);
             window.sessionStorage.setItem("id_token", idToken);
             window.sessionStorage.setItem("refresh_token", refreshToken);
         }
-
-        this.tokens = new Tokens(accessToken, idToken, refreshToken);
     }
 
     public static async getMasterKeyPair(): Promise<MasterKeyPair> {
         if (this.keyPair) {
             return this.keyPair;
         }
-        const settings = await SettingsManager.getSettings();
 
-        // Check the location
-        let foundKey = false;
-        switch (settings.securitySettings.local.deviceTrust) {
-            case "minimal":
-                // fetch from session storage
-                const privateKeyData = window.sessionStorage.getItem("private_key");
-                const publicKeyData = window.sessionStorage.getItem("public_key");
-                if (!privateKeyData || !publicKeyData) {
-                    // key wasn't in storage, need to reprompt the user
-                    break;
-                }
-                // decode both keys
-                const privateKeyBuffer = decode(privateKeyData);
-                const publicKeyBuffer = decode(publicKeyData);
+        let keyPair: any = {};
 
-                this.keyPair = {
-                    "privateKey": await crypto.subtle.importKey("pkcs8", privateKeyBuffer, keyPairParams, false, [ "unwrapKey" ]),
-                    "publicKey": await crypto.subtle.importKey("spki", publicKeyBuffer, keyPairParams, true, [ "wrapKey" ])
-                };
-                foundKey = true;
-                break;
-
-
-            case "full":
-                // fetch the cryptoKey object from indexedDB
-                await this.loadDatabase();
-                const keyPair = await this.database.getObject("keypair", "secrets");
-                if (!keyPair) {
-                    // key wasn't in storage
-                    break;
-                }
-                this.keyPair = keyPair;
-                foundKey = true;
-                break;
+        const privateKeyData = window.sessionStorage.getItem("private_key");
+        const publicKeyData = window.sessionStorage.getItem("public_key");
+        
+        // Load as much as we can from session storage
+        if (privateKeyData) {
+            keyPair.privateKey = await crypto.subtle.importKey("pkcs8", decode(privateKeyData), keyPairParams, true, [ "unwrapKey" ]);
+        }
+        if (publicKeyData) {
+            keyPair.publicKey = await crypto.subtle.importKey("spki", decode(publicKeyData), keyPairParams, true, [ "wrapKey" ]);
         }
 
-        if (!foundKey) {
+        // If we've got a full key pair, return it
+        if (keyPair.privateKey && keyPair.publicKey) {
+            return keyPair;
+        }
+        
+        // attempt to load from indexedDB
+        await this.loadDatabase();
+        let idbKeyPair = await this.database.getObject("keypair", "secrets") as MasterKeyPair;
+
+        // if there's no key in IDB, try to fetch one from the cloud
+        if (!idbKeyPair) {
             const password = await this.getUserPassword();
-            const keyPair = await CloudConnection.getMasterKeyPair(password);
-            await this.storeKeyPair(keyPair);
-            this.keyPair = keyPair
+            return await CloudConnection.getMasterKeyPair(password);
+        }
+        // if there's an unwrapped key, set it (but default to using a key from session storage if one exists)
+        if (idbKeyPair.privateKey && !keyPair.privateKey) {
+            keyPair.privateKey = idbKeyPair.privateKey;
+        }
+        if (idbKeyPair.publicKey && !keyPair.publicKey) {
+            keyPair.publicKey = idbKeyPair.publicKey;
+        }
+        // unwrap the wrapped private key if there is one (and a private key hasn't already been found)
+        if (idbKeyPair.wrappedPrivateKey && !keyPair.privateKey) {
+            // Should store user data like identity IDs with a class instead of this BS
+            const passcode = await this.getUserPassword();
+            const tokens = await this.getTokens();
+            const salt = (jwtDecode(await tokens.getIdToken()) as any)["custom:identityId"];
+            const masterKey = await passcodeToKey(passcode, salt);
+            keyPair.privateKey = await crypto.subtle.unwrapKey("jwk", idbKeyPair.wrappedPrivateKey, masterKey, "AES-KW", keyPairParams, true, [ "unwrapKey" ]);
         }
 
-        return this.keyPair
+        // if you still don't have a full key pair, try to fetch from the cloud
+        if (!keyPair.privateKey || !keyPair.publicKey) {
+            const password = await this.getUserPassword();
+            return await CloudConnection.getMasterKeyPair(password);
+        }
+
+        return keyPair;
+
+        // TODO add logic for private key importing or something
     }
 
-    public static async storeKeyPair(keyPair: MasterKeyPair) {
+    public static async storeMasterKeyPair(keyPair: MasterKeyPair) {
         const settings = await SettingsManager.getSettings();
         switch (settings.securitySettings.local.deviceTrust) {
-            case "minimal":
+            case "none":
                 // export keys
                 const privateKeyData = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
                 const publicKeyData = await crypto.subtle.exportKey("spki", keyPair.publicKey);
@@ -174,7 +184,24 @@ export class SecretManager {
                 window.sessionStorage.setItem("private_key", privateKeyEncoded);
                 window.sessionStorage.setItem("public_key", publicKeyEncoded);
                 break;
-            
+
+            case "minimal":
+                await this.loadDatabase();
+                if (!keyPair.wrappedPrivateKey) {
+                    throw new Error("No wrapped key was provided");
+                }
+
+                const privateKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+                window.sessionStorage.setItem("private_key", encode(privateKey));
+                await this.database.putObject(
+                    {
+                        id: "keypair",
+                        publicKey: keyPair.publicKey,
+                        wrappedPrivateKey: keyPair.wrappedPrivateKey
+                    }, "secrets"
+                );
+                break;
+
             case "full":
                 await this.loadDatabase();
                 if (!keyPair.id) {

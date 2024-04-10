@@ -82,7 +82,7 @@ async function login(event: SubmitEvent) {
             await finishLogin(authResponse.AuthenticationResult);
         }
 
-        await SecretManager.storeKeyPair(
+        await SecretManager.storeMasterKeyPair(
             await CloudConnection.getMasterKeyPair(formData.get("password").toString())
         );
         window.location.href = "/test.html";

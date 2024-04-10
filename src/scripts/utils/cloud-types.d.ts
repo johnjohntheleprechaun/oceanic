@@ -89,5 +89,6 @@ export interface WrappedMasterKeyPair {
 export interface MasterKeyPair {
     id?: "keypair",
     privateKey: CryptoKey;
+    wrappedPrivateKey?: ArrayBuffer;
     publicKey: CryptoKey;
 }
