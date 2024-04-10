@@ -60,7 +60,10 @@ html, body {
     color: var(--accent);
 }
 
-.page-container > article {
-    margin: 30px;
-    width: min(1000px, 100%);
+.nav-links {
+    margin: 25px;
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-around;
 }
