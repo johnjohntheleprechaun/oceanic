@@ -7,6 +7,9 @@ import { Database, userDatabaseUpgrade, userDatabaseVersion } from "./storage";
 import { Tokens } from "./tokens";
 const passwordPromptHTML: string = require("../../templates/password-prompt.html").default;
 
+/**
+ * The params for the user's key pair
+ */
 export const keyPairParams = {
     name: "RSA-OAEP",
     modulusLength: 4096,
@@ -14,6 +17,12 @@ export const keyPairParams = {
     hash: "SHA-256",
 };
 
+/**
+ * Derive a key from a passcode
+ * @param passcode The passcode to derive the key from
+ * @param salt The salt to use (should be the user's identity ID)
+ * @returns The derived key
+ */
 export async function passcodeToKey(passcode: string, salt: ArrayBuffer | string): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     if (typeof salt === "string") {
@@ -55,6 +64,11 @@ export function decode(data: string) {
     return bytes.buffer;
 }
 
+/**
+ * Encode an ArrayBuffer as a base64 string
+ * @param data The data to encode
+ * @returns The base64 encoded string
+ */
 export function encode(data: ArrayBuffer) {
     let binaryString = "";
     const bytes = new Uint8Array(data);
@@ -76,6 +90,10 @@ export class SecretManager {
         }
     }
 
+    /**
+     * Fetch tokens from session storage or indexed DB (depending on securitySettings.local.deviceTrust)
+     * @returns The tokens
+     */
     public static async getTokens(): Promise<Tokens> {
         if (this.tokens) {
             return this.tokens;
@@ -93,6 +111,12 @@ export class SecretManager {
         return this.tokens;
     }
 
+    /**
+     * Store a users token in the location specified by securitySettings.local.deviceTrust
+     * @param accessToken
+     * @param idToken
+     * @param refreshToken
+     */
     public static async storeTokens(accessToken: string, idToken: string, refreshToken: string) {
         const settings = await SettingsManager.getSettings();
         this.tokens = new Tokens(accessToken, idToken, refreshToken);
@@ -108,6 +132,10 @@ export class SecretManager {
         }
     }
 
+    /**
+     * Get the user's master key pair (whether from session storage, indexedDB, or the cloud). Also handles any unwrapping, prompting, etc.
+     * @returns The master key pair
+     */
     public static async getMasterKeyPair(): Promise<MasterKeyPair> {
         if (this.keyPair) {
             return this.keyPair;
@@ -179,6 +207,10 @@ export class SecretManager {
         // TODO add logic for private key importing or something
     }
 
+    /**
+     * Store the master key pair (in the locations defined by the securitySettings.local.deviceTrust)
+     * @param keyPair The key pair to store
+     */
     public static async storeMasterKeyPair(keyPair: MasterKeyPair) {
         const settings = await SettingsManager.getSettings();
         switch (settings.securitySettings.local.deviceTrust) {
@@ -223,8 +255,12 @@ export class SecretManager {
         }
     }
 
+    /**
+     * Prompt the user to enter their password and return the result
+     * @returns The password provided by the user
+     */
     static async getUserPassword(): Promise<string> {
-        console.log(passwordPromptHTML);
+        console.log("Prompting the user for their password");
         const prompt = document.createElement("div");
         document.body.appendChild(prompt);
         prompt.outerHTML = passwordPromptHTML;
