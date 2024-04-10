@@ -6,6 +6,10 @@
     font-family: "Roboto Bold";
     src: url(/fonts/Roboto-Bold.ttf);
 }
+@font-face {
+    font-family: "Roboto";
+    src: url(/fonts/Roboto-Regular.ttf);
+}
 
 html, body {
     margin: 0px;
@@ -40,7 +44,7 @@ html, body {
 }
 .banner > .logo-text > .tagline {
     color: var(--secondary);
-    font-family: "Roboto";
+    font-family: "Roboto Bold";
     font-size: 25px;
     font-weight: 900;
     text-transform: uppercase;
