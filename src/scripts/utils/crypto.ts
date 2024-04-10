@@ -115,6 +115,8 @@ export class SecretManager {
 
         let importedKeyPair: any = {};
 
+        let updateStorage = false;
+
         const privateKeyData = window.sessionStorage.getItem("private_key");
         const publicKeyData = window.sessionStorage.getItem("public_key");
         
@@ -138,29 +140,38 @@ export class SecretManager {
         // if there's no key in IDB, try to fetch one from the cloud
         if (!idbKeyPair) {
             const password = await this.getUserPassword();
-            return await CloudConnection.getMasterKeyPair(password);
+            importedKeyPair = await CloudConnection.getMasterKeyPair(password);
+            updateStorage = true;
         }
         // if there's an unwrapped key, set it (but default to using a key from session storage if one exists)
-        if (idbKeyPair.privateKey && !importedKeyPair.privateKey) {
+        if (!importedKeyPair.privateKey && idbKeyPair.privateKey) {
             importedKeyPair.privateKey = idbKeyPair.privateKey;
         }
-        if (idbKeyPair.publicKey && !importedKeyPair.publicKey) {
+        if (!importedKeyPair.publicKey && idbKeyPair.publicKey) {
             importedKeyPair.publicKey = idbKeyPair.publicKey;
         }
         // unwrap the wrapped private key if there is one (and a private key hasn't already been found)
-        if (idbKeyPair.wrappedPrivateKey && !importedKeyPair.privateKey) {
+        if (!importedKeyPair.privateKey && idbKeyPair.wrappedPrivateKey) {
             // Should store user data like identity IDs with a class instead of this BS
             const passcode = await this.getUserPassword();
             const tokens = await this.getTokens();
             const salt = (jwtDecode(await tokens.getIdToken()) as any)["custom:identityId"];
             const masterKey = await passcodeToKey(passcode, salt);
             importedKeyPair.privateKey = await crypto.subtle.unwrapKey("jwk", idbKeyPair.wrappedPrivateKey, masterKey, "AES-KW", keyPairParams, true, [ "unwrapKey" ]);
+            importedKeyPair.wrappedPrivateKey = idbKeyPair.wrappedPrivateKey;
+            updateStorage = true;
         }
 
         // if you still don't have a full key pair, try to fetch from the cloud
         if (!importedKeyPair.privateKey || !importedKeyPair.publicKey) {
             const password = await this.getUserPassword();
-            return await CloudConnection.getMasterKeyPair(password);
+            importedKeyPair = await CloudConnection.getMasterKeyPair(password);
+            updateStorage = true;
+        }
+
+        // re-store the keypair (so that, for example, the unwrapped private key will be put back in session storage)
+        if (updateStorage) {
+            await this.storeMasterKeyPair(importedKeyPair);
         }
 
         return importedKeyPair;
