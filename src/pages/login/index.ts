@@ -3,6 +3,8 @@ import { formSubmit } from "../../scripts/utils/forms";
 import { newPasswordVerifier } from "./verifiers";
 import { toCanvas } from "qrcode";
 import { CloudConfig } from "../../scripts/utils/cloud-config";
+import { SecretManager } from "../../scripts/utils/crypto";
+import { CloudConnection } from "../../scripts/utils/aws";
 
 declare const cloudConfig: CloudConfig;
 
@@ -73,13 +75,18 @@ async function login(event: SubmitEvent) {
         });
 
         const authResponse = await client.send(initiateCommand) as InitiateAuthResponse;
-        console.log(authResponse);
+        //console.log(authResponse);
         
         if (authResponse.ChallengeName) {
-            respondToChallenge(authResponse.ChallengeName, authResponse.ChallengeParameters, formData.get("username").toString(), authResponse.Session);
+            await respondToChallenge(authResponse.ChallengeName, authResponse.ChallengeParameters, formData.get("username").toString(), authResponse.Session);
         } else {
-            finishLogin(authResponse.AuthenticationResult);
+            await finishLogin(authResponse.AuthenticationResult);
         }
+
+        await SecretManager.storeMasterKeyPair(
+            await CloudConnection.getMasterKeyPair(formData.get("password").toString())
+        );
+        window.location.href = "/test.html";
     } catch (error) {
         console.log(error);
     }
@@ -88,7 +95,7 @@ async function login(event: SubmitEvent) {
 async function respondToChallenge(challengeName: string, challengeParams: Record<string, string>, username: string, session: string) {
     switch (challengeName) {
         case "NEW_PASSWORD_REQUIRED":
-            newPasswordChallenge(username, session, challengeParams);
+            await newPasswordChallenge(username, session, challengeParams);
             break;
         case "MFA_SETUP":
             mfaSetupChallenge(username, session);
@@ -102,13 +109,7 @@ async function respondToChallenge(challengeName: string, challengeParams: Record
 }
 
 async function finishLogin(authResult: AuthenticationResultType) {
-    window.localStorage.setItem("id_token", authResult.IdToken);
-    window.localStorage.setItem("access_token", authResult.AccessToken);
-    window.localStorage.setItem("refresh_token", authResult.RefreshToken);
-    const getUser = new GetUserCommand({ AccessToken: authResult.AccessToken });
-    const user = await client.send(getUser);
-    window.localStorage.setItem("user_data", JSON.stringify(user));
-    window.location.href = "/test.html";
+    await SecretManager.storeTokens(authResult.AccessToken, authResult.IdToken, authResult.RefreshToken);
 }
 
 async function newPasswordChallenge(username: string, session: string, challengeParams: Record<string, string>) {
@@ -134,12 +135,12 @@ async function newPasswordChallenge(username: string, session: string, challenge
     });
 
     const response = await client.send(challengeRespondCommand);
-    console.log(response);
+    //console.log(response);
 
     if (response.ChallengeName) {
-        respondToChallenge(response.ChallengeName, response.ChallengeParameters, username, response.Session);
+        await respondToChallenge(response.ChallengeName, response.ChallengeParameters, username, response.Session);
     } else {
-        finishLogin(response.AuthenticationResult);
+        await finishLogin(response.AuthenticationResult);
     }
 }
 

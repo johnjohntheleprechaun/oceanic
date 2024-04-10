@@ -64,7 +64,7 @@ export interface DocumentPermissions {
 /**
  * Represents a user's keypair, as stored in DynamoDB
  */
-export interface KeyPair {
+export interface WrappedMasterKeyPair {
     /**
      * The identity ID of the user who's keypair this is
      */
@@ -72,7 +72,7 @@ export interface KeyPair {
     /**
      * The DynamoDB sort key
      */
-    id: "keypair";
+    id?: "keypair";
     /**
      * The wrapped private key
      */
@@ -80,10 +80,15 @@ export interface KeyPair {
     /**
      * The public key
      */
-    publicKey: JsonWebKey;
+    publicKey: Uint8Array;
 }
 
+/**
+ * The master key pair as stored in indexedDB and used withing the code
+ */
 export interface MasterKeyPair {
+    id?: "keypair",
     privateKey: CryptoKey;
+    wrappedPrivateKey?: ArrayBuffer;
     publicKey: CryptoKey;
 }

@@ -1,20 +1,15 @@
-import { CognitoIdentityProviderClient, UpdateUserAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
-import { CloudConnection as CloudConnection } from "./utils/aws";
-import { marshall } from "@aws-sdk/util-dynamodb";
+import { CloudConnection } from "./utils/aws";
+import { CloudConfig } from "./utils/cloud-config";
+import { SecretManager } from "./utils/crypto";
+import { SettingsManager } from "./utils/settings";
+import { Database, userDatabaseUpgrade, userDatabaseVersion } from "./utils/storage";
+const defaults = require("json-schema-defaults");
 
-declare const cloudConfig: any;
+declare const cloudConfig: CloudConfig;
 
 async function test() {
-    //console.log(crypto.getRandomValues(new Uint8Array(96/8)));
-    const testPassword = "thisisatestpassword";
-    const cloudConnection = await CloudConnection.fromLocalStorage();
-    //await cloudConnection.createNewKeyPair(testPassword);
-
-    const document = await cloudConnection.createDocument("messages-journal");
-    console.log(document);
-
-    const publicKey = await cloudConnection.getPublicKey(cloudConnection.identityId);
-    console.log(publicKey);
+    const keyPair = await SecretManager.getMasterKeyPair();
+    console.log(keyPair);
 }
 
 export {test}

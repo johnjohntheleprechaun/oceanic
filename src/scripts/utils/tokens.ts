@@ -5,6 +5,13 @@ import { CloudConfig } from "./cloud-config";
 
 declare const cloudConfig: CloudConfig;
 
+export interface ExportedTokens {
+    id: "tokens";
+    accessToken: string;
+    idToken: string;
+    refreshToken: string;
+}
+
 export class Tokens {
     cognitoClient: CognitoIdentityProviderClient;
     
@@ -14,6 +21,22 @@ export class Tokens {
         public refreshToken: string
     ) {
         this.cognitoClient = new CognitoIdentityProviderClient({ region: "us-west-2" });
+    }
+
+    /**
+     * Export the tokens so that they can be stored in indexedDB
+     */
+    public export(): ExportedTokens {
+        return {
+            "id": "tokens",
+            "accessToken": this.accessToken,
+            "idToken": this.idToken,
+            "refreshToken": this.refreshToken
+        }
+    }
+
+    public static import(tokens: ExportedTokens) {
+        return new Tokens(tokens.accessToken, tokens.idToken, tokens.refreshToken);
     }
 
     /**
@@ -43,6 +66,7 @@ export class Tokens {
      * Attempt to refresh the tokens stored in the object
      */
     public async refresh() {
+        console.log("refreshing");
         const refreshCommand = new InitiateAuthCommand({
             AuthFlow: "REFRESH_TOKEN_AUTH",
             AuthParameters: {
@@ -65,16 +89,16 @@ export class Tokens {
     }
 
     /**
-     * Fetch tokens from window.localStorage
+     * Fetch tokens from session storage
      * @returns A new token object
      */
-    public static fromLocalStorage() {
-        const accessToken = window.localStorage.getItem("access_token");
-        const idToken = window.localStorage.getItem("id_token");
-        const refreshToken = window.localStorage.getItem("refresh_token");
+    public static fromSessionStorage() {
+        const accessToken = window.sessionStorage.getItem("access_token");
+        const idToken = window.sessionStorage.getItem("id_token");
+        const refreshToken = window.sessionStorage.getItem("refresh_token");
 
         if ([accessToken, idToken, refreshToken].includes(null)) {
-            throw new MissingTokenError("local storage");
+            throw new MissingTokenError("session storage");
         }
         return new Tokens(accessToken, idToken, refreshToken);
     }
