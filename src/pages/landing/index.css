@@ -1,6 +1,58 @@
+@font-face {
+    font-family: "Oceanic Drift";
+    src: url(/fonts/oceanicdrift.ttf);
+}
+@font-face {
+    font-family: "Roboto Bold";
+    src: url(/fonts/Roboto-Bold.ttf);
+}
+
 html, body {
     margin: 0px;
     padding: 0px;
 
     background-color: var(--background);
+    font-family: "Roboto";
+    color: var(--text);
+}
+
+.page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+.banner > .logo-text {
+    display: flex;
+    flex-direction: column;
+}
+.banner > .logo-text > .logo-title {
+    font-family: "Oceanic Drift";
+    color: var(--secondary);
+    font-size: 200px;
+    text-shadow: 7px 7px var(--primary);
+}
+.banner > .logo-text > .tagline {
+    color: var(--secondary);
+    font-family: "Roboto";
+    font-size: 25px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+.banner > img {
+    height: 175px;
+}
+.tagline > .emphasis {
+    color: var(--accent);
+}
+
+.page-container > article {
+    margin: 30px;
+    width: min(1000px, 100%);
 }
