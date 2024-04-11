@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="~css/theme.css" type="text/css">
     <link rel="stylesheet" href="~index.css" type="text/css">
+    <link rel="stylesheet" href="~feature-list.css" type="text/css">
     <title>Oceanic - Journaling and Notes App</title>
 </head>
 <body>
@@ -17,8 +18,30 @@
         </header>
         <nav class="nav-links">
             <a href="/home.html">Open Oceanic</a>
-            <a href="/features.html">Explore Features</a>
         </nav>
+        <section class="feature-list">
+            <section class="feature">
+                <span class="icon">encrypted</span>
+                <div class="feature-description">
+                    <h1>Open Security</h1>
+                    <p>Oceanic encrypts all your journals before storage, and as an open source project anybody can check the security for themselves. Each document uses it's own key, and every user has their own asymmetric key pair (wrapped with a key derived from your password) to wrap/unwrap each document key. Effectively, this means that you can share a single journal or note, without any risk of somebody being able to decrypt a different one. It also means that even if something horrible happens and your document files are leaked, they won't be usable without your password.</p>
+                </div>
+            </section>
+            <section class="feature">
+                <span class="icon">tune</span>
+                <div class="feature-description">
+                    <h1>Fully Customizable</h1>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                </div>
+            </section>
+            <section class="feature">
+                <span class="icon">backup</span>
+                <div class="feature-description">
+                    <h1>Optional Cloud Backup</h1>
+                    <p>With 100% optional cloud backup, you can protect your journals from accidental deletion or data loss. Any documents stored in the cloud are encrypted, just like they are locally. You can also share your documents with other users. Don't have the energy to explain something that happened to your therapist? Just share the journal entry you wrote when it happened, and let them read it themselves! Or suppose you've got a list of movies you liked, and you want to share it with a friend. You can even let them edit it!</p>
+                </div>
+            </section>
+        </section>
         <article>
             <h1>The Origins of Oceanic</h1>
             <p>Oceanic started as a little hobby project, made to help me journal better (easier?). I had realized that my method of journaling was essentially me messaging the void, as if I was talking to somebody who wasn't really there. The only problem was that I was doing it in Google Keep, which frankly sucked. The solution? Build my own app! What could possibly be difficult about that, right?</p>
