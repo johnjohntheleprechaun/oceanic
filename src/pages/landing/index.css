@@ -54,8 +54,8 @@ html, body {
     font-weight: 900;
     text-transform: uppercase;
 }
-.banner > img {
-    height: 175px;
+.banner > svg {
+    width: 175px;
 }
 .tagline > .emphasis {
     color: var(--accent);
