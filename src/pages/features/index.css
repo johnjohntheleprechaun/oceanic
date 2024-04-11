@@ -1,6 +1,52 @@
+@font-face {
+    font-family: "Roboto Bold";
+    src: url(/fonts/Roboto-Bold.ttf);
+}
+@font-face {
+    font-family: "Roboto";
+    src: url(/fonts/Roboto-Regular.ttf);
+}
+@font-face {
+    font-family: "Material Symbols Rounded";
+    src: url(/fonts/material-symbols-rounded.woff2);
+}
+.icon {
+    font-family: "Material Symbols Rounded";
+    color: var(--text);
+    user-select: none;
+}
+
 html, body {
     margin: 0px;
     padding: 0px;
     width: 100%;
     background-color: var(--background);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.page-content {
+    width: min(1000px, 100%);
+    box-sizing: border-box;
+    padding: 20px;
+}
+
+.feature {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap-reverse;
+    align-items: center;
+    justify-content: center;
+    column-gap: 40px;
+}
+
+.feature > .icon {
+    font-size: 150px;
+}
+
+.feature-description {
+    color: var(--text);
+    font-family: "Roboto";
+    width: min(600px, 100%);
 }
