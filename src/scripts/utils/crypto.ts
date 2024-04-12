@@ -71,4 +71,11 @@ export class CryptoUtils {
             false, [ "wrapKey", "unwrapKey" ]
         )
     }
+
+    /**
+     * Generate a new key pair
+     */
+    public static async generateKeyPair(): Promise<CryptoKeyPair> {
+        return await crypto.subtle.generateKey(CryptoUtils.keyPairParams, true, [ "wrapKey", "unwrapKey" ]);
+    }
 }
