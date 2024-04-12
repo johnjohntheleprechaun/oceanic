@@ -3,7 +3,7 @@ import { formSubmit } from "../../scripts/utils/forms";
 import { newPasswordVerifier } from "./verifiers";
 import { toCanvas } from "qrcode";
 import { CloudConfig } from "../../scripts/utils/cloud-config";
-import { SecretManager } from "../../scripts/utils/crypto";
+import { SecretManager } from "../../scripts/utils/secrets";
 import { CloudConnection } from "../../scripts/utils/aws";
 
 declare const cloudConfig: CloudConfig;

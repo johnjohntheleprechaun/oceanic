@@ -1,12 +1,12 @@
-import { DynamoDBClient, GetItemCommand, PutItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
 import { DocumentInfo, WrappedMasterKeyPair, MasterKeyPair } from "./cloud-types";
-import { SecretManager, keyPairParams, passcodeToKey } from "./crypto";
-import { Tokens } from "./tokens";
+import { keyPairParams, passcodeToKey } from "./crypto";
 import { CloudConfig } from "./cloud-config";
+import { SecretManager, Tokens } from "./secrets";
 
 declare const cloudConfig: CloudConfig;
 
