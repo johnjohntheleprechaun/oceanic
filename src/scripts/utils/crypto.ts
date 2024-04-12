@@ -16,7 +16,7 @@ export class CryptoUtils {
      * Encode an ArrayBuffer as a base64 string
      * @param data The data to encode
      */
-    public static encode(data: ArrayBuffer): string {
+    public static btoa(data: ArrayBuffer): string {
         let binaryString = "";
         const bytes = new Uint8Array(data);
         
@@ -29,7 +29,7 @@ export class CryptoUtils {
      * Turn a base64 string into an ArrayBuffer
      * @param data The base64 encoded string
     */
-   public static decode(data: string): ArrayBuffer {
+   public static atob(data: string): ArrayBuffer {
        const binaryString = atob(data);
        const bytes = new Uint8Array(binaryString.length);
        for (let i = 0; i < binaryString.length; i++) {

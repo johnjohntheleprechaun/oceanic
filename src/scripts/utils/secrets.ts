@@ -89,10 +89,10 @@ export class SecretManager {
         
         // Load as much as we can from session storage
         if (privateKeyData) {
-            importedKeyPair.privateKey = await crypto.subtle.importKey("pkcs8", CryptoUtils.decode(privateKeyData), CryptoUtils.keyPairParams, true, [ "unwrapKey" ]);
+            importedKeyPair.privateKey = await crypto.subtle.importKey("pkcs8", CryptoUtils.atob(privateKeyData), CryptoUtils.keyPairParams, true, [ "unwrapKey" ]);
         }
         if (publicKeyData) {
-            importedKeyPair.publicKey = await crypto.subtle.importKey("spki", CryptoUtils.decode(publicKeyData), CryptoUtils.keyPairParams, true, [ "wrapKey" ]);
+            importedKeyPair.publicKey = await crypto.subtle.importKey("spki", CryptoUtils.atob(publicKeyData), CryptoUtils.keyPairParams, true, [ "wrapKey" ]);
         }
 
         // If we've got a full key pair, return it
@@ -159,8 +159,8 @@ export class SecretManager {
                 const publicKeyData = await crypto.subtle.exportKey("spki", keyPair.publicKey);
 
                 // encode keys
-                const privateKeyEncoded = CryptoUtils.encode(privateKeyData);
-                const publicKeyEncoded = CryptoUtils.encode(publicKeyData);
+                const privateKeyEncoded = CryptoUtils.btoa(privateKeyData);
+                const publicKeyEncoded = CryptoUtils.btoa(publicKeyData);
 
                 // store keys
                 window.sessionStorage.setItem("private_key", privateKeyEncoded);
@@ -174,7 +174,7 @@ export class SecretManager {
                 }
 
                 const privateKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-                window.sessionStorage.setItem("private_key", CryptoUtils.encode(privateKey));
+                window.sessionStorage.setItem("private_key", CryptoUtils.btoa(privateKey));
                 await this.database.putObject(
                     {
                         id: "keypair",
