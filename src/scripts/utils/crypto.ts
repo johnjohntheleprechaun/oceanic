@@ -104,4 +104,22 @@ export class CryptoUtils {
 
         return fullData;
     }
+
+    /**
+     * Decrypt an object.
+     * @param data The encrypted object. This should have the 96 bit IV at the beginning, and the result of encryption at the end.
+     * @param key The key to use.
+     * @returns The decrypted data.
+     */
+    public static async decrypt(data: Uint8Array, key: CryptoKey): Promise<Uint8Array> {
+        const iv = data.slice(0, 96/8); // extract the 96 bit IV
+        const body = data.slice(96/8); // extract the encrypted data
+        console.log("decrypting data...");
+        const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", length: 256, iv },
+            key, body
+        );
+        console.log("decryption finished");
+        return new Uint8Array(decrypted);
+    }
 }

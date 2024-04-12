@@ -93,7 +93,7 @@ export class CloudConnection {
      * @param key The key this object is encrypted with
      * @returns The object's content
      */
-    public static  async getObject(objectName: string, key: CryptoKey) {
+    public static async getObject(objectName: string, key: CryptoKey): Promise<Uint8Array> {
         await this.initialize();
         const getCommand = new GetObjectCommand({
             Bucket: cloudConfig.bucketName,
@@ -102,12 +102,7 @@ export class CloudConnection {
         const document = await this.s3Client.send(getCommand);
         const body = await document.Body.transformToByteArray();
         // decrypt the object
-        const iv = body.slice(0, 96/8); // extract the 96 bit IV
-        const encrypted = body.slice(96/8); // extract the encrypted data
-        return await crypto.subtle.decrypt(
-            { name: "AES-GCM", length: 256, iv },
-            key, encrypted
-        );
+        return await CryptoUtils.decrypt(body, key);
     }
 
     /**
