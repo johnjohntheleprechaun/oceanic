@@ -223,38 +223,40 @@ export class CloudConnection {
     }
 
     /**
-     * Generate a new key pair, and push it to DynamoDB
+     * Update a user's key pair
      * @param masterKey Either the key to use for wrapping the private key, or the passcode to generate a key from
      * @returns The generated keypair
      */
-    public static async createNewKeyPair(masterKey: CryptoKey | string) {
+    public static async updateKeyPair(keyPair: MasterKeyPair, masterKey?: CryptoKey | string): Promise<void> {
         await this.initialize();
 
-        let wrappingKey: CryptoKey;
-
-        // Derive a key if needed
-        if (typeof masterKey === "string") {
-            wrappingKey = await CryptoUtils.passcodeToKey(masterKey, this.identityId);
-        } else {
-            wrappingKey = masterKey
+        if (!keyPair.wrappedPrivateKey && !masterKey) {
+            throw new Error("No wrapped private key was found and no master key was provided to wrap the unwrapped key");
         }
 
-        // make sure the key can be used for wrapping
-        if (!wrappingKey.usages.includes("wrapKey")) {
-            throw new Error("Can't use that key for wrapping")
+        let wrappedPrivateKey: ArrayBuffer;
+        if (!keyPair.wrappedPrivateKey) {
+            let wrappingKey: CryptoKey;
+    
+            // Derive a key if needed
+            if (typeof masterKey === "string") {
+                wrappingKey = await CryptoUtils.passcodeToKey(masterKey, this.identityId);
+            } else {
+                wrappingKey = masterKey
+            }
+    
+            // make sure the key can be used for wrapping
+            if (!wrappingKey.usages.includes("wrapKey")) {
+                throw new Error("Can't use the provided master key for wrapping");
+            }
+    
+            // wrap the private key for storage in the cloud
+            console.log("wrapping the private key");
+            wrappedPrivateKey = await crypto.subtle.wrapKey(
+                "jwk", keyPair.privateKey, wrappingKey, "AES-KW"
+            );
+            console.log("wrapping complete");
         }
-
-        // generate a new key pair
-        const keyPair = await crypto.subtle.generateKey(CryptoUtils.keyPairParams, true, [ "wrapKey", "unwrapKey" ]);
-        await SecretManager.storeMasterKeyPair(keyPair);
-
-        // wrap the private key for storage in the cloud
-        console.log("wrapping");
-        //console.log("jwk");
-        const wrappedPrivateKey = await crypto.subtle.wrapKey(
-            "jwk", keyPair.privateKey, wrappingKey, "AES-KW"
-        );
-        console.log("wrapped");
 
         // upload the key to DynamoDB
         const dynamoObject: WrappedMasterKeyPair = {
@@ -268,9 +270,6 @@ export class CloudConnection {
             Item: marshall(dynamoObject)
         });
         await this.dynamoClient.send(putCommand);
-
-        // return the newly generated key pair
-        return keyPair;
     }
 
     public static async getMasterKeyPair(masterKey: CryptoKey | string): Promise<MasterKeyPair> {
