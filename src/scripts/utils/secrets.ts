@@ -6,7 +6,7 @@ import { MasterKeyPair } from "./cloud-types";
 import { formSubmit } from "./forms";
 import { SettingsManager } from "./settings";
 import { Database, userDatabaseUpgrade, userDatabaseVersion } from "./storage";
-import { decode, encode, keyPairParams, passcodeToKey } from "./crypto";
+import { CryptoUtils } from "./crypto";
 
 declare const cloudConfig: CloudConfig;
 const passwordPromptHTML: string = require("../../templates/password-prompt.html").default;
@@ -89,10 +89,10 @@ export class SecretManager {
         
         // Load as much as we can from session storage
         if (privateKeyData) {
-            importedKeyPair.privateKey = await crypto.subtle.importKey("pkcs8", decode(privateKeyData), keyPairParams, true, [ "unwrapKey" ]);
+            importedKeyPair.privateKey = await crypto.subtle.importKey("pkcs8", CryptoUtils.decode(privateKeyData), CryptoUtils.keyPairParams, true, [ "unwrapKey" ]);
         }
         if (publicKeyData) {
-            importedKeyPair.publicKey = await crypto.subtle.importKey("spki", decode(publicKeyData), keyPairParams, true, [ "wrapKey" ]);
+            importedKeyPair.publicKey = await crypto.subtle.importKey("spki", CryptoUtils.decode(publicKeyData), CryptoUtils.keyPairParams, true, [ "wrapKey" ]);
         }
 
         // If we've got a full key pair, return it
@@ -123,8 +123,8 @@ export class SecretManager {
             const passcode = await this.getUserPassword();
             const tokens = await this.getTokens();
             const salt = (jwtDecode(await tokens.getIdToken()) as any)["custom:identityId"];
-            const masterKey = await passcodeToKey(passcode, salt);
-            importedKeyPair.privateKey = await crypto.subtle.unwrapKey("jwk", idbKeyPair.wrappedPrivateKey, masterKey, "AES-KW", keyPairParams, true, [ "unwrapKey" ]);
+            const masterKey = await CryptoUtils.passcodeToKey(passcode, salt);
+            importedKeyPair.privateKey = await crypto.subtle.unwrapKey("jwk", idbKeyPair.wrappedPrivateKey, masterKey, "AES-KW", CryptoUtils.keyPairParams, true, [ "unwrapKey" ]);
             importedKeyPair.wrappedPrivateKey = idbKeyPair.wrappedPrivateKey;
             updateStorage = true;
         }
@@ -159,8 +159,8 @@ export class SecretManager {
                 const publicKeyData = await crypto.subtle.exportKey("spki", keyPair.publicKey);
 
                 // encode keys
-                const privateKeyEncoded = encode(privateKeyData);
-                const publicKeyEncoded = encode(publicKeyData);
+                const privateKeyEncoded = CryptoUtils.encode(privateKeyData);
+                const publicKeyEncoded = CryptoUtils.encode(publicKeyData);
 
                 // store keys
                 window.sessionStorage.setItem("private_key", privateKeyEncoded);
@@ -174,7 +174,7 @@ export class SecretManager {
                 }
 
                 const privateKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-                window.sessionStorage.setItem("private_key", encode(privateKey));
+                window.sessionStorage.setItem("private_key", CryptoUtils.encode(privateKey));
                 await this.database.putObject(
                     {
                         id: "keypair",

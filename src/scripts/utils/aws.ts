@@ -4,7 +4,7 @@ import { CognitoIdentityCredentialProvider, fromCognitoIdentityPool } from "@aws
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import jwtDecode from "jwt-decode";
 import { DocumentInfo, WrappedMasterKeyPair, MasterKeyPair } from "./cloud-types";
-import { keyPairParams, passcodeToKey } from "./crypto";
+import { CryptoUtils } from "./crypto";
 import { CloudConfig } from "./cloud-config";
 import { SecretManager, Tokens } from "./secrets";
 
@@ -234,7 +234,7 @@ export class CloudConnection {
 
         // Derive a key if needed
         if (typeof masterKey === "string") {
-            wrappingKey = await passcodeToKey(masterKey, this.identityId);
+            wrappingKey = await CryptoUtils.passcodeToKey(masterKey, this.identityId);
         } else {
             wrappingKey = masterKey
         }
@@ -245,7 +245,7 @@ export class CloudConnection {
         }
 
         // generate a new key pair
-        const keyPair = await crypto.subtle.generateKey(keyPairParams, true, [ "wrapKey", "unwrapKey" ]);
+        const keyPair = await crypto.subtle.generateKey(CryptoUtils.keyPairParams, true, [ "wrapKey", "unwrapKey" ]);
         await SecretManager.storeMasterKeyPair(keyPair);
 
         // wrap the private key for storage in the cloud
@@ -279,7 +279,7 @@ export class CloudConnection {
         // Derive a key if necessary
         let wrappingKey: CryptoKey;
         if (typeof masterKey === "string") {
-            wrappingKey = await passcodeToKey(masterKey, this.identityId);
+            wrappingKey = await CryptoUtils.passcodeToKey(masterKey, this.identityId);
         } else {
             wrappingKey = masterKey;
         }
@@ -301,8 +301,8 @@ export class CloudConnection {
 
         // Import the keys and return
         return {
-            publicKey: await crypto.subtle.importKey("spki", keyPair.publicKey, keyPairParams, true, [ "wrapKey" ]),
-            privateKey: await crypto.subtle.unwrapKey("jwk", keyPair.privateKey, wrappingKey, "AES-KW", keyPairParams, true, [ "unwrapKey" ]),
+            publicKey: await crypto.subtle.importKey("spki", keyPair.publicKey, CryptoUtils.keyPairParams, true, [ "wrapKey" ]),
+            privateKey: await crypto.subtle.unwrapKey("jwk", keyPair.privateKey, wrappingKey, "AES-KW", CryptoUtils.keyPairParams, true, [ "unwrapKey" ]),
             wrappedPrivateKey: keyPair.privateKey
         }
     }
@@ -326,6 +326,6 @@ export class CloudConnection {
         const response = await this.dynamoClient.send(getCommand);
         const keyPair = unmarshall(response.Item) as WrappedMasterKeyPair;
 
-        return crypto.subtle.importKey("spki", keyPair.publicKey, keyPairParams, false, [ "wrapKey" ]);
+        return crypto.subtle.importKey("spki", keyPair.publicKey, CryptoUtils.keyPairParams, false, [ "wrapKey" ]);
     }
 }
