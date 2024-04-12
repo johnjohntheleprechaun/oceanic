@@ -78,4 +78,30 @@ export class CryptoUtils {
     public static async generateKeyPair(): Promise<CryptoKeyPair> {
         return await crypto.subtle.generateKey(CryptoUtils.keyPairParams, true, [ "wrapKey", "unwrapKey" ]);
     }
+
+    /**
+     * Encrypt some data. This will generate a new IV and prepend it to the output
+     * @param data The data to encrypt
+     * @param key The AES-GCM key to use
+     */
+    public static async encrypt(data: Uint8Array, key: CryptoKey): Promise<Uint8Array> {
+        // generate a 96 bit IV
+        const iv = crypto.getRandomValues(new Uint8Array(96/8));
+
+        // encrypt the journal data
+        console.log("encrypting data...");
+        const encrypted = new Uint8Array(await crypto.subtle.encrypt(
+            { name: "AES-GCM", iv }, key, data
+        ));
+        console.log("encryption finished");
+
+        // create a new array that's the combined length
+        const fullData = new Uint8Array(encrypted.length + iv.length);
+        // put the IV at the beginning
+        fullData.set(iv);
+        // set the rest of the object to the encrypted data
+        fullData.set(encrypted, iv.length);
+
+        return fullData;
+    }
 }

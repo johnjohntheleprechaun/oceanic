@@ -144,27 +144,12 @@ export class CloudConnection {
     public static async putObject(objectName: string, data: Uint8Array, key: CryptoKey) {
         await this.initialize();
 
-        // generate a 96 bit IV
-        const iv = crypto.getRandomValues(new Uint8Array(96/8));
-
-        // encrypt the journal data
-        console.log("encrypting...");
-        const encrypted = new Uint8Array(await crypto.subtle.encrypt(
-            { name: "AES-GCM", iv }, key, data
-        ));
-        console.log("done");
-
-        // create a new array that's the combined length
-        const fullData = new Uint8Array(encrypted.length + iv.length);
-        // put the IV at the beginning
-        fullData.set(iv);
-        // set the rest of the object to the encrypted data
-        fullData.set(encrypted, iv.length);
+        const encrypted = await CryptoUtils.encrypt(data, key);
 
         const putCommand = new PutObjectCommand({
             Bucket: cloudConfig.bucketName,
             Key: `${this.identityId}/${objectName}`,
-            Body: fullData
+            Body: encrypted
         });
         console.log("sending");
         return await this.s3Client.send(putCommand);
