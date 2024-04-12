@@ -1,3 +1,5 @@
+import { SecretManager } from "./secrets";
+
 /**
  * A collection of static functions for cryptography
  */
@@ -105,6 +107,24 @@ export class CryptoUtils {
             { name: "AES-GCM", length: 256 },
             true, [ "encrypt", "decrypt" ]
         );
+    }
+
+    public static async unwrapDocumentKey(wrappedKey: Uint8Array): Promise<CryptoKey> {
+        const keyPair = await SecretManager.getMasterKeyPair();
+        return await crypto.subtle.unwrapKey(
+            "raw", wrappedKey, keyPair.privateKey,
+            { name: "RSA-OAEP" }, "AES-GCM",
+            false, [ "encrypt", "decrypt" ]
+        );
+    }
+
+    public static async wrapDocumentKey(key: CryptoKey): Promise<Uint8Array> {
+        const keyPair = await SecretManager.getMasterKeyPair();
+        const wrappedKey = await crypto.subtle.wrapKey(
+            "raw", key, keyPair.privateKey,
+            { name: "RSA-OAEP" }
+        );
+        return new Uint8Array(wrappedKey);
     }
 
     /**

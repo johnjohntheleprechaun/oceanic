@@ -80,11 +80,9 @@ export class CloudConnection {
     public static async getDocumentContent(id: string): Promise<string> {
         await this.initialize();
         const documentInfo = await this.getDocumentInfo(id);
-        const wrappedKey = documentInfo.documentKey;
-        const documentKey = await crypto.subtle.unwrapKey("raw", wrappedKey, this.masterKey.privateKey, { name: "RSA-OAEP" }, "AES-GCM", false, [ "encrypt", "decrypt" ]);
-        const decoder = new TextDecoder();
-        const documentData = await this.getObject(id, documentKey);
-        return decoder.decode(documentData);
+        const unwrappedKey = await CryptoUtils.unwrapDocumentKey(documentInfo.documentKey);
+        const documentBody = await this.getObject(id, unwrappedKey);
+        return CryptoUtils.decode(documentBody);
     }
 
     /**
