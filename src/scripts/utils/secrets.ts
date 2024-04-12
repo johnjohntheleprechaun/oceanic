@@ -1,6 +1,5 @@
 import { CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthCommandOutput } from "@aws-sdk/client-cognito-identity-provider";
 import jwtDecode, { JwtPayload } from "jwt-decode";
-import { ExpiredTokenError, MissingTokenError } from "./tokens-errors";
 import { CloudConfig } from "./cloud-config";
 import { CloudConnection } from "./aws";
 import { MasterKeyPair } from "./cloud-types";
@@ -315,5 +314,23 @@ export class Tokens {
         } else {
             return false;
         }
+    }
+}
+
+export class MissingTokenError extends Error {
+    constructor(source?: string) {
+        if (source) {
+            super(`Couldn't find tokens in ${source}`);
+        } else {
+            super("Couldn't find tokens");
+        }
+        this.name = "MissingTokenError";
+    }
+}
+
+export class ExpiredTokenError extends Error {
+    constructor(tokenType: string) {
+        super(`${tokenType} token is expired`);
+        this.name = "ExpiredTokenError";
     }
 }
