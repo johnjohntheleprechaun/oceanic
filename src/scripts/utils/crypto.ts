@@ -11,6 +11,24 @@ export class CryptoUtils {
         publicExponent: new Uint8Array([1, 0, 1]),
         hash: "SHA-256",
     };
+    
+    /**
+     * Encode a string as UTF-8
+     * @param data The string to decode
+     */
+    public static encode(data: string): Uint8Array {
+        const encoder = new TextEncoder();
+        return encoder.encode(data);
+    }
+
+    /**
+     * Decode UTF-8 text
+     * @param data The binary data of the string
+     */
+    public static decode(data: Uint8Array): string {
+        const decoder = new TextDecoder();
+        return decoder.decode(data);
+    }
 
     /**
      * Encode an ArrayBuffer as a base64 string
@@ -26,7 +44,7 @@ export class CryptoUtils {
         return btoa(binaryString);
     }
     /**
-     * Turn a base64 string into an ArrayBuffer
+     * Decode a base64 string into an ArrayBuffer
      * @param data The base64 encoded string
     */
    public static atob(data: string): ArrayBuffer {

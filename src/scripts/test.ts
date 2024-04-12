@@ -9,17 +9,11 @@ const defaults = require("json-schema-defaults");
 declare const cloudConfig: CloudConfig;
 
 async function test() {
-    const key = await CryptoUtils.generateSymmetricKey();
-    console.log(key);
-    
-    const initial = new Uint8Array(1073741824)
-    console.log(initial);
-    
-    const encrypted = await CryptoUtils.encrypt(initial, key);
-    console.log(encrypted);
-
-    const decrypted = await CryptoUtils.decrypt(encrypted, key);
-    console.log(decrypted);
+    const test = "Hello World!";
+    const encoded = CryptoUtils.encode(test);
+    const decoded = CryptoUtils.decode(encoded);
+    console.log(encoded);
+    console.log(decoded);
 }
 
 export {test}
