@@ -160,11 +160,7 @@ export class CloudConnection {
         await this.initialize();
         
         // Create a new document key
-        console.log("generating key");
-        const documentKey = await crypto.subtle.generateKey(
-            { name: "AES-GCM", length: 256 },
-            true, [ "encrypt", "decrypt" ]
-        ) as CryptoKey;
+        const documentKey = await CryptoUtils.generateSymmetricKey();
 
         // wrap the document key
         const wrappedKey = await crypto.subtle.wrapKey("jwk", documentKey, this.masterKey.publicKey, { name: "RSA-OAEP" }) as ArrayBuffer;

@@ -9,17 +9,15 @@ const defaults = require("json-schema-defaults");
 declare const cloudConfig: CloudConfig;
 
 async function test() {
-    const key = await crypto.subtle.generateKey(
-        { name: "AES-GCM", length: 256 },
-        true, [ "encrypt", "decrypt" ]
-    ) as CryptoKey;
+    const key = await CryptoUtils.generateSymmetricKey();
+    console.log(key);
     
-    const initial = crypto.getRandomValues(new Uint8Array(8));
+    const initial = new Uint8Array(1073741824)
     console.log(initial);
     
     const encrypted = await CryptoUtils.encrypt(initial, key);
     console.log(encrypted);
-    
+
     const decrypted = await CryptoUtils.decrypt(encrypted, key);
     console.log(decrypted);
 }

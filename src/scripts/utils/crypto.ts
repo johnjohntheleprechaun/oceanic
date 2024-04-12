@@ -80,6 +80,16 @@ export class CryptoUtils {
     }
 
     /**
+     * Generate a new AES-GCM key
+     */
+    public static async generateSymmetricKey(): Promise<CryptoKey> {
+        return await crypto.subtle.generateKey(
+            { name: "AES-GCM", length: 256 },
+            true, [ "encrypt", "decrypt" ]
+        );
+    }
+
+    /**
      * Encrypt some data. This will generate a new IV and prepend it to the output
      * @param data The data to encrypt
      * @param key The AES-GCM key to use
@@ -116,7 +126,7 @@ export class CryptoUtils {
         const body = data.slice(96/8); // extract the encrypted data
         console.log("decrypting data...");
         const decrypted = await crypto.subtle.decrypt(
-            { name: "AES-GCM", length: 256, iv },
+            { name: "AES-GCM", iv },
             key, body
         );
         console.log("decryption finished");
