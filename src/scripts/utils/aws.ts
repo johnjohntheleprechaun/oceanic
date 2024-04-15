@@ -49,9 +49,7 @@ export class CloudConnection {
 
     /**
      * Initialize credentials and clients
-     * @param tokens A tokens object
      */
-
     public static async initialize() {
         if (this.loaded) {
             return;
