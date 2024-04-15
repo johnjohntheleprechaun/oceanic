@@ -1,3 +1,4 @@
+import { MasterKeyPair } from "./cloud-types";
 import { SecretManager } from "./secrets";
 
 /**
@@ -109,8 +110,7 @@ export class CryptoUtils {
         );
     }
 
-    public static async unwrapDocumentKey(wrappedKey: Uint8Array): Promise<CryptoKey> {
-        const keyPair = await SecretManager.getMasterKeyPair();
+    public static async unwrapDocumentKey(wrappedKey: Uint8Array, keyPair?: MasterKeyPair): Promise<CryptoKey> {
         return await crypto.subtle.unwrapKey(
             "raw", wrappedKey, keyPair.privateKey,
             { name: "RSA-OAEP" }, "AES-GCM",
@@ -118,10 +118,12 @@ export class CryptoUtils {
         );
     }
 
-    public static async wrapDocumentKey(key: CryptoKey): Promise<Uint8Array> {
-        const keyPair = await SecretManager.getMasterKeyPair();
+    public static async wrapDocumentKey(key: CryptoKey, keyPair?: MasterKeyPair): Promise<Uint8Array> {
+        if (!keyPair) {
+            keyPair = await SecretManager.getMasterKeyPair();
+        }
         const wrappedKey = await crypto.subtle.wrapKey(
-            "raw", key, keyPair.privateKey,
+            "raw", key, keyPair.publicKey,
             { name: "RSA-OAEP" }
         );
         return new Uint8Array(wrappedKey);
@@ -137,11 +139,9 @@ export class CryptoUtils {
         const iv = crypto.getRandomValues(new Uint8Array(96/8));
 
         // encrypt the journal data
-        console.log("encrypting data...");
         const encrypted = new Uint8Array(await crypto.subtle.encrypt(
             { name: "AES-GCM", iv }, key, data
         ));
-        console.log("encryption finished");
 
         // create a new array that's the combined length
         const fullData = new Uint8Array(encrypted.length + iv.length);
@@ -162,12 +162,10 @@ export class CryptoUtils {
     public static async decrypt(data: Uint8Array, key: CryptoKey): Promise<Uint8Array> {
         const iv = data.slice(0, 96/8); // extract the 96 bit IV
         const body = data.slice(96/8); // extract the encrypted data
-        console.log("decrypting data...");
         const decrypted = await crypto.subtle.decrypt(
             { name: "AES-GCM", iv },
             key, body
         );
-        console.log("decryption finished");
         return new Uint8Array(decrypted);
     }
 }
