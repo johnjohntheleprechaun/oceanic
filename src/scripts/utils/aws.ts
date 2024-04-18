@@ -7,6 +7,7 @@ import { DocumentInfo, WrappedMasterKeyPair, MasterKeyPair } from "./cloud-types
 import { CryptoUtils } from "./crypto";
 import { CloudConfig } from "./cloud-config";
 import { SecretManager, Tokens } from "./secrets";
+import { SettingsManager } from "./settings";
 
 declare const cloudConfig: CloudConfig;
 
@@ -43,6 +44,8 @@ export class CloudConnection {
      */
     private static loaded: boolean;
 
+    public static readonly cloudVersion: string = "0.x.x";
+
     static {
         console.log("CloudConnection static initialization");
     }
@@ -68,6 +71,79 @@ export class CloudConnection {
         this.dynamoClient = new DynamoDBClient({ credentials: this.credentials, region: "us-west-2" });
 
         this.loaded = true;
+    }
+
+    /**
+     * Compare a general version with a specific version, and return true if they're compatable.
+     * @param expected The SemVer string representing the expected version. General versions are allowed (like 1.x.x, or 1.2.x).
+     * @param actual The version to check against.
+     */
+    private static compareVersionStrings(expected: string, actual: string): boolean {
+        const generalVersionRegex = /^([0-9x]+)\.([0-9x]+)\.([0-9x]+)$/;
+        const actualVersionRegex = /^([0-9]+)\.([0-9]+)\.([0-9]+)$/;
+
+        const expectedMatch = generalVersionRegex.exec(expected);
+        const actualMatch = actualVersionRegex.exec(actual);
+
+        if (!expectedMatch || !actualMatch) {
+            throw new Error("invalid version strings");
+        }
+
+        for (let i = 1; i <= 3; i++) {
+            console.log(expectedMatch[i], actualMatch[i])
+            if (expectedMatch[i] !== "x" && expectedMatch[i] !== actualMatch[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static async checkOnline(): Promise<boolean> {
+        const settings = await SettingsManager.getSettings();
+        if (settings.generalSettings.onlineMode === "offline") {
+            return false;
+        }
+
+        const online = window.sessionStorage.getItem("deviceOnline");
+        console.log(online);
+        if (online === "true") {
+            return true;
+        }
+        else if (online === "false") {
+            return false;
+        }
+        else {
+            // try to contact the server
+            const controller = new AbortController();
+            const timeout = 1000;
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+                console.log("aborted");
+            }, timeout);
+
+            try {
+                const resp = await fetch(cloudConfig.apiEndpoint + "ping", { signal: controller.signal }).then(resp => resp.text());
+                console.log(resp, this.cloudVersion);
+
+                if (this.compareVersionStrings(this.cloudVersion, resp)) {
+                    window.sessionStorage.setItem("deviceOnline", "true");
+                    return true;
+                }
+                else {
+                    window.sessionStorage.setItem("deviceOnline", "false");
+                    return false;
+                }
+            } catch (error) {
+                if (controller.signal.aborted) {
+                    // took to long, assume offline
+                    window.sessionStorage.setItem("deviceOnline", "false");
+                    return false;
+                }
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
     }
 
     /**

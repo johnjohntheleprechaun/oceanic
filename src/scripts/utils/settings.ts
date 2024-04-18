@@ -18,8 +18,6 @@ export class SettingsManager {
         if (settings && settings.type) {
             delete settings.type;
         }
-        console.log(settings, userSettingsValidator(settings));
-        console.log(userSettingsSchema)
         if (!userSettingsValidator(settings)) {
             // ditch the invalid settings, and set defaults
             // something better should probably be made at some point

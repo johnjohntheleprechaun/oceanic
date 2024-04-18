@@ -48,14 +48,37 @@ const securitySettingsSchema = {
     }
 } as const satisfies JSONSchema;
 export type SecuritySettings = FromSchema<typeof securitySettingsSchema>;
+
+const generalSettingsSchema = {
+    type: "object",
+    properties: {
+        "onlineMode": {
+            title: "Online Mode",
+            description: "Affects whether cloud features are used",
+            oneOf: [
+                {
+                    const: "online",
+                    description: "When this device is online, all online features will be enabled (unless they've specifically been disabled)."
+                },
+                {
+                    const: "offline",
+                    description: "All cloud features will be disabled, regardless of whether this device is online."
+                }
+            ],
+            default: "offline"
+        }
+    }
+} as const satisfies JSONSchema;
+
+
 export type SettingsGroup = SecuritySettings
 
 export const userSettingsSchema = {
     type: "object",
     properties: {
         "securitySettings": { ...securitySettingsSchema },
-    },
-    required: [ "securitySettings" ]
+        "generalSettings": { ...generalSettingsSchema }
+    }
 } as const satisfies JSONSchema;
 export const userSettingsValidator = ajv.compile(userSettingsSchema);
 export type UserSettings = FromSchema<typeof userSettingsSchema>;
