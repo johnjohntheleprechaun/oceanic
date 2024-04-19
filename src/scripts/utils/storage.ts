@@ -1,8 +1,12 @@
+import { DocumentInfo } from "./cloud-types";
+import { CryptoUtils } from "./crypto";
+import { SecretManager } from "./secrets";
 import { SettingsGroup, userSettingsSchema, userSettingsValidator } from "./settings-schemas";
 const defaults = require("json-schema-defaults");
 
-const JOURNAL_DB_VERSION = 3;
-
+/**
+ * @deprecated
+ */
 interface JournalInterface {
     id: string,
     created: number,
@@ -76,6 +80,7 @@ class Journal {
 
 class JournalDatabase {
     database: Database
+    public static readonly version: number = 1;
 
     public static async open(): Promise<JournalDatabase> {
         const database = new JournalDatabase();
@@ -85,7 +90,7 @@ class JournalDatabase {
     async init() {
         await navigator.storage.persist();
         
-        this.database = await Database.open("journal", JOURNAL_DB_VERSION, this.upgradeDB);
+        this.database = await Database.open("document", JournalDatabase.version, this.upgradeDB);
     }
 
     public async getJournal(id: string): Promise<JournalInterface> {
@@ -114,7 +119,64 @@ class JournalDatabase {
         }
     }
 
-    upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction) {
+    private upgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction): () => Promise<any> {
+        let updateData: () => Promise<any>;
+
+        if (event.oldVersion === 0) {
+            const infoStore = db.createObjectStore("info", { keyPath: "id" });
+            infoStore.createIndex("created", "created");
+            infoStore.createIndex("updated", "updated");
+            db.createObjectStore("content");
+            db.createObjectStore("attachments");
+            updateData = this.migrate;
+        }
+
+        return updateData;
+    }
+
+    /**
+     * Migrate from the old journal database to the new document database
+     */
+    private async migrate() {
+        // step one, get a keypair for encryption
+        const keyPair = await CryptoUtils.generateKeyPair();
+        await SecretManager.storeMasterKeyPair(keyPair);
+        const userId = crypto.randomUUID();
+
+        // now go through the journals and pull them apart to store in the separate stores of the new DB
+        const journalDatabase = await Database.open("journal", 3, this.oldUpgradeDB); // v3 was the latest version
+        for await (const journal of journalDatabase.listItems("entries")) {
+            const documentKey = await CryptoUtils.generateSymmetricKey();
+            // Create the document info object and store it in the info object store
+            const document: DocumentInfo = {
+                user: userId,
+                id: journal.id,
+                title: journal.title,
+                type: journal.type,
+                created: journal.created,
+                updated: journal.created,
+                attachments: [],
+                documentKey: await CryptoUtils.wrapDocumentKey(documentKey),
+                authorizedUsers: []
+            };
+            await this.database.putObject(document, "info");
+
+            // encrypt the journal content and put it in the content store
+            const encodedContent = CryptoUtils.encode(journal.content);
+            const encryptedContent = await CryptoUtils.encrypt(encodedContent, documentKey);
+            await this.database.putObject(encryptedContent, "content", journal.id);
+        }
+
+        // now that you've finished with the old database, delete it
+        journalDatabase.db.close();
+        window.indexedDB.deleteDatabase("journal");
+    }
+
+    /**
+     * The old upgrade func, from back before cloud stuff.
+     * @deprecated
+     */
+    private oldUpgradeDB(event: IDBVersionChangeEvent, db: IDBDatabase, transaction: IDBTransaction): () => Promise<any> {
         let updateData: () => Promise<any>;
         if (event.oldVersion === 0) { // no database previously
             const objectStore = db.createObjectStore("entries", { keyPath: "id" });
