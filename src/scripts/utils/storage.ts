@@ -153,8 +153,8 @@ export function userDatabaseUpgrade(event: IDBVersionChangeEvent, database: IDBD
     switch (event.oldVersion) {
         case 0:
             // first time initialization
-            const userDataStore = database.createObjectStore("data", { keyPath: "type" });
-            const userSecretStore = database.createObjectStore("secrets", { keyPath: "id" });
+            const userDataStore = database.createObjectStore("data");
+            const userSecretStore = database.createObjectStore("secrets");
             break;
     }
 
@@ -343,14 +343,15 @@ class Database {
      * Put an object in an object store (or update it if it already exists)
      * @param newData The new object
      * @param storeName The name of the object store
+     * @param key The object's key
      * @returns The key for the object
      */
-    async putObject(newData: any, storeName: string): Promise<string> {
+    async putObject(newData: any, storeName: string, key?: IDBValidKey): Promise<string> {
         const store = this.openStore(storeName, true);
 
         return new Promise((resolve, reject) => {
             // put the data
-            const addRequest = store.put(newData);
+            const addRequest = store.put(newData, key);
     
             // add event listeners
             addRequest.onsuccess = function() {
@@ -367,14 +368,15 @@ class Database {
      * Create a new object in an object store. This will fail if the key is already being used
      * @param object The new object
      * @param storeName The name of the object store
+     * @param key The object's key
      * @returns The object key
      */
-    async addObject(object: any, storeName: string): Promise<string> {
+    async addObject(object: any, storeName: string, key?: IDBValidKey): Promise<string> {
         const store = this.openStore(storeName, true);
 
         return new Promise((resolve, reject) => {
             // attempt to add the object
-            const addRequest = store.add(object);
+            const addRequest = store.add(object, key);
     
             // add event listeners
             addRequest.onsuccess = function() {

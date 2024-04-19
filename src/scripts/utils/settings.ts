@@ -14,10 +14,6 @@ export class SettingsManager {
     public static async getSettings(): Promise<UserSettings> {
         await this.ensureLoaded();
         const settings = await this.database.getObject("settings", "data");
-        // remove the IDB key if needed so that the validator will work
-        if (settings && settings.type) {
-            delete settings.type;
-        }
         if (!userSettingsValidator(settings)) {
             // ditch the invalid settings, and set defaults
             // something better should probably be made at some point
@@ -30,8 +26,7 @@ export class SettingsManager {
     }
 
     private static async overwriteSettings(newSettings: UserSettings) {
-        newSettings["type"] = "settings";
-        await this.database.putObject(newSettings, "data");
+        await this.database.putObject(newSettings, "data", "settings");
     }
 
     public static async updateSetting(settingPath: string, value: string | boolean | number) {
