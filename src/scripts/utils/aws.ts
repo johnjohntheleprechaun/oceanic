@@ -140,6 +140,9 @@ export class CloudConnection {
                     window.sessionStorage.setItem("deviceOnline", "false");
                     return false;
                 }
+                else {
+                    throw error;
+                }
             } finally {
                 clearTimeout(timeoutId);
             }
