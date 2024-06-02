@@ -1,7 +1,8 @@
+import { CloudConnection } from "./aws";
 import { DocumentInfo } from "./cloud-types";
 import { CryptoUtils } from "./crypto";
 import { SecretManager } from "./secrets";
-import { SettingsGroup, userSettingsSchema, userSettingsValidator } from "./settings-schemas";
+import { SettingsManager } from "./settings";
 const defaults = require("json-schema-defaults");
 
 /**
@@ -13,6 +14,79 @@ interface JournalInterface {
     title: string,
     type: string,
     content: string
+}
+
+class Document {
+    database: Database;
+    documentInfo: DocumentInfo;
+    key: CryptoKey;
+
+    constructor (
+        public id: string
+    ) {}
+    /**
+     * Open a document, whether that's fetching from the cloud or indexedDB
+     * @param id The document's ID
+     */
+    public static async open(id: string) {
+        const document = new Document(id);
+        await document.init();
+        return document;
+    }
+    private async init() {
+        const settings = await SettingsManager.getSettings();
+
+        if (settings.securitySettings.local.deviceTrust === "none") {
+            // don't even try to load from IDB
+            this.documentInfo = await CloudConnection.getDocumentInfo(this.id);
+            return;
+        }
+        // Load the database
+        this.database = (await JournalDatabase.open()).database;
+        // Attempt to fetch from IDB
+        const documentInfo: DocumentInfo = await this.database.getObject(this.id, "info");
+        if (!documentInfo && await CloudConnection.checkOnline()) {
+            // not locally stored, so try to get from online
+            this.documentInfo = await CloudConnection.getDocumentInfo(this.id);
+        }
+        else if (documentInfo && !documentInfo.backup) {
+            // return as is
+            this.documentInfo = documentInfo;
+        }
+        else if (documentInfo && documentInfo.backup && await CloudConnection.checkOnline()) {
+            // try to update from cloud storage
+            const newDocumentInfo = await CloudConnection.getDocumentInfo(this.id);
+            
+            if (!newDocumentInfo) {
+                // TODO: push the document info you have
+                this.documentInfo = documentInfo;
+            }
+            else {
+                this.documentInfo = newDocumentInfo;
+            }
+        }
+        else {
+            // congrats, you failed!
+            throw new Error("Couldn't open document");
+        }
+
+        this.key = await CryptoUtils.unwrapDocumentKey(this.documentInfo.documentKey);
+    }
+
+    async getContent(): Promise<string> {
+        if (this.documentInfo.backup && await CloudConnection.checkOnline()) {
+            // fetch from online and cache
+            const content = await CloudConnection.getObject(`${this.documentInfo.user}/${this.documentInfo.id}`, this.key);
+            const decoded = CryptoUtils.decode(await CryptoUtils.decrypt(content, this.key));
+            await this.database.putObject(content, this.id);
+            return decoded;
+        }
+        else {
+            // just serve locally
+            const content = await this.database.getObject(this.id, "content");
+            return CryptoUtils.decode(await CryptoUtils.decrypt(content, this.key));
+        }
+    }
 }
 
 class Journal {

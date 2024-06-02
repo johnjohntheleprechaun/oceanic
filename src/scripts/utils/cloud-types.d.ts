@@ -38,6 +38,17 @@ export interface DocumentInfo {
      * All the users (exluding the owner) who have access to the document
      */
     authorizedUsers: AuthorizedUser[];
+
+    // Local shit
+
+    /**
+     * Whether this document should be backed up in the cloud
+     */
+    backup?: boolean;
+    /**
+     * The unix timestamp (in milliseconds) of the last sync operation
+     */
+    lastSync?: number;
 }
 
 export interface AuthorizedUser {
