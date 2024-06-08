@@ -175,11 +175,9 @@ module.exports = async () => { return {
 }};
 
 async function createCloudConfig() {
-    const initialConfig = JSON.parse(fs.readFileSync("cloud_config.json").toString());
-    const awsResources = await fetch(initialConfig.apiEndpoint + "resources").then(data => data.json());
+    const cloudConfig = JSON.parse(fs.readFileSync("cloud_config.json").toString());
     const config = {
-        ...initialConfig,
-        ...awsResources
+        ...cloudConfig
     }
     return JSON.stringify(config);
 }

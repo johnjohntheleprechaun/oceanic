@@ -9,7 +9,9 @@ import { CloudConnection } from "../../scripts/utils/aws";
 declare const cloudConfig: CloudConfig;
 
 const forms: { [key: string]: HTMLFormElement } = {};
+const authEndpoint = cloudConfig.apiEndpoint + "/auth";
 const client = new CognitoIdentityProviderClient({ region: "us-west-2" });
+console.log(authEndpoint)
 
 let currentForm: HTMLFormElement;
 let formsContainer: HTMLElement;
@@ -65,22 +67,28 @@ async function login(event: SubmitEvent) {
     event.preventDefault();
     const formData = new FormData(forms["login"]);
     try {
-        const initiateCommand = new InitiateAuthCommand({
+        const initiateCommand = {
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
                 USERNAME: formData.get("username").toString(),
                 PASSWORD: formData.get("password").toString()
             },
             ClientId: cloudConfig.clientId
-        });
-
-        const authResponse = await client.send(initiateCommand) as InitiateAuthResponse;
-        //console.log(authResponse);
+        };
+        const response = await fetch(authEndpoint, {
+            body: JSON.stringify(initiateCommand),
+            method: "POST",
+            headers: {
+                "X-Amz-Target": "AWSCognitoIdentityProviderService.InitiateAuth",
+                "Content-Type": "application/x-amz-json-1.1"
+            }
+        }).then(resp => resp.json());
+        console.log(response);
         
-        if (authResponse.ChallengeName) {
-            await respondToChallenge(authResponse.ChallengeName, authResponse.ChallengeParameters, formData.get("username").toString(), authResponse.Session);
+        if (response.ChallengeName) {
+            await respondToChallenge(response.ChallengeName, response.ChallengeParameters, formData.get("username").toString(), response.Session);
         } else {
-            await finishLogin(authResponse.AuthenticationResult);
+            await finishLogin(response.AuthenticationResult);
         }
 
         await SecretManager.storeMasterKeyPair(
@@ -123,7 +131,7 @@ async function newPasswordChallenge(username: string, session: string, challenge
     // wait for the form to be submitted
     switchForms("new-password");
     const formData = await formSubmit(forms["new-password"], newPasswordVerifier);
-    const challengeRespondCommand = new RespondToAuthChallengeCommand({
+    const challengeRespondCommand = {
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ClientId: cloudConfig.clientId,
         ChallengeResponses: {
@@ -132,9 +140,15 @@ async function newPasswordChallenge(username: string, session: string, challenge
             "userAttributes.email": email
         },
         Session: session
-    });
+    };
 
-    const response = await client.send(challengeRespondCommand);
+    const response = await fetch(authEndpoint, {
+        body: JSON.stringify(challengeRespondCommand),
+        headers: {
+            "X-Amz-Target": "AWSCognitoIdentityProviderService.RespondToAuthChallenge",
+            "Content-Type": "application/x-amz-json-1.1"
+        }
+    }).then(resp => resp.json());
     //console.log(response);
 
     if (response.ChallengeName) {
@@ -169,15 +183,21 @@ async function mfaSetupChallenge(username: string, session: string) {
     
 
     // Now respond to auth with the challenge, supposedly
-    const challengeResponse = new RespondToAuthChallengeCommand({
+    const challengeResponse = {
         ChallengeName: "MFA_SETUP",
         ClientId: cloudConfig.clientId,
         Session: confirmOtpResponse.Session,
         ChallengeResponses: {
             "USERNAME": username
         }
-    });
-    const response = await client.send(challengeResponse);
+    };
+    const response = await fetch(authEndpoint, {
+        body: JSON.stringify(challengeResponse),
+        headers: {
+            "X-Amz-Target": "AWSCognitoIdentityProviderService.RespondToAuthChallenge",
+            "Content-Type": "application/x-amz-json-1.1"
+        }
+    }).then(resp => resp.json());
     if (response.ChallengeName) {
         respondToChallenge(response.ChallengeName, response.ChallengeParameters, username, response.Session);
     } else {
@@ -190,7 +210,7 @@ async function otpMfaChallenge(username: string, session: string) {
     const form = await formSubmit(forms["otp-mfa"]);
     const code = form.get("code").toString();
 
-    const challengeResponse = new RespondToAuthChallengeCommand({
+    const challengeResponse = {
         ChallengeName: "SOFTWARE_TOKEN_MFA",
         ClientId: cloudConfig.clientId,
         ChallengeResponses: {
@@ -198,8 +218,14 @@ async function otpMfaChallenge(username: string, session: string) {
             "SOFTWARE_TOKEN_MFA_CODE": code
         },
         Session: session
-    });
-    const response = await client.send(challengeResponse);
+    };
+    const response = await fetch(authEndpoint, {
+        body: JSON.stringify(challengeResponse),
+        headers: {
+            "X-Amz-Target": "AWSCognitoIdentityProviderService.RespondToAuthChallenge",
+            "Content-Type": "application/x-amz-json-1.1"
+        }
+    }).then(resp => resp.json());
     if (response.ChallengeName) {
         respondToChallenge(response.ChallengeName, response.ChallengeParameters, username, response.Session);
     } else {
